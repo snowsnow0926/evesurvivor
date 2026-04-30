@@ -25,11 +25,11 @@ static func get_quality_name(q: Quality) -> String:
 
 static func get_quality_color(q: Quality) -> Color:
 	match q:
-		Quality.COMMON: return Color(0.7, 0.7, 0.7)
-		Quality.UNCOMMON: return Color(0.2, 0.9, 0.3)
-		Quality.RARE: return Color(0.2, 0.5, 1.0)
-		Quality.LEGENDARY: return Color(1.0, 0.6, 0.0)
-		Quality.EPIC: return Color(0.7, 0.2, 1.0)
+		Quality.COMMON: return Color(1.0, 1.0, 1.0)
+		Quality.UNCOMMON: return Color(0.118, 1.0, 0.369)
+		Quality.RARE: return Color(0.302, 0.651, 1.0)
+		Quality.LEGENDARY: return Color(0.784, 0.302, 1.0)
+		Quality.EPIC: return Color(1.0, 0.549, 0.0)
 		Quality.MYTHIC: return Color(1.0, 0.2, 0.2)
 	return Color.WHITE
 

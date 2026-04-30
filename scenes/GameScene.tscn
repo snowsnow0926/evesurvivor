@@ -36,3 +36,4 @@ script = ExtResource("4_psf")
 [node name="PauseMenu" parent="UIRoot" instance=ExtResource("8_pause_scene")]
 
 [node name="BossWarning" parent="UIRoot" instance=ExtResource("9_bw_scene")]
+mouse_filter = 2

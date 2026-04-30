@@ -41,70 +41,110 @@ layout_mode = 2
 text = "护卫舰 | 武器槽: 1 | 防御槽: 1"
 horizontal_alignment = 1
 
-[node name="EquippedTitle" type="Label" parent="Panel/VBox"]
-layout_mode = 2
-text = "已装备"
-theme_override_font_sizes/font_size = 16
-
-[node name="EquippedGrid" type="GridContainer" parent="Panel/VBox"]
-layout_mode = 2
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 8
-columns = 4
-custom_minimum_size = Vector2(0, 88)
-
-[node name="Separator" type="HSeparator" parent="Panel/VBox"]
-layout_mode = 2
-
-[node name="InventoryTitle" type="Label" parent="Panel/VBox"]
-layout_mode = 2
-text = "仓库库存"
-theme_override_font_sizes/font_size = 16
-
-[node name="InventoryScroll" type="ScrollContainer" parent="Panel/VBox"]
+[node name="ContentHBox" type="HBoxContainer" parent="Panel/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
-size_flags_horizontal = 3
-horizontal_scroll_mode = 0
-custom_minimum_size = Vector2(0, 160)
-
-[node name="InventoryGrid" type="GridContainer" parent="Panel/VBox/InventoryScroll"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 8
-columns = 4
-
-[node name="DetailSection" type="VBoxContainer" parent="Panel/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="DetailTitle" type="Label" parent="Panel/VBox/DetailSection"]
-layout_mode = 2
-text = "选择装备查看详情"
-horizontal_alignment = 1
-
-[node name="DetailName" type="Label" parent="Panel/VBox/DetailSection"]
-layout_mode = 2
-text = ""
-
-[node name="DetailHBox" type="HBoxContainer" parent="Panel/VBox/DetailSection"]
-layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="DetailType" type="Label" parent="Panel/VBox/DetailSection/DetailHBox"]
+[node name="EquippedSide" type="VBoxContainer" parent="Panel/VBox/ContentHBox"]
 layout_mode = 2
-text = ""
-
-[node name="DetailStats" type="Label" parent="Panel/VBox/DetailSection/DetailHBox"]
-layout_mode = 2
-text = ""
 size_flags_horizontal = 3
+theme_override_constants/separation = 6
 
-[node name="DetailStatus" type="Label" parent="Panel/VBox/DetailSection/DetailHBox"]
+[node name="EquippedTitle" type="Label" parent="Panel/VBox/ContentHBox/EquippedSide"]
+layout_mode = 2
+text = "已装备"
+horizontal_alignment = 1
+
+[node name="EquippedScroll" type="ScrollContainer" parent="Panel/VBox/ContentHBox/EquippedSide"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+custom_minimum_size = Vector2(0, 260)
+
+[node name="EquippedGrid" type="GridContainer" parent="Panel/VBox/ContentHBox/EquippedSide/EquippedScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 3
+custom_minimum_size = Vector2(0, 240)
+
+[node name="InventorySide" type="VBoxContainer" parent="Panel/VBox/ContentHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="InventoryTitle" type="Label" parent="Panel/VBox/ContentHBox/InventorySide"]
+layout_mode = 2
+text = "仓库库存"
+horizontal_alignment = 1
+
+[node name="InventoryScroll" type="ScrollContainer" parent="Panel/VBox/ContentHBox/InventorySide"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+custom_minimum_size = Vector2(0, 260)
+
+[node name="InventoryGrid" type="GridContainer" parent="Panel/VBox/ContentHBox/InventorySide/InventoryScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 4
+custom_minimum_size = Vector2(0, 240)
+
+[node name="DetailPanel" type="PanelContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_styles/normal/corner_radius_top_left = 0
+theme_override_styles/normal/corner_radius_top_right = 0
+custom_minimum_size = Vector2(0, 64)
+
+[node name="DetailHBox" type="HBoxContainer" parent="Panel/VBox/DetailPanel"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="DetailIcon" type="Label" parent="Panel/VBox/DetailPanel/DetailHBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "[?]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DetailVBox" type="VBoxContainer" parent="Panel/VBox/DetailPanel/DetailHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="DetailName" type="Label" parent="Panel/VBox/DetailPanel/DetailHBox/DetailVBox"]
+layout_mode = 2
+text = "选择一件装备查看详情"
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+
+[node name="DetailStats" type="Label" parent="Panel/VBox/DetailPanel/DetailHBox/DetailVBox"]
 layout_mode = 2
 text = ""
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="DetailDesc" type="Label" parent="Panel/VBox/DetailPanel/DetailHBox/DetailVBox"]
+layout_mode = 2
+text = ""
+theme_override_colors/font_color = Color(0.4, 0.4, 0.4, 1)
+theme_override_font_sizes/font_size = 11
+
+[node name="SellPriceRow" type="HBoxContainer" parent="Panel/VBox/DetailPanel/DetailHBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+alignment = 2
+
+[node name="SellPriceLabel" type="Label" parent="Panel/VBox/DetailPanel/DetailHBox/SellPriceRow"]
+layout_mode = 2
+text = "出售: --"
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 12
 
 [node name="BtnRow" type="HBoxContainer" parent="Panel/VBox"]
 layout_mode = 2

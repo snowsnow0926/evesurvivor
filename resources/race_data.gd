@@ -44,7 +44,7 @@ static func _human_data() -> RaceData:
 	r.base_weapon_scene = "res://scenes/Missile.tscn"
 	r.talents = [
 		{"name": "导弹专精", "desc": "导弹基础等级 +1", "type": "missile_base_level", "value": 1},
-		{"name": "远程锁定", "desc": "导弹射程 +20%", "type": "missile_range", "value": 0.2},
+		{"name": "远程锁定", "desc": "导弹射程 +20%", "type": "missile_range", "value": 1},
 	]
 	return r
 
@@ -52,7 +52,7 @@ static func _orc_data() -> RaceData:
 	var r = RaceData.new()
 	r.race_id = RaceID.ORC
 	r.display_name = "兽人"
-	r.description = "重型战士，HP更高，默认使用加农炮武器，拥有炮术专精天赋。"
+	r.description = "重型战士，HP更高，默认使用加农炮武器，拥有炮术专精和狂暴射击天赋。"
 	r.base_hp = 120.0
 	r.shield_max = 30.0
 	r.shield_regen = 2.0
@@ -63,7 +63,7 @@ static func _orc_data() -> RaceData:
 	r.base_weapon_scene = "res://scenes/CannonBullet.tscn"
 	r.talents = [
 		{"name": "炮术专精", "desc": "加农炮基础等级 +1", "type": "cannon_base_level", "value": 1},
-		{"name": "狂暴射击", "desc": "加农炮射速 +15%", "type": "cannon_fire_rate", "value": 0.15},
+		{"name": "狂暴射击", "desc": "加农炮射速 +15%", "type": "cannon_fire_rate", "value": 1},
 	]
 	return r
 
@@ -82,7 +82,7 @@ static func _plant_data() -> RaceData:
 	r.base_weapon_scene = "res://scenes/RailgunBullet.tscn"
 	r.talents = [
 		{"name": "磁轨专精", "desc": "磁轨炮基础等级 +1", "type": "railgun_base_level", "value": 1},
-		{"name": "光子爆发", "desc": "磁轨炮暴击率 +20%", "type": "railgun_crit", "value": 0.20},
+		{"name": "光子爆发", "desc": "磁轨炮暴击率 +20%", "type": "railgun_crit", "value": 1},
 	]
 	return r
 
@@ -101,6 +101,6 @@ static func _silicon_data() -> RaceData:
 	r.base_weapon_scene = "res://scenes/LaserBeam.tscn"
 	r.talents = [
 		{"name": "激光专精", "desc": "激光炮基础等级 +1", "type": "laser_base_level", "value": 1},
-		{"name": "能量聚焦", "desc": "激光宽度 +15%，持续时间 +15%", "type": "laser_width_duration", "value": 0.15},
+		{"name": "能量聚焦", "desc": "激光宽度 +15%，持续时间 +15%", "type": "laser_width_duration", "value": 1},
 	]
 	return r

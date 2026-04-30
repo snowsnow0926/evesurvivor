@@ -2,6 +2,26 @@ extends Control
 
 const RaceData = preload("res://resources/race_data.gd")
 const ShipData = preload("res://resources/ship_data.gd")
+const WeaponData = preload("res://resources/weapon_data.gd")
+const EquipmentData = preload("res://resources/equipment_data.gd")
+
+const UPGRADE_NAME_MAP: Dictionary = {
+	"damage": "伤害强化",
+	"shield_max": "临时护盾",
+	"shield_regen": "护盾充能",
+	"fire_coverage": "火力覆盖",
+	"silent_hunter": "静默猎手",
+	"precision_kill": "精准猎杀",
+	"cannon_bloodthirst": "嗜血残暴",
+	"cannon_rush": "狂飙突进",
+	"cannon_vengeance": "为了部落",
+	"railgun_damage": "一发入魂",
+	"railgun_crit": "命中注定",
+	"railgun_multi": "多重射击",
+	"laser_duration": "高能光束",
+	"laser_width": "高效射击",
+	"laser_shield": "护盾中和",
+}
 
 @onready var main_panel: PanelContainer = $TopRightAnchor/MainPanel
 @onready var hp_bar: ProgressBar = $TopRightAnchor/MainPanel/VBox/HPRow/HPBar
@@ -23,21 +43,23 @@ const ShipData = preload("res://resources/ship_data.gd")
 @onready var race_bonus_label: Label = $ShipInfoPanel/ShipInfoVBox/RaceBonusLabel
 @onready var ship_slots_label: Label = $ShipInfoPanel/ShipInfoVBox/ShipSlotsLabel
 
-@onready var weapon_panel: HBoxContainer = $WeaponPanel
-@onready var weapon_slot1: PanelContainer = $WeaponPanel/WeaponSlot1
-@onready var weapon_slot2: PanelContainer = $WeaponPanel/WeaponSlot2
-@onready var weapon_slot1_name: Label = $WeaponPanel/WeaponSlot1/WeaponSlot1VBox/Name
-@onready var weapon_slot2_name: Label = $WeaponPanel/WeaponSlot2/WeaponSlot2VBox/Name
+@onready var top_weapon_panel: PanelContainer = $TopCenterAnchor/TopWeaponPanel
+@onready var top_slot1_name: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot1/WeaponSlot1VBox/Name
+@onready var top_slot2: PanelContainer = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot2
+@onready var top_slot2_name: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot2/WeaponSlot2VBox/Name
+@onready var top_defense_name: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot/DefenseSlotVBox/Name
+
+@onready var upgrade_list_vbox: VBoxContainer = $BottomRightAnchor/UpgradeListPanel/UpgradeListVBox
 
 @onready var timer_label: Label = $TopRightAnchor/TimerLabel
 
 var game_scene: Node2D
+var _vbox_warned: bool = false
 
 func _ready() -> void:
-	print("[HUD] _ready called")
-	print("[HUD] main_panel visible=", main_panel.visible if main_panel else "N/A")
-	print("[HUD] rect=", get_global_rect())
-	
+	if not upgrade_list_vbox:
+		print("[HUD] WARNING: upgrade_list_vbox is null! Node path may be wrong.")
+		return
 	if main_panel:
 		var style = StyleBoxFlat.new()
 		style.bg_color = Color(0.1, 0.1, 0.2, 0.9)
@@ -63,46 +85,98 @@ func _ready() -> void:
 		ship_slots_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.9))
 		ship_slots_label.add_theme_font_size_override("font_size", 12)
 
-	if weapon_slot1:
-		var style = StyleBoxFlat.new()
-		style.bg_color = Color(0.1, 0.1, 0.2, 0.85)
-		style.set_border_width_all(2)
-		style.border_color = Color(0.4, 0.6, 1.0)
-		style.set_corner_radius_all(6)
-		weapon_slot1.add_theme_stylebox_override("panel", style)
-	if weapon_slot2:
-		var style = StyleBoxFlat.new()
-		style.bg_color = Color(0.1, 0.1, 0.2, 0.85)
-		style.set_border_width_all(2)
-		style.border_color = Color(0.4, 0.6, 1.0)
-		style.set_corner_radius_all(6)
-		weapon_slot2.add_theme_stylebox_override("panel", style)
+	var equip_style = func(p: PanelContainer):
+		var s = StyleBoxFlat.new()
+		s.bg_color = Color(0.1, 0.15, 0.3, 0.9)
+		s.set_border_width_all(2)
+		s.border_color = Color(0.5, 0.7, 1.0)
+		s.set_corner_radius_all(6)
+		p.add_theme_stylebox_override("panel", s)
+
+	if top_weapon_panel:
+		var s = StyleBoxFlat.new()
+		s.bg_color = Color(0.05, 0.05, 0.15, 0.85)
+		s.set_border_width_all(2)
+		s.border_color = Color(0.3, 0.4, 0.7)
+		s.set_corner_radius_all(6)
+		top_weapon_panel.add_theme_stylebox_override("panel", s)
+		for slot_path in [
+			"TopWeaponHBox/WeaponSlot1", "TopWeaponHBox/WeaponSlot2",
+			"TopWeaponHBox/DefenseSlot"
+		]:
+			var slot = top_weapon_panel.get_node_or_null(slot_path)
+			if slot:
+				equip_style.call(slot)
+
+	var upgrade_panel = $BottomRightAnchor/UpgradeListPanel
+	if upgrade_panel:
+		var s = StyleBoxFlat.new()
+		s.bg_color = Color(0.05, 0.05, 0.15, 0.85)
+		s.set_border_width_all(2)
+		s.border_color = Color(0.3, 0.5, 0.8)
+		s.set_corner_radius_all(6)
+		upgrade_panel.add_theme_stylebox_override("panel", s)
+	if upgrade_list_vbox:
+		var title_lbl = upgrade_list_vbox.get_node_or_null("TitleLabel")
+		if title_lbl:
+			title_lbl.add_theme_color_override("font_color", Color(0.7, 0.9, 1.0))
+			title_lbl.add_theme_font_size_override("font_size", 14)
+	if upgrade_list_vbox:
+		upgrade_list_vbox.custom_minimum_size.y = 30
 
 func setup(gs: Node2D) -> void:
 	game_scene = gs
-	print("[HUD] setup called")
 	update_display(100, 100, 50.0, 50.0, 0, 0, 0, 0.0, 10.0, 1)
 
+var _debug_process_count: int = 0
+
 func _process(_delta: float) -> void:
+	_debug_process_count += 1
+	if _debug_process_count <= 3:
+		print("[HUD._process] game_scene=", game_scene, " game_manager=", game_scene.game_manager if game_scene else "N/A", " upgrade_list_vbox=", upgrade_list_vbox)
 	if not game_scene or not game_scene.game_manager:
 		return
 	var gm = game_scene.game_manager
 
-	var primary_name = "武器"
+	var primary_name = "空槽位"
+	var primary_level = 0
+	var primary_quality: int = 0
 	if game_scene and game_scene.game_manager and game_scene.game_manager.player and is_instance_valid(game_scene.game_manager.player):
 		var p = game_scene.game_manager.player
 		if p.has_method("get_primary_weapon"):
 			var pw = p.get_primary_weapon()
 			if pw:
 				primary_name = pw.display_name
+				primary_level = _get_weapon_upgrade_level(pw.weapon_id)
+				if "quality" in pw:
+					primary_quality = pw.quality
 
-	var secondary_name = null
+	var secondary_name = "空槽位"
+	var secondary_level = 0
+	var secondary_quality: int = 0
+	var has_secondary = false
 	if game_scene and game_scene.game_manager and game_scene.game_manager.player and is_instance_valid(game_scene.game_manager.player):
 		var p = game_scene.game_manager.player
 		if p.has_method("get_secondary_weapon"):
 			var sw = p.get_secondary_weapon()
 			if sw:
-				secondary_name = sw
+				secondary_name = sw.display_name
+				secondary_level = _get_weapon_upgrade_level(sw.weapon_id)
+				if "quality" in sw:
+					secondary_quality = sw.quality
+				has_secondary = true
+
+	var defense_name = "空槽位"
+	var defense_level = 0
+	var defense_quality: int = 0
+	var ship_id = int(GameState.selected_ship_id)
+	if ship_id == 0:
+		ship_id = ShipData.ShipID.FRIGATE
+	var armor_dict = GameState.equipped_armor.get(ship_id, {})
+	if armor_dict is Dictionary and not armor_dict.is_empty():
+		defense_name = armor_dict.get("name", "防御装")
+		defense_level = armor_dict.get("level", 1)
+		defense_quality = armor_dict.get("quality", 0)
 
 	update_display(
 		gm.player_hp,
@@ -118,11 +192,13 @@ func _process(_delta: float) -> void:
 		gm.combo_count
 	)
 	_update_timer_display(gm)
-	_update_weapon_display(primary_name, secondary_name)
-	_update_ship_panel(gm)
+	_update_top_weapon_display(
+		primary_name, primary_level, primary_quality,
+		secondary_name, secondary_level, secondary_quality, has_secondary,
+		defense_name, defense_level, defense_quality
+	)
 	_update_race_and_ship_display()
-
-func _update_ship_panel(gm) -> void:
+	_update_upgrade_list_display(gm)
 	if ship_hp_label:
 		ship_hp_label.text = "HP: %d / %d" % [gm.player_hp, gm.player_max_hp]
 	if ship_shield_label:
@@ -145,38 +221,108 @@ func _update_ship_panel(gm) -> void:
 	if ship_dodge_label:
 		ship_dodge_label.text = "闪避: %.0f%%" % (gm.player_dodge * 100.0)
 
-func _update_weapon_display(primary: String, secondary = null) -> void:
-	if weapon_slot1_name:
-		weapon_slot1_name.text = primary
+func _get_weapon_upgrade_level(weapon_id) -> int:
+	var upgrade_ids = _get_upgrade_ids_for_weapon(weapon_id)
+	if upgrade_ids.is_empty():
+		return 0
+	var total = 0
+	var gm = game_scene.game_manager if game_scene else null
+	if not gm:
+		return 0
+	for uid in upgrade_ids:
+		total += gm.upgrade_counts.get(uid, 0)
+	return total
 
-	var secondary_name = ""
-	if secondary:
-		secondary_name = secondary.display_name
-	elif game_scene and game_scene.game_manager and game_scene.game_manager.player and is_instance_valid(game_scene.game_manager.player):
-		var p = game_scene.game_manager.player
-		if p.has_method("get_secondary_weapon"):
-			var sw = p.get_secondary_weapon()
-			if sw:
-				secondary_name = sw.display_name
+func _get_upgrade_ids_for_weapon(wid) -> Array:
+	match wid:
+		WeaponData.WeaponID.MISSILE, WeaponData.WeaponID.SMALL_MISSILE:
+			return ["fire_coverage", "silent_hunter", "precision_kill"]
+		WeaponData.WeaponID.CANNON, WeaponData.WeaponID.SMALL_CANNON:
+			return ["cannon_bloodthirst", "cannon_rush", "cannon_vengeance"]
+		WeaponData.WeaponID.RAILGUN, WeaponData.WeaponID.SMALL_RAILGUN:
+			return ["railgun_multi", "railgun_crit", "railgun_damage"]
+		WeaponData.WeaponID.LASER, WeaponData.WeaponID.SMALL_LASER:
+			return ["laser_duration", "laser_width", "laser_shield"]
+	return []
 
-	if weapon_slot2_name:
-		weapon_slot2_name.text = secondary_name
-	if weapon_slot2:
-		weapon_slot2.visible = not secondary_name.is_empty()
+func _update_top_weapon_display(primary: String, primary_lv: int, primary_q: int, secondary: String, secondary_lv: int, secondary_q: int, has_secondary: bool, defense: String, defense_lv: int, defense_q: int) -> void:
+	if top_slot1_name:
+		if primary == "空槽位":
+			top_slot1_name.text = "空槽位"
+			top_slot1_name.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+		else:
+			top_slot1_name.text = "%s Lv.%d" % [primary, primary_lv]
+			top_slot1_name.add_theme_color_override("font_color", EquipmentData.get_quality_color(primary_q))
 
-	var primary_style = StyleBoxFlat.new()
-	primary_style.bg_color = Color(0.1, 0.15, 0.3, 0.9)
-	primary_style.set_border_width_all(2)
-	primary_style.border_color = Color(0.6, 0.8, 1.0)
-	primary_style.set_corner_radius_all(6)
-	weapon_slot1.add_theme_stylebox_override("panel", primary_style)
+	if top_slot2:
+		top_slot2.visible = has_secondary
+		if top_slot2_name:
+			if secondary == "空槽位":
+				top_slot2_name.text = "空槽位"
+				top_slot2_name.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+			else:
+				top_slot2_name.text = "%s Lv.%d" % [secondary, secondary_lv]
+				top_slot2_name.add_theme_color_override("font_color", EquipmentData.get_quality_color(secondary_q))
 
-	var secondary_style = StyleBoxFlat.new()
-	secondary_style.bg_color = Color(0.1, 0.15, 0.3, 0.9)
-	secondary_style.set_border_width_all(2)
-	secondary_style.border_color = Color(0.6, 0.8, 1.0)
-	secondary_style.set_corner_radius_all(6)
-	weapon_slot2.add_theme_stylebox_override("panel", secondary_style)
+	if top_defense_name:
+		if defense == "空槽位":
+			top_defense_name.text = "空槽位"
+			top_defense_name.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+		else:
+			top_defense_name.text = "%s Lv.%d" % [defense, defense_lv]
+			top_defense_name.add_theme_color_override("font_color", EquipmentData.get_quality_color(defense_q))
+
+func _update_upgrade_list_display(gm) -> void:
+	if not upgrade_list_vbox:
+		if not _vbox_warned:
+			print("[HUD] _update_upgrade_list_display: upgrade_list_vbox is null!")
+			_vbox_warned = true
+		return
+
+	var current_keys = gm.upgrade_counts.keys()
+	var has_any_upgrade = false
+	for k in current_keys:
+		if gm.upgrade_counts[k] > 0:
+			has_any_upgrade = true
+			break
+
+	# Ensure panel visibility tracks upgrade state
+	var upgrade_panel = $BottomRightAnchor/UpgradeListPanel
+	if upgrade_panel:
+		if has_any_upgrade and not upgrade_panel.visible:
+			print("[HUD] UpgradeListPanel 显示! upgrade_counts=", gm.upgrade_counts)
+		upgrade_panel.visible = has_any_upgrade
+
+	var existing_labels: Array = []
+	for i in range(2, upgrade_list_vbox.get_child_count()):
+		var child = upgrade_list_vbox.get_child(i)
+		if child is Label:
+			existing_labels.append(child)
+
+	var label_idx = 0
+	for key in current_keys:
+		var count = gm.upgrade_counts.get(key, 0)
+		if count <= 0:
+			continue
+		var display_name = UPGRADE_NAME_MAP.get(key, key)
+		var text = "%s Lv.%d" % [display_name, count]
+
+		var lbl: Label
+		if label_idx < existing_labels.size():
+			lbl = existing_labels[label_idx]
+			lbl.text = text
+			lbl.visible = true
+		else:
+			lbl = Label.new()
+			lbl.text = text
+			lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+			lbl.add_theme_font_size_override("font_size", 12)
+			lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
+			upgrade_list_vbox.add_child(lbl)
+		label_idx += 1
+
+	for i in range(label_idx, existing_labels.size()):
+		existing_labels[i].visible = false
 
 func update_display(p_hp: int, p_max_hp: int, p_shield: float, p_shield_max: float, p_coin: int, p_minerals: int, p_kills: int, p_xp: float, p_xp_max: float, p_level: int, p_combo: int = 0) -> void:
 	if hp_bar:
@@ -185,14 +331,14 @@ func update_display(p_hp: int, p_max_hp: int, p_shield: float, p_shield_max: flo
 		hp_bar.add_theme_color_override("fill", Color(1, 0.2, 0.2))
 	if hp_label:
 		hp_label.text = "HP: %d" % p_hp
-	
+
 	if xp_bar:
 		xp_bar.max_value = maxf(p_xp_max, 1.0)
 		xp_bar.value = clampf(p_xp, 0, p_xp_max)
 		xp_bar.add_theme_color_override("fill", Color(0.2, 0.8, 0.2))
 	if xp_label:
 		xp_label.text = "XP: %.0f / %.0f" % [p_xp, p_xp_max]
-	
+
 	if info_label:
 		var combo_text = " | x%d COMBO!" % p_combo if p_combo >= 3 else ""
 		info_label.text = "Level: %d | Kills: %d | Coin: %d%s" % [p_level, p_kills, p_coin, combo_text]

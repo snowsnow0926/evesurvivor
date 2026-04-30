@@ -71,9 +71,11 @@ func _build_weapon_list() -> void:
 	for child in weapon_list_vbox.get_children():
 		child.queue_free()
 
-	var all_items = ShopItemData.get_all_shop_items()
+	var all_items: Array[ShopItemData] = ShopItemData.get_all_shop_items()
 	var filtered: Array[ShopItemData] = []
 	for item in all_items:
+		if not (item is ShopItemData):
+			continue
 		if _current_tab == "weapon" and item.equip_type == ShopItemData.EquipType.WEAPON:
 			filtered.append(item)
 		elif _current_tab == "armor" and item.equip_type == ShopItemData.EquipType.ARMOR:
@@ -87,6 +89,7 @@ func _build_weapon_list() -> void:
 		]
 		btn.custom_minimum_size = Vector2(0, 48)
 		btn.pressed.connect(_on_shop_item_selected.bind(item))
+		btn.add_theme_color_override("font_color", EquipmentData.get_quality_color(item.quality as EquipmentData.Quality))
 		weapon_list_vbox.add_child(btn)
 
 	if list_label:
@@ -153,8 +156,10 @@ func _update_detail_panel() -> void:
 		if buy_btn: buy_btn.visible = true
 		if sell_btn: sell_btn.visible = false
 	elif not selected_inventory_item.is_empty():
+		var q = selected_inventory_item.get("quality", 0)
 		if detail_title:
 			detail_title.text = selected_inventory_item.get("name", "?")
+			detail_title.add_theme_color_override("font_color", EquipmentData.get_quality_color(q))
 		if detail_desc:
 			detail_desc.text = selected_inventory_item.get("description", "")
 		var sell_price = int(selected_inventory_item.get("star_coin_price", 0) * 0.4)
@@ -208,6 +213,7 @@ func _buy_weapon(item_dict: Dictionary) -> void:
 		return
 
 	GameState.equipment_inventory.append(item_dict)
+	print("[ShopUI] _buy_weapon: added to inventory, total: ", GameState.equipment_inventory.size())
 
 	var weapon_slot_count = ship.weapon_slot_count
 	if GameState.upgraded_ships.get(ship_id, false):
@@ -224,6 +230,7 @@ func _buy_weapon(item_dict: Dictionary) -> void:
 	if equipped_list.size() < weapon_slot_count:
 		equipped_list.append(item_dict)
 		GameState.equipped_weapons[ship_id] = equipped_list
+		GameState.equipment_inventory.erase(item_dict)
 		print("[ShopUI] auto equip weapon to ship ", ship_id, ", equipped count now: ", equipped_list.size())
 	else:
 		print("[ShopUI] slots full (", weapon_slot_count, "), weapon stays in inventory")
@@ -251,9 +258,10 @@ func _buy_armor(item_dict: Dictionary) -> void:
 		var old_dict = current_armor.duplicate()
 		old_dict["equip_id"] = current_armor.get("equip_id", "") + "_old"
 		GameState.equipment_inventory.append(old_dict)
+		GameState.equipment_inventory.erase(item_dict)
 
 	GameState.equipped_armor[ship_id_key] = item_dict
-	GameState.equipment_inventory.append(item_dict)
+	print("[ShopUI] _buy_armor: equipped armor for ship ", ship_id_key)
 
 func _on_sell() -> void:
 	if selected_inventory_item.is_empty():

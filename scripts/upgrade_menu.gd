@@ -12,50 +12,28 @@ var selected_index: int = 0
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	print("[UpgradeMenu] _ready called, process_mode set to ALWAYS")
 	set_process_input(true)
 
 func move_selection(dir: int) -> void:
 	if buttons.is_empty():
 		return
 	selected_index = wrapi(selected_index + dir, 0, buttons.size())
-	print("[UpgradeMenu] move_selection: dir=", dir, " new_index=", selected_index)
 	_update_selection()
 
 func confirm_selection() -> void:
-	print("[UpgradeMenu] confirm_selection: index=", selected_index)
 	if selected_index >= 0 and selected_index < buttons.size():
 		var btn = buttons[selected_index]
 		var id = btn.get_meta("upgrade_id")
-		print("[UpgradeMenu] Confirming: ", id)
 		_on_upgrade_selected(id)
-	else:
-		print("[UpgradeMenu] Invalid selection!")
 
 func handle_click(pos: Vector2) -> void:
-	print("[UpgradeMenu] === HANDLE_CLICK ===")
-	print("[UpgradeMenu] Click position (global): ", pos)
-	print("[UpgradeMenu] UpgradeMenu visible: ", visible)
-	print("[UpgradeMenu] UpgradeMenu rect: ", get_global_rect())
-	print("[UpgradeMenu] Buttons count: ", buttons.size())
-
 	for i in range(buttons.size()):
 		var btn = buttons[i]
-		var rect = btn.get_global_rect()
-		var contains = rect.has_point(pos)
-		print("[UpgradeMenu] Button[", i, "]")
-		print("  - name: '", btn.text.split("\n")[0], "'")
-		print("  - rect: ", rect)
-		print("  - rect position: min=", rect.position, " max=", rect.end)
-		print("  - contains click: ", contains)
-
-		if contains:
+		if btn.get_global_rect().has_point(pos):
 			selected_index = i
 			_update_selection()
 			confirm_selection()
 			return
-
-	print("[UpgradeMenu] No button hit!")
 
 func open_upgrade_menu(available_upgrades: Array, gm: Node2D) -> void:
 	game_manager = gm
@@ -63,14 +41,14 @@ func open_upgrade_menu(available_upgrades: Array, gm: Node2D) -> void:
 	upgrade_options = _pick_random_upgrades(filtered_pool, 3)
 	_populate()
 
+	# 确保面板可见且在最上层
 	visible = true
+	z_index = 100
 
 	selected_index = 0
 	_update_selection()
-	print("[UpgradeMenu] menu opened")
 
 	await get_tree().create_timer(0.1).timeout
-	print("[UpgradeMenu] 0.1s later: visible=", visible)
 
 func _filter_by_equipped_weapon(pool: Array, gm: Node2D) -> Array:
 	var weapon_upgrade_ids: Array = []
@@ -145,21 +123,21 @@ func _pick_random_upgrades(pool: Array, count: int) -> Array:
 
 func _get_upgrade_weight(upgrade_id: String) -> float:
 	match upgrade_id:
-		"damage":          return 6.0
-		"shield_max":      return 4.0
-		"fire_coverage":   return 6.0
-		"shield_regen":    return 4.0
-		"silent_hunter":   return 2.0
-		"precision_kill":  return 2.0
-		"cannon_bloodthirst": return 4.0
-		"cannon_rush":     return 2.0
-		"cannon_vengeance":return 2.0
-		"railgun_damage":  return 2.0
-		"railgun_crit":    return 2.0
-		"railgun_multi":    return 2.0
-		"laser_duration":  return 4.0
-		"laser_width":     return 2.0
-		"laser_shield":    return 2.0
+		"damage":          return 8.0
+		"shield_max":      return 2.0
+		"fire_coverage":   return 8.0
+		"shield_regen":    return 2.0
+		"silent_hunter":   return 4.0
+		"precision_kill":  return 4.0
+		"cannon_bloodthirst": return 8.0
+		"cannon_rush":     return 4.0
+		"cannon_vengeance":return 4.0
+		"railgun_multi":   return 8.0
+		"railgun_crit":    return 4.0
+		"railgun_damage":  return 4.0
+		"laser_duration":  return 8.0
+		"laser_width":     return 4.0
+		"laser_shield":    return 4.0
 	return 3.0
 
 func _populate() -> void:
@@ -183,6 +161,7 @@ func _populate() -> void:
 		btn.position = Vector2(start_x, start_y + i * (btn_height + btn_spacing))
 		btn.set_meta("upgrade_id", upgrade["id"])
 		btn.set_meta("index", i)
+		btn.z_index = 10
 
 		btn.add_theme_stylebox_override("normal", _make_btn_style(Color(0.15, 0.15, 0.25)))
 		btn.add_theme_stylebox_override("hover", _make_btn_style(Color(0.25, 0.35, 0.55)))
@@ -193,12 +172,10 @@ func _populate() -> void:
 		btn.pressed.connect(_on_btn_pressed.bind(upgrade["id"]))
 		add_child(btn)
 		buttons.append(btn)
-		print("[UpgradeMenu] Added button[", i, "]: ", upgrade.get("name"), " at ", btn.position)
 
 func _on_btn_pressed(upgrade_id: String) -> void:
 	if not visible:
 		return
-	print("[UpgradeMenu] Button pressed: ", upgrade_id)
 	visible = false
 	upgrade_selected.emit(upgrade_id)
 	if game_manager and is_instance_valid(game_manager):
@@ -227,14 +204,12 @@ func _update_selection() -> void:
 
 func _on_upgrade_selected(upgrade_id: String) -> void:
 	SoundManager.play_sfx("upgrade_select")
-	print("[UpgradeMenu] SELECTED: ", upgrade_id)
 	visible = false
 	upgrade_selected.emit(upgrade_id)
 	if game_manager and is_instance_valid(game_manager):
 		game_manager.apply_upgrade(upgrade_id)
 
 func skip_upgrade() -> void:
-	print("[UpgradeMenu] SKIP upgrade")
 	visible = false
 	if game_manager and is_instance_valid(game_manager):
 		game_manager.is_upgrading = false

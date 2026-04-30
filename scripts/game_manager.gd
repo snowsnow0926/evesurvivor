@@ -112,12 +112,9 @@ var upgrade_counts: Dictionary = {}
 var upgrade_pool: Array = []
 
 func _ready() -> void:
-	print("[GameManager] _ready called")
 	_setup_upgrade_pool()
 	_setup_references()
-	print("[GameManager] enemy_root=", enemy_root, " bullet_root=", bullet_root, " exp_orb_root=", exp_orb_root)
 	_spawn_player()
-	print("[GameManager] _ready done")
 
 func _setup_upgrade_pool() -> void:
 	upgrade_pool = [
@@ -261,10 +258,9 @@ func _apply_upgrade_effect(upgrade_id: String) -> void:
 func _spawn_player() -> void:
 	if player != null and is_instance_valid(player):
 		return
-	print("[GameManager] _spawn_player called")
 	var player_scene_path = "res://scenes/Player.tscn"
 	if not ResourceLoader.exists(player_scene_path):
-		print("[GameManager] Player.tscn NOT FOUND!")
+		push_error("[GameManager] Player.tscn NOT FOUND!")
 		return
 	var ps = load(player_scene_path)
 	if ps:
@@ -279,11 +275,10 @@ func _spawn_player() -> void:
 		var race = RaceData.get_race(GameState.selected_race_id)
 		if race and player.has_method("apply_race_data"):
 			player.apply_race_data(race)
-			print("[GameManager] apply_race_data done, player active_weapons will be set")
 		if race:
 			_apply_race_to_gm(race)
 	else:
-		print("[GameManager] failed to load Player scene")
+		push_error("[GameManager] failed to load Player scene")
 
 func start_run_timer() -> void:
 	if GameState.first_run:
@@ -353,7 +348,7 @@ func _spawn_enemy() -> void:
 	if enemy_path == "":
 		return
 	if not ResourceLoader.exists(enemy_path):
-		print("[GameManager] Enemy scene not found: ", enemy_path)
+		push_error("[GameManager] Enemy scene not found: " + enemy_path)
 		return
 
 	var enemy_scene = load(enemy_path)
@@ -407,7 +402,7 @@ func _spawn_boss() -> void:
 	SoundManager.play_sfx("boss_appear")
 	SoundManager.play_music("battle_boss")
 	if not ResourceLoader.exists(BOSS_SCENE_PATH):
-		print("[GameManager] BossVoid.tscn NOT FOUND!")
+		push_error("[GameManager] BossVoid.tscn NOT FOUND!")
 		return
 	if not player or not is_instance_valid(player):
 		return
@@ -528,7 +523,6 @@ func _difficulty_scale() -> void:
 func on_exp_orb_collected(amount: float) -> void:
 	print("[GameManager] on_exp_orb_collected: amount=", amount, " current_xp=", current_xp)
 	current_xp += amount * xp_boost
-	print("[GameManager] after adding: current_xp=", current_xp, " xp_to_next=", xp_to_next_level)
 	var leveled_up = false
 	while current_xp >= xp_to_next_level:
 		current_xp -= xp_to_next_level
@@ -552,7 +546,7 @@ func _get_equipped_weapon_id() -> int:
 	return 0
 
 func apply_upgrade(upgrade_id: String) -> void:
-	print("[GameManager] apply_upgrade called: ", upgrade_id, " is_upgrading=", is_upgrading)
+	print("[GameManager] apply_upgrade: ", upgrade_id, " upgrade_counts=", upgrade_counts)
 
 	if not upgrade_counts.has(upgrade_id):
 		upgrade_counts[upgrade_id] = 0
@@ -684,7 +678,6 @@ func on_self_destruct() -> void:
 	game_ended.emit("self_destruct")
 
 func reset_for_new_run() -> void:
-	print("[GameManager] reset_for_new_run called")
 	is_game_over = false
 	is_paused = false
 	is_upgrading = false

@@ -3,13 +3,13 @@ extends Area2D
 var direction: Vector2 = Vector2.RIGHT
 var max_range: float = 700.0
 var damage_per_tick: float = 12.0
-var duration: float = 2.0
+var duration: float = 2.4
 var crit_rate: float = 0.08
 var crit_mult: float = 1.6
 var game_manager: Node2D
 
 var elapsed: float = 0.0
-var tick_interval: float = 0.7
+var tick_interval: float = 0.6
 var tick_timer: float = 0.0
 var hit_bodies: Array = []
 var beam_width: float = 16.0
@@ -43,9 +43,10 @@ func _physics_process(delta: float) -> void:
 		current_target = closest
 		direction = (closest.global_position - global_position).normalized()
 		target_world_pos = closest.global_position
-		rotation = direction.angle()
-		beam_end_pos = target_world_pos
+		beam_end_pos = global_position + direction * max_range
 	else:
+		current_target = null
+		direction = (target_world_pos - global_position).normalized() if target_world_pos != Vector2.ZERO else direction
 		beam_end_pos = global_position + direction * max_range
 	rotation = direction.angle()
 	_update_collision_shape()
@@ -58,12 +59,11 @@ func _physics_process(delta: float) -> void:
 	if line2d:
 		line2d.clear_points()
 		line2d.add_point(Vector2.ZERO)
-		var local_end = to_local(beam_end_pos)
-		if local_end.length() > max_range:
-			local_end = direction * max_range
-		line2d.add_point(local_end)
+		var end_offset = beam_end_pos - global_position
+		line2d.add_point(end_offset)
 		line2d.width = beam_width
 		line2d.modulate = Color(0.0, 0.6, 1.0, 0.8)
+		line2d.z_index = -1
 
 func _deal_damage_to_hits() -> void:
 	var to_remove: Array = []

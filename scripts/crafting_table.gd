@@ -1,5 +1,8 @@
 extends Control
 
+const EquipmentData = preload("res://resources/equipment_data.gd")
+const ShipData = preload("res://resources/ship_data.gd")
+
 @onready var inventory_grid: GridContainer = $Panel/VBox/InventoryGrid
 @onready var crafting_slots: HBoxContainer = $Panel/VBox/CraftingSlots
 @onready var result_preview: Label = $Panel/VBox/ResultPreview
@@ -27,7 +30,24 @@ func _build_inventory() -> void:
 	for child in inventory_grid.get_children():
 		child.queue_free()
 
+	var ship_id = int(GameState.selected_ship_id)
+	if ship_id == 0:
+		ship_id = ShipData.ShipID.FRIGATE
+
+	var equipped_ids: Array = []
+	var equipped_weapons = GameState.equipped_weapons.get(ship_id, [])
+	if equipped_weapons is Array:
+		for w in equipped_weapons:
+			if w is Dictionary:
+				equipped_ids.append(w.get("equip_id", ""))
+	var equipped_armor = GameState.equipped_armor.get(ship_id, {})
+	if equipped_armor is Dictionary and not equipped_armor.is_empty():
+		equipped_ids.append(equipped_armor.get("equip_id", ""))
+
 	for item in GameState.equipment_inventory:
+		var equip_id = item.get("equip_id", "")
+		if equipped_ids.has(equip_id):
+			continue
 		var btn = _make_item_button(item)
 		inventory_grid.add_child(btn)
 
@@ -42,10 +62,15 @@ func _make_item_button(item: Dictionary) -> Button:
 
 func _on_item_selected(item: Dictionary) -> void:
 	for i in range(2):
+		if selected_items[i] != null and selected_items[i].get("equip_id") == item.get("equip_id"):
+			selected_items[i] = null
+			_update_crafting_slots()
+			return
+	for i in range(2):
 		if selected_items[i] == null:
 			selected_items[i] = item
 			_update_crafting_slots()
-			break
+			return
 	_update_preview()
 
 func _update_crafting_slots() -> void:
@@ -101,12 +126,16 @@ func _on_craft_pressed() -> void:
 	GameState.equipment_inventory.erase(selected_items[0])
 	GameState.equipment_inventory.erase(selected_items[1])
 
+	var equip_type_val = selected_items[0].get("equip_type", "")
+	var is_weapon = true
+	if typeof(equip_type_val) == TYPE_STRING:
+		is_weapon = equip_type_val.to_upper() == "WEAPON"
+
 	var new_item = {
 		"equip_id": str(randi()),
 		"equip_type": selected_items[0].get("equip_type", 0),
 		"quality": next_q,
-		"name": EquipmentData.get_quality_name(next_q) + " " +
-				("武器" if selected_items[0].get("equip_type") == 0 else "护甲"),
+		"name": EquipmentData.get_quality_name(next_q) + " " + ("武器" if is_weapon else "护甲"),
 	}
 	GameState.equipment_inventory.append(new_item)
 

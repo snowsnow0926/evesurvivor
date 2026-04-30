@@ -11,6 +11,15 @@ var selected_race_id: RaceData.RaceID = RaceData.RaceID.HUMAN
 var race_buttons: Array = []
 
 func _ready() -> void:
+	# 为 PanelContainer 设置默认样式，防止 add_theme_style_override 时 rp_style 为 null
+	var panel = $Panel as PanelContainer
+	if panel:
+		var default_style = StyleBoxFlat.new()
+		default_style.bg_color = Color(0.08, 0.08, 0.16, 0.95)
+		default_style.set_border_width_all(1)
+		default_style.border_color = Color(0.3, 0.3, 0.5, 0.3)
+		default_style.set_corner_radius_all(8)
+		panel.add_theme_stylebox_override("panel", default_style)
 	_build_race_cards()
 	_select_race(RaceData.RaceID.HUMAN)
 	confirm_btn.pressed.connect(_on_confirm)
@@ -151,14 +160,18 @@ func _select_race(race_id: RaceData.RaceID) -> void:
 		var card_race_id = card.get_meta("race_id") as RaceData.RaceID
 		if card_race_id == race_id:
 			var sel_style = card.get_meta("style_selected") as StyleBoxFlat
-			card.add_theme_stylebox_override("normal", sel_style)
+			if sel_style:
+				card.add_theme_stylebox_override("normal", sel_style)
+			else:
+				push_warning("[CharacterCreate] Missing style_selected for race card")
 			var btn = card.get_meta("button") as Button
 			if btn:
 				btn.text = "已选择"
 				btn.disabled = true
 		else:
 			var norm_style = card.get_meta("style_normal") as StyleBoxFlat
-			card.add_theme_stylebox_override("normal", norm_style)
+			if norm_style:
+				card.add_theme_stylebox_override("normal", norm_style)
 			var btn = card.get_meta("button") as Button
 			if btn:
 				btn.text = "选择"
@@ -169,13 +182,15 @@ func _on_card_mouse_enter(card: Control) -> void:
 	var card_race_id = card.get_meta("race_id") as RaceData.RaceID
 	if card_race_id != selected_race_id:
 		var hover_style = card.get_meta("style_hover") as StyleBoxFlat
-		card.add_theme_stylebox_override("normal", hover_style)
+		if hover_style:
+			card.add_theme_stylebox_override("normal", hover_style)
 
 func _on_card_mouse_exit(card: Control) -> void:
 	var card_race_id = card.get_meta("race_id") as RaceData.RaceID
 	if card_race_id != selected_race_id:
 		var norm_style = card.get_meta("style_normal") as StyleBoxFlat
-		card.add_theme_stylebox_override("normal", norm_style)
+		if norm_style:
+			card.add_theme_stylebox_override("normal", norm_style)
 
 func _update_confirm_button() -> void:
 	confirm_btn.disabled = false

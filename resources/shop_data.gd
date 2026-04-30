@@ -21,6 +21,7 @@ enum EquipType { WEAPON, ARMOR }
 @export var equip_type: EquipType
 @export var shield_bonus: float
 @export var shield_regen_bonus: float
+@export var quality: int
 
 static func get_all_shop_items() -> Array[ShopItemData]:
 	return [
@@ -60,6 +61,7 @@ static func _small_missile() -> ShopItemData:
 	w.scene_path = "res://scenes/Missile.tscn"
 	w.shield_bonus = 0.0
 	w.shield_regen_bonus = 0.0
+	w.quality = 0
 	return w
 
 static func _small_cannon() -> ShopItemData:
@@ -80,6 +82,7 @@ static func _small_cannon() -> ShopItemData:
 	w.scene_path = "res://scenes/CannonBullet.tscn"
 	w.shield_bonus = 0.0
 	w.shield_regen_bonus = 0.0
+	w.quality = 0
 	return w
 
 static func _small_railgun() -> ShopItemData:
@@ -100,6 +103,7 @@ static func _small_railgun() -> ShopItemData:
 	w.scene_path = "res://scenes/RailgunBullet.tscn"
 	w.shield_bonus = 0.0
 	w.shield_regen_bonus = 0.0
+	w.quality = 1
 	return w
 
 static func _small_laser() -> ShopItemData:
@@ -120,6 +124,7 @@ static func _small_laser() -> ShopItemData:
 	w.scene_path = "res://scenes/LaserBeam.tscn"
 	w.shield_bonus = 0.0
 	w.shield_regen_bonus = 0.0
+	w.quality = 1
 	return w
 
 static func _small_shield_optimizer() -> ShopItemData:
@@ -140,6 +145,7 @@ static func _small_shield_optimizer() -> ShopItemData:
 	e.scene_path = ""
 	e.shield_bonus = 30.0
 	e.shield_regen_bonus = 0.0
+	e.quality = 0
 	return e
 
 static func _small_shield_regen() -> ShopItemData:
@@ -160,6 +166,7 @@ static func _small_shield_regen() -> ShopItemData:
 	e.scene_path = ""
 	e.shield_bonus = 0.0
 	e.shield_regen_bonus = 2.0
+	e.quality = 0
 	return e
 
 func to_inventory_dict() -> Dictionary:

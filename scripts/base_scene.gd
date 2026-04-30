@@ -68,13 +68,25 @@ func _show_repair() -> void:
 	_switch_panel(repair_panel)
 
 func _show_crafting() -> void:
-	_switch_panel(crafting_panel)
+	if current_panel and is_instance_valid(current_panel):
+		current_panel.visible = false
+	if crafting_panel and is_instance_valid(crafting_panel):
+		crafting_panel.visible = true
+		current_panel = crafting_panel
+		if crafting_panel.has_method("_build_inventory"):
+			crafting_panel._build_inventory()
+
+func _show_warehouse() -> void:
+	if current_panel and is_instance_valid(current_panel):
+		current_panel.visible = false
+	if warehouse_panel and is_instance_valid(warehouse_panel):
+		warehouse_panel.visible = true
+		current_panel = warehouse_panel
+		if warehouse_panel.has_method("_build_all"):
+			warehouse_panel._build_all()
 
 func _show_shop() -> void:
 	_switch_panel(shop_panel)
-
-func _show_warehouse() -> void:
-	_switch_panel(warehouse_panel)
 
 func _show_shipyard() -> void:
 	_switch_panel(shipyard_panel)
@@ -88,8 +100,6 @@ func _switch_panel(panel: Control) -> void:
 	if panel and is_instance_valid(panel):
 		panel.visible = true
 		current_panel = panel
-		if panel == warehouse_panel and panel.has_method("_build_all"):
-			panel._build_all()
 
 func close_all_panels() -> void:
 	if current_panel and is_instance_valid(current_panel):

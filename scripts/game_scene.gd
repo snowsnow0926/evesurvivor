@@ -2,7 +2,6 @@ extends Node2D
 
 var game_manager: Node2D
 var is_settlement_open: bool = false
-var debug_print_timer: float = 0.0
 
 var shake_intensity: float = 0.0
 var shake_duration: float = 0.0
@@ -11,21 +10,17 @@ var original_offset: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	is_settlement_open = false
-	print("[GameScene] _ready called")
 	game_manager = $GameManager
-	print("[GameScene] game_manager = ", game_manager)
 	_setup_ui()
 	_connect_signals()
 	game_manager.start_run_timer()
 	SoundManager.play_music("battle")
 	_maybe_start_guide()
-	print("[GameScene] _ready done")
 
 func _setup_ui() -> void:
 	var ui_root = $UIRoot
 	if ui_root:
 		ui_root.process_mode = Node.PROCESS_MODE_ALWAYS
-		print("[GameScene] UIRoot process_mode set to ALWAYS")
 	var hud = $UIRoot/HUD
 	if hud and hud.has_method("setup"):
 		hud.setup(self)
@@ -54,12 +49,7 @@ func _connect_signals() -> void:
 		pause_menu.retreat_requested.connect(_on_retreat_requested)
 		pause_menu.self_destruct_requested.connect(_on_self_destruct_requested)
 
-func _process(delta: float) -> void:
-	debug_print_timer += delta
-	if debug_print_timer >= 1.0:
-		debug_print_timer = 0.0
-		if game_manager:
-			print("[GameScene] player=", game_manager.get("player"), " enemies=", game_manager.get("enemy_root").get_child_count() if game_manager.get("enemy_root") else -1)
+func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("pause"):
 		if game_manager.is_upgrading or game_manager.is_game_over:
 			return
@@ -71,7 +61,7 @@ func _process(delta: float) -> void:
 		_notify_guide_pause()
 
 	# 屏幕震动
-	_update_screen_shake(delta)
+	_update_screen_shake(_delta)
 
 func _input(event: InputEvent) -> void:
 	pass
@@ -108,12 +98,10 @@ func _on_pause_toggled(is_paused: bool) -> void:
 			pause_menu.close_menu()
 
 func _on_game_ended(reason: String) -> void:
-	print("[GameScene] game_ended: ", reason)
 	get_tree().paused = false
 	_show_settlement_screen(reason)
 
 func _show_settlement_screen(reason) -> void:
-	print("[GameScene] _show_settlement_screen START, reason=", reason)
 	if is_settlement_open:
 		return
 	is_settlement_open = true
