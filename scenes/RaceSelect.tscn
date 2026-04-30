@@ -1,0 +1,177 @@
+[gd_scene format=3 uid="uid://du7llc373axqm"]
+
+[ext_resource type="Script" path="res://scripts/race_select.gd" id="1_race_select"]
+
+[node name="RaceSelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_race_select")
+
+[node name="BG" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.04, 0.04, 0.08, 0.95)
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 24.0
+offset_bottom = 72.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 36
+text = "选择种族"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSplit" type="HSplitContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 90.0
+offset_bottom = -80.0
+grow_horizontal = 2
+grow_vertical = 2
+min_size = Vector2(700, 400)
+split_offset = 220
+
+[node name="LeftPanel" type="Panel" parent="HSplit"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="VBox" type="VBoxContainer" parent="HSplit/LeftPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
+theme_override_constants/separation = 8
+
+[node name="Header" type="Label" parent="HSplit/LeftPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.8, 1.0, 1.0)
+theme_override_font_sizes/font_size = 20
+text = "种族列表"
+horizontal_alignment = 1
+
+[node name="RaceList" type="VBoxContainer" parent="HSplit/LeftPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RightPanel" type="Panel" parent="HSplit"]
+layout_mode = 3
+size_flags_horizontal = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="HSplit/RightPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+horizontal_scroll_mode = 0
+
+[node name="DetailVBox" type="VBoxContainer" parent="HSplit/RightPanel/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="RaceName" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.85, 0.3, 1.0)
+theme_override_font_sizes/font_size = 32
+text = "种族名"
+
+[node name="RaceDesc" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.85, 0.95, 1.0)
+theme_override_font_sizes/font_size = 18
+text = "种族描述"
+autowrap_mode = 2
+
+[node name="AttrsSection" type="VBoxContainer" parent="HSplit/RightPanel/ScrollContainer/DetailVBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="AttrHP" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox/AttrsSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.9, 0.5, 1.0)
+theme_override_font_sizes/font_size = 18
+text = "HP: 0"
+
+[node name="AttrShield" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox/AttrsSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.8, 1.0, 1.0)
+theme_override_font_sizes/font_size = 18
+text = "护盾: 0"
+
+[node name="AttrRegen" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox/AttrsSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.8, 1.0, 1.0)
+theme_override_font_sizes/font_size = 18
+text = "回充: 0/s"
+
+[node name="AttrSpeed" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox/AttrsSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.5, 1.0)
+theme_override_font_sizes/font_size = 18
+text = "移速: 0"
+
+[node name="AttrDodge" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox/AttrsSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.6, 1.0, 1.0)
+theme_override_font_sizes/font_size = 18
+text = "闪避: 0%"
+
+[node name="AttrCrit" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox/AttrsSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.5, 0.5, 1.0)
+theme_override_font_sizes/font_size = 18
+text = "暴击: 0%"
+
+[node name="DefaultWeapon" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.7, 0.2, 1.0)
+theme_override_font_sizes/font_size = 20
+text = "默认武器: 导弹"
+
+[node name="Talents" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 1.0, 0.5, 1.0)
+theme_override_font_sizes/font_size = 18
+text = "无种族天赋"
+autowrap_mode = 2
+
+[node name="BottomBar" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -64.0
+grow_horizontal = 2
+grow_vertical = 0
+alignment = 2
+theme_override_constants/separation = 16
+
+[node name="BackBtn" type="Button" parent="BottomBar"]
+layout_mode = 2
+text = "返回主菜单"
+
+[node name="ConfirmBtn" type="Button" parent="BottomBar"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 1.0, 0.3, 1.0)
+text = "确认选择"

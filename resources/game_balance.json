@@ -1,0 +1,136 @@
+{
+  "player": {
+    "move_speed": 320,
+    "turn_time": 0.12,
+    "hp": 100,
+    "shield_max": 50,
+    "shield_regen": 4,
+    "dodge": 0.1,
+    "crit_rate": 0.05,
+    "crit_mult": 1.5
+  },
+  "weapons": {
+    "missile": {
+      "fire_interval": 0.8,
+      "damage": 15,
+      "speed": 600,
+      "range": 500,
+      "max_lifetime": 3.0
+    },
+    "cannon": {
+      "fire_interval": 1.2,
+      "damage": 25,
+      "speed": 800,
+      "range": 400,
+      "pierce_count": 1,
+      "explode_chance": 0.0
+    },
+    "railgun": {
+      "fire_interval": 0.6,
+      "damage": 30,
+      "speed": 1000,
+      "range": 400,
+      "crit_rate_bonus": 0.0
+    },
+    "laser": {
+      "fire_interval": 2.5,
+      "damage": 12,
+      "range": 700,
+      "duration": 2.0,
+      "width": 16
+    }
+  },
+  "enemies": {
+    "melee": {
+      "hp": 30,
+      "damage": 10,
+      "move_speed": 100,
+      "contact_cooldown": 0.5
+    },
+    "sentry": {
+      "hp": 20,
+      "damage": 8,
+      "move_speed": 60,
+      "fire_interval": 1.2,
+      "bullet_speed": 400,
+      "preferred_distance": 350
+    },
+    "raven": {
+      "hp": 15,
+      "move_speed": 200,
+      "explosion_range": 100,
+      "explosion_damage": 25,
+      "windup_duration": 0.5
+    },
+    "boss": {
+      "hp": 500,
+      "move_speed": 80,
+      "rage_move_speed": 120,
+      "contact_damage": 15,
+      "fire_interval_normal": 1.5,
+      "fire_interval_rage": 1.0,
+      "bullet_speed": 400,
+      "bullet_damage": 10
+    }
+  },
+  "spawn": {
+    "spawn_interval_initial": 2.0,
+    "spawn_interval_min": 0.8,
+    "spawn_distance_min": 600,
+    "spawn_distance_max": 900
+  },
+  "rewards": {
+    "melee":  {"coin": 10,  "mineral": 2},
+    "sentry": {"coin": 14,  "mineral": 3},
+    "raven":  {"coin": 18,  "mineral": 4},
+    "boss":   {"coin": 250, "mineral": 40}
+  },
+  "combo": {
+    "timeout": 3.0,
+    "multiplier_cap": 3.0
+  },
+  "xp": {
+    "base_to_next": 10.0,
+    "level_scaling": 1.5,
+    "boost_mult": 1.0
+  },
+  "upgrades": {
+    "weapon_upgrade":    {"mult": 1.15, "max": 3},
+    "damage":           {"mult": 1.2,  "max": 3},
+    "shield_max":       {"add": 30,   "max": 3},
+    "fire_coverage":    {"add": 1,    "max": 3},
+    "shield_regen":     {"mult": 1.5, "max": 3},
+    "silent_hunter":    {"mult": 0.85,"max": 3},
+    "precision_kill":  {"add": 100,  "max": 3},
+    "missile_rf":       {"mult": 0.8, "max": 3},
+    "missile_range":    {"add": 100,  "max": 3},
+    "missile_dmg":      {"mult": 1.25,"max": 3},
+    "cannon_pierce":    {"add": 1,    "max": 2},
+    "cannon_rf":        {"mult": 0.8, "max": 3},
+    "cannon_explode":   {"add": 0.3,  "max": 2},
+    "cannon_bloodthirst":{"add": 1,   "max": 3},
+    "cannon_rush":      {"mult": 0.85,"max": 3},
+    "cannon_vengeance": {"mult": 0.85,"max": 3},
+    "railgun_damage":   {"mult": 1.2, "max": 3},
+    "railgun_crit":     {"add": 0.1,  "max": 3},
+    "railgun_multi":     {"add": 1,    "max": 3},
+    "laser_duration":   {"mult": 1.2, "max": 3},
+    "laser_width":      {"mult": 1.2, "max": 3},
+    "laser_shield":     {"add": 0.2,  "max": 3}
+  },
+  "difficulty": {
+    "hp_scale_per_20_kills": 1.1,
+    "spawn_interval_reduce_per_20_kills": 0.1,
+    "boss_trigger_kills": 50,
+    "boss_warning_kills": 45
+  },
+  "settlement": {
+    "dead_coin_ratio":    0.5,
+    "dead_mineral_ratio": 0.5,
+    "timeout_coin_ratio": 1.0,
+    "timeout_mineral_ratio": 1.0,
+    "retreat_coin_ratio": 1.0,
+    "retreat_mineral_ratio": 1.0,
+    "first_run_duration": 300
+  }
+}

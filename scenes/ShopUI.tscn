@@ -1,0 +1,122 @@
+[gd_scene load_steps=2 format=3 uid="uid://shop_ui_001"]
+
+[ext_resource type="Script" path="res://scripts/shop_ui.gd" id="1_shop"]
+
+[node name="ShopUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_shop")
+
+[node name="BG" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.04, 0.04, 0.08, 1)
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -380.0
+offset_top = -310.0
+offset_right = 380.0
+offset_bottom = 310.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "武器商店"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HBox" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="LeftPanel" type="VBoxContainer" parent="Panel/VBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="WeaponListLabel" type="Label" parent="Panel/VBox/HBox/LeftPanel"]
+layout_mode = 2
+text = "武器列表"
+
+[node name="WeaponList" type="ScrollContainer" parent="Panel/VBox/HBox/LeftPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="VBox" type="VBoxContainer" parent="Panel/VBox/HBox/LeftPanel/WeaponList"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RightPanel" type="VBoxContainer" parent="Panel/VBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="DetailTitle" type="Label" parent="Panel/VBox/HBox/RightPanel"]
+layout_mode = 2
+text = "选择武器查看详情"
+horizontal_alignment = 1
+
+[node name="DetailDesc" type="Label" parent="Panel/VBox/HBox/RightPanel"]
+layout_mode = 2
+text = ""
+autowrap_mode = 2
+
+[node name="DetailStats" type="Label" parent="Panel/VBox/HBox/RightPanel"]
+layout_mode = 2
+text = ""
+
+[node name="DetailCost" type="Label" parent="Panel/VBox/HBox/RightPanel"]
+layout_mode = 2
+text = ""
+
+[node name="Spacer" type="Control" parent="Panel/VBox/HBox/RightPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BuyBtn" type="Button" parent="Panel/VBox/HBox/RightPanel"]
+layout_mode = 2
+text = "购买"
+disabled = true
+
+[node name="SellBtn" type="Button" parent="Panel/VBox/HBox/RightPanel"]
+layout_mode = 2
+text = "出售"
+disabled = true
+
+[node name="Footer" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="CoinLabel" type="Label" parent="Panel/VBox/Footer"]
+layout_mode = 2
+text = "星币: 0"
+
+[node name="MineralsLabel" type="Label" parent="Panel/VBox/Footer"]
+layout_mode = 2
+text = "矿物: 0 / 0 / 0"
+
+[node name="Spacer" type="Control" parent="Panel/VBox/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BackBtn" type="Button" parent="Panel/VBox/Footer"]
+layout_mode = 2
+text = "返回"

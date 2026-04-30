@@ -1,0 +1,41 @@
+# Godot-specific ignores
+.godot/
+*.import
+
+# Build outputs
+*.pck
+*.exe
+*.dll
+*.zip
+*.tar.gz
+
+# Environment files
+*.env
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.bak
+*.cache
+
+# User-specific files
+*.user
+*.user.cfg
+
+# Logs
+*.log
+
+# Import temp files (already covered by .godot/ but being safe)
+import/wal/

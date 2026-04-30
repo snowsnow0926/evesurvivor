@@ -1,0 +1,36 @@
+[gd_scene format=3 uid="uid://cf8raven001"]
+
+[ext_resource type="Script" path="res://scripts/enemy_raven.gd" id="1_raven"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_raven"]
+radius = 12.0
+
+[node name="EnemyRaven" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("1_raven")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+rotation = 1.5708
+shape = SubResource("CircleShape2D_raven")
+
+[node name="Polygon2D" type="Polygon2D" parent="."]
+rotation = 1.5708
+color = Color(1.0, 0.5, 0.0, 1.0)
+polygon = PackedVector2Array(-10, -10, 10, 0, -10, 10)
+
+[node name="HPBg" type="ColorRect" parent="."]
+z_index = 1
+offset_left = -18.0
+offset_top = -22.0
+offset_right = 18.0
+offset_bottom = -18.0
+color = Color(0.2, 0.2, 0.2, 0.8)
+
+[node name="HPBar" type="ColorRect" parent="."]
+z_index = 1
+offset_left = -17.0
+offset_top = -21.0
+offset_right = 17.0
+offset_bottom = -19.0
+color = Color(1.0, 0.5, 0.0, 1.0)

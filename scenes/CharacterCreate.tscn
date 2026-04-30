@@ -1,0 +1,90 @@
+[gd_scene format=3 uid="uid://oekvvnvagk0w"]
+
+[ext_resource type="Script" path="res://scripts/character_create.gd" id="1_cc"]
+
+[node name="CharacterCreate" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_cc")
+
+[node name="BG" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.03, 0.03, 0.08, 0.98)
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -480.0
+offset_top = -400.0
+offset_right = 480.0
+offset_bottom = 400.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "创建角色"
+horizontal_alignment = 1
+
+[node name="VersionLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "v0.8 · 种族扩展（人类/兽人/植物/硅基）"
+horizontal_alignment = 1
+
+[node name="RaceScroll" type="ScrollContainer" parent="Panel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="RaceGrid" type="GridContainer" parent="Panel/VBox/RaceScroll"]
+layout_mode = 2
+columns = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="HSeparator" type="HSeparator" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="NameRow" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="NameLabel" type="Label" parent="Panel/VBox/NameRow"]
+layout_mode = 2
+text = "角色名称:"
+
+[node name="NameEdit" type="LineEdit" parent="Panel/VBox/NameRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "输入角色名称..."
+
+[node name="HSeparator2" type="HSeparator" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="BtnRow" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 10
+
+[node name="BackBtn" type="Button" parent="Panel/VBox/BtnRow"]
+layout_mode = 2
+text = "返回"
+
+[node name="ConfirmBtn" type="Button" parent="Panel/VBox/BtnRow"]
+layout_mode = 2
+text = "进入基地"

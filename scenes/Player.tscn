@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3 uid="uid://cf8player001"]
+
+[ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_player"]
+radius = 16.0
+
+[node name="Player" type="CharacterBody2D"]
+collision_layer = 1
+collision_mask = 10
+script = ExtResource("1_player")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+rotation = 1.5708
+shape = SubResource("CircleShape2D_player")
+
+[node name="Polygon2D" type="Polygon2D" parent="."]
+rotation = -1.5708
+color = Color(0.0, 0.8, 1.0, 1.0)
+polygon = PackedVector2Array(-12, -16, 12, 0, -12, 16)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+current = true

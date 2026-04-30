@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://dj3udnxthtjho"]
+
+[ext_resource type="Script" path="res://scripts/sentry_bullet.gd" id="1_sb"]
+
+[node name="SentryBullet" type="Area2D"]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1_sb")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+
+[node name="ColorRect" type="ColorRect" parent="."]
+z_index = 1
+offset_left = -5.0
+offset_top = -5.0
+offset_right = 5.0
+offset_bottom = 5.0
+color = Color(1.0, 0.3, 0.1, 1.0)

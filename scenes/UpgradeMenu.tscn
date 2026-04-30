@@ -1,0 +1,45 @@
+[gd_scene load_steps=2 format=3 uid="uid://cf8upgrade001"]
+
+[ext_resource type="Script" path="res://scripts/upgrade_menu.gd" id="1_upgrade"]
+
+[node name="UpgradeMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_upgrade")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.8)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="UpgradePanel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(450, 350)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer/UpgradePanel"]
+layout_mode = 2
+custom_minimum_size = Vector2(400, 300)
+alignment = 1
+theme_override_constants/separation = 16
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/UpgradePanel/VBox"]
+layout_mode = 2
+size_flags_vertical = 4
+custom_minimum_size = Vector2(0, 40)
+text = "SELECT UPGRADE"
+horizontal_alignment = 1
+autowrap_mode = 1

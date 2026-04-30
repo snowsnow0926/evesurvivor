@@ -1,0 +1,151 @@
+[gd_scene load_steps=2 format=3 uid="uid://5b5sa7yt22yu"]
+
+[ext_resource type="Script" path="res://scripts/settlement_scene.gd" id="1_settlement"]
+
+[node name="SettlementScene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="BG" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.03, 0.03, 0.07, 0.98)
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 2
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -340.0
+offset_right = 320.0
+offset_bottom = 340.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+theme_override_constants/separation = 12
+
+[node name="ResultLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "任务完成"
+horizontal_alignment = 1
+
+[node name="ResultDesc" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = ""
+horizontal_alignment = 1
+
+[node name="StatsGrid" type="GridContainer" parent="Panel/VBox"]
+layout_mode = 2
+columns = 2
+theme_override_constants/separation = 16
+
+[node name="KillsTitle" type="Label" parent="Panel/VBox/StatsGrid"]
+layout_mode = 2
+text = "击杀数:"
+horizontal_alignment = 2
+
+[node name="KillsValue" type="Label" parent="Panel/VBox/StatsGrid"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 0
+
+[node name="LevelTitle" type="Label" parent="Panel/VBox/StatsGrid"]
+layout_mode = 2
+text = "最高等级:"
+horizontal_alignment = 2
+
+[node name="LevelValue" type="Label" parent="Panel/VBox/StatsGrid"]
+layout_mode = 2
+text = "1"
+horizontal_alignment = 0
+
+[node name="CoinTitle" type="Label" parent="Panel/VBox/StatsGrid"]
+layout_mode = 2
+text = "星币:"
+horizontal_alignment = 2
+
+[node name="CoinValue" type="Label" parent="Panel/VBox/StatsGrid"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 0
+
+[node name="MineralsTitle" type="Label" parent="Panel/VBox/StatsGrid"]
+layout_mode = 2
+text = "矿物:"
+horizontal_alignment = 2
+
+[node name="MineralsValue" type="Label" parent="Panel/VBox/StatsGrid"]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 0
+
+[node name="EarnedTitle" type="Label" parent="Panel/VBox/StatsGrid"]
+layout_mode = 2
+text = "本局获得:"
+horizontal_alignment = 2
+
+[node name="EarnedHBox" type="HBoxContainer" parent="Panel/VBox/StatsGrid"]
+layout_mode = 2
+
+[node name="EarnedCoinValue" type="Label" parent="Panel/VBox/StatsGrid/EarnedHBox"]
+layout_mode = 2
+text = "+0"
+horizontal_alignment = 0
+
+[node name="EarnedCoinLabel" type="Label" parent="Panel/VBox/StatsGrid/EarnedHBox"]
+layout_mode = 2
+text = " 星币"
+horizontal_alignment = 0
+
+[node name="EarnedMineralsValue" type="Label" parent="Panel/VBox/StatsGrid"]
+layout_mode = 2
+text = "+0"
+horizontal_alignment = 2
+
+[node name="EarnedMineralsLabel" type="Label" parent="Panel/VBox/StatsGrid"]
+layout_mode = 2
+text = " 矿物"
+horizontal_alignment = 0
+
+[node name="ShipStatusLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "舰船状态: 良好"
+horizontal_alignment = 1
+
+[node name="ButtonsHBox" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="RetryBtn" type="Button" parent="Panel/VBox/ButtonsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "重新开始"
+
+[node name="BaseBtn" type="Button" parent="Panel/VBox/ButtonsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "返回基地"
+
+[node name="MenuBtn" type="Button" parent="Panel/VBox/ButtonsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "主菜单"

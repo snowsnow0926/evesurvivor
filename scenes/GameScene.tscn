@@ -1,0 +1,38 @@
+[gd_scene load_steps=10 format=3 uid="uid://cf8gamescene001"]
+
+[ext_resource type="Script" path="res://scripts/game_manager.gd" id="1_gm"]
+[ext_resource type="Script" path="res://scripts/game_scene.gd" id="5_gs"]
+[ext_resource type="Script" path="res://scripts/parallax_starfield.gd" id="4_psf"]
+[ext_resource type="PackedScene" uid="uid://cf8hud001" path="res://scenes/HUD.tscn" id="6_hud_scene"]
+[ext_resource type="PackedScene" uid="uid://cf8upgrade001" path="res://scenes/UpgradeMenu.tscn" id="7_upgrade_scene"]
+[ext_resource type="PackedScene" uid="uid://cf8pause001" path="res://scenes/PauseMenu.tscn" id="8_pause_scene"]
+[ext_resource type="PackedScene" uid="uid://cf8bosswarning001" path="res://scenes/BossWarning.tscn" id="9_bw_scene"]
+
+[node name="GameScene" type="Node2D"]
+script = ExtResource("5_gs")
+
+[node name="GameManager" type="Node2D" parent="."]
+script = ExtResource("1_gm")
+
+[node name="PlayerRoot" type="Node2D" parent="."]
+
+[node name="EnemyRoot" type="Node2D" parent="."]
+
+[node name="BulletRoot" type="Node2D" parent="."]
+
+[node name="ExpOrbRoot" type="Node2D" parent="."]
+
+[node name="DamageRoot" type="Node2D" parent="."]
+
+[node name="ParallaxStarfield" type="Node2D" parent="."]
+script = ExtResource("4_psf")
+
+[node name="UIRoot" type="CanvasLayer" parent="."]
+
+[node name="HUD" parent="UIRoot" instance=ExtResource("6_hud_scene")]
+
+[node name="UpgradeMenu" parent="UIRoot" instance=ExtResource("7_upgrade_scene")]
+
+[node name="PauseMenu" parent="UIRoot" instance=ExtResource("8_pause_scene")]
+
+[node name="BossWarning" parent="UIRoot" instance=ExtResource("9_bw_scene")]

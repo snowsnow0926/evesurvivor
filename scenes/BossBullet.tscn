@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://drchg1sge3gro"]
+
+[ext_resource type="Script" path="res://scripts/boss_bullet.gd" id="1_bb"]
+
+[node name="BossBullet" type="Area2D"]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1_bb")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+
+[node name="ColorRect" type="ColorRect" parent="."]
+z_index = 1
+offset_left = -7.0
+offset_top = -7.0
+offset_right = 7.0
+offset_bottom = 7.0
+color = Color(0.8, 0.0, 0.8, 1.0)

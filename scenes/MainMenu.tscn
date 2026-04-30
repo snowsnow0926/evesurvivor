@@ -1,0 +1,81 @@
+[gd_scene load_steps=2 format=3 uid="uid://cf8menu001"]
+
+[ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_menu"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="BG" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.05, 0.1, 0.95)
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 2
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -280.0
+offset_right = 300.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "EVE SURVIVOR"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "类幸存者 · EVE同人"
+horizontal_alignment = 1
+
+[node name="StartBtn" type="Button" parent="Panel/VBox"]
+layout_mode = 2
+text = "START MISSION"
+
+[node name="HSeparator" type="HSeparator" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="CoinLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "星币: 0"
+horizontal_alignment = 1
+
+[node name="MineralsLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "矿物: 0"
+horizontal_alignment = 1
+
+[node name="ShipStatus" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "舰船状态: 完好"
+horizontal_alignment = 1
+
+[node name="RepairsBtn" type="Button" parent="Panel/VBox"]
+layout_mode = 2
+text = "REPAIR (500星币)"
+disabled = true
