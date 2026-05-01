@@ -108,7 +108,10 @@ func _get_all_equipped_weapon_types(gm: Node2D) -> Array:
 	return types
 
 func _pick_random_upgrades(pool: Array, count: int) -> Array:
-	var available = pool.filter(func(u): return u.get("max", -1) == -1 or game_manager.upgrade_counts.get(u["id"], 0) < u["max"])
+	var available = pool.filter(func(u):
+		var research_bonus = GameState.research_progress.get(u["id"], 0)
+		return u.get("max", -1) == -1 or game_manager.upgrade_counts.get(u["id"], 0) < u["max"] + research_bonus
+	)
 	var result: Array = []
 	var rng = RandomNumberGenerator.new()
 	rng.randomize()

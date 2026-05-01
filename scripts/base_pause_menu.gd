@@ -38,11 +38,23 @@ func _on_continue_pressed() -> void:
 
 func _on_save_game_pressed() -> void:
 	SoundManager.play_sfx("button_click")
-	print("[BasePauseMenu] 保存游戏 pressed — 功能预留")
+	if GameState.current_save_slot < 0:
+		GameState.current_save_slot = 0
+	GameState.save_save_slot(GameState.current_save_slot)
 
 func _on_load_game_pressed() -> void:
 	SoundManager.play_sfx("button_click")
-	print("[BasePauseMenu] 读取游戏 pressed — 功能预留")
+	if GameState.current_save_slot < 0:
+		GameState.current_save_slot = 0
+	var ok = GameState.load_save_slot(GameState.current_save_slot)
+	if ok:
+		get_tree().paused = false
+		get_tree().change_scene_to_file("res://scenes/BaseScene.tscn")
+	else:
+		var popup = AcceptDialog.new()
+		popup.dialog_text = "未找到存档"
+		get_tree().current_scene.add_child(popup)
+		popup.popup_centered()
 
 func _on_main_menu_pressed() -> void:
 	SoundManager.play_sfx("button_click")

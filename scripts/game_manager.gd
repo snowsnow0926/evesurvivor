@@ -579,7 +579,9 @@ func apply_upgrade(upgrade_id: String) -> void:
 		return
 
 	var data = upgrade_data[0]
-	if upgrade_counts[upgrade_id] >= data["max"]:
+	var research_bonus = GameState.research_progress.get(upgrade_id, 0)
+	var effective_max = data["max"] + research_bonus
+	if upgrade_counts[upgrade_id] >= effective_max:
 		_debug("upgrade max reached!")
 		is_upgrading = false
 		get_tree().paused = false

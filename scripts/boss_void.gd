@@ -17,13 +17,25 @@ var hp_bar_bg: ColorRect
 func _ready() -> void:
 	super._ready()
 	polygon = $Polygon2D
+	ship_sprite = $ShipSprite
 	hp_bar = $HPBar
 	hp_bar_bg = $HPBarBg
 	if polygon:
 		polygon.rotation = PI / 2
 	scale = Vector2(3.0, 3.0)
-
+	setup_icon()
 	_death_particle_color = Color(0.5, 0.0, 0.5, 1.0)
+
+func setup_icon() -> void:
+	var tex: Texture2D = ShipIconGenerator.get_texture(ShipIconGenerator.Category.SHIP, "npcbattleCruiser")
+	if tex != null:
+		ship_sprite.texture = tex
+		ship_sprite.visible = true
+		ship_sprite.offset = Vector2(-16, -16)
+		polygon.visible = false
+	else:
+		ship_sprite.visible = false
+		polygon.visible = true
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
@@ -52,8 +64,9 @@ func _process_combat(delta: float) -> void:
 func _enter_rage_mode() -> void:
 	is_rage = true
 	move_speed = 120.0
-	if polygon:
-		polygon.modulate = Color(1.5, 0.3, 0.3)
+	var target: Node = ship_sprite if ship_sprite and ship_sprite.visible else polygon
+	if target:
+		target.modulate = Color(1.5, 0.3, 0.3)
 
 func _fire_spread() -> void:
 	var player = _get_player()
@@ -129,11 +142,13 @@ func _update_hp_bar() -> void:
 			hp_bar.position.x = -51.0 * ratio
 
 func _start_hit_flash() -> void:
-	if polygon:
-		var original_color = polygon.modulate if not is_rage else Color(1.5, 0.3, 0.3)
-		polygon.modulate = Color(3.0, 3.0, 3.0)
-		var tween = create_tween()
-		tween.tween_property(polygon, "modulate", original_color, 0.15)
+	var target: Node = ship_sprite if ship_sprite and ship_sprite.visible else polygon
+	if not target:
+		return
+	var original_color = target.modulate if target.modulate is Color else Color.WHITE
+	target.modulate = Color(3.0, 3.0, 3.0)
+	var tween = create_tween()
+	tween.tween_property(target, "modulate", original_color, 0.15)
 
 func _spawn_death_effect() -> void:
 	var parent = get_parent()

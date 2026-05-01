@@ -2,203 +2,176 @@ class_name ShipIconGenerator
 extends RefCounted
 
 const ICON_VIEWBOX: float = 100.0
-const STYLE_DEFAULT = {
-	"color": Color.WHITE,
-	"line_width": 6.0,
-}
+const ICON_SIZE: float = 80.0
 
-enum ShipIcon {
-	CAPSULE,
-	FRIGATE,
-	DESTROYER,
-	CRUISER,
-	BATTLECRUISER,
-	BATTLESHIP,
-	DRONE,
-	INDUSTRIAL,
-	SHUTTLE,
-	FREIGHTER,
-	DREADNOUGHT,
-	CARRIER,
-	FIGHTER,
-	SUPERCAPITAL,
-}
+enum Category { SHIP, ENEMY, BUILDING }
+
+class IconEntry:
+	var id: String
+	var name_zh: String
+	var name_en: String
+	var path: Array
+	var category: Category
+	var texture_path: String
+	var _texture: Texture2D
+	var _tinted: Texture2D
+	var _tinted_color: Color
+
+	static func from_dict(d: Dictionary, cat: Category) -> IconEntry:
+		var e := IconEntry.new()
+		e.id = d.get("id", "")
+		e.name_zh = d.get("name_zh", e.id)
+		e.name_en = d.get("name_en", e.id)
+		e.path = d.get("path", [])
+		e.category = cat
+		e.texture_path = d.get("texture_path", "")
+		return e
+
+	func get_texture(tint_color: Color = Color.WHITE) -> Texture2D:
+		if tint_color == Color.WHITE:
+			if _texture != null:
+				return _texture
+		else:
+			if _tinted != null and _tinted_color == tint_color:
+				return _tinted
+		if texture_path.is_empty():
+			return null
+		var raw: Texture2D = load(texture_path)
+		if raw == null:
+			return null
+
+		if tint_color == Color.WHITE:
+			_texture = raw
+			return _texture
+
+		var img: Image = raw.get_image()
+		if img == null:
+			return raw
+		var copy := img.duplicate()
+		for y: int in range(copy.get_height()):
+			for x: int in range(copy.get_width()):
+				var px: Color = copy.get_pixel(x, y)
+				if px.v > 0.05:
+					copy.set_pixel(x, y, tint_color * px.v)
+		_tinted = ImageTexture.create_from_image(copy)
+		_tinted_color = tint_color
+		return _tinted
 
 static var _data: Dictionary = {
-	ShipIcon.CAPSULE: {
-		name_zh = "太空舱",
-		name_en = "Capsule",
-		path = [
-			["M", 50, 14], ["L", 72, 36], ["L", 72, 70],
-			["L", 62, 70], ["L", 50, 57], ["L", 38, 70],
-			["L", 28, 70], ["L", 28, 36], ["Z"]
-		],
-	},
-	ShipIcon.FRIGATE: {
-		name_zh = "护卫舰",
-		name_en = "Frigate",
-		path = [
-			["M", 50, 28], ["L", 76, 66], ["L", 24, 66], ["Z"]
-		],
-	},
-	ShipIcon.DESTROYER: {
-		name_zh = "驱逐舰",
-		name_en = "Destroyer",
-		path = [
-			["M", 50, 26], ["L", 76, 62], ["L", 24, 62], ["Z"],
-			["M", 25, 76], ["L", 75, 76]
-		],
-	},
-	ShipIcon.CRUISER: {
-		name_zh = "巡洋舰",
-		name_en = "Cruiser",
-		path = [
-			["M", 50, 18], ["L", 74, 40], ["L", 74, 70],
-			["L", 26, 70], ["L", 26, 40], ["Z"]
-		],
-	},
-	ShipIcon.BATTLECRUISER: {
-		name_zh = "战列巡洋舰",
-		name_en = "Battlecruiser",
-		path = [
-			["M", 50, 18], ["L", 74, 40], ["L", 74, 66],
-			["L", 26, 66], ["L", 26, 40], ["Z"],
-			["M", 27, 80], ["L", 73, 80]
-		],
-	},
-	ShipIcon.BATTLESHIP: {
-		name_zh = "战列舰",
-		name_en = "Battleship",
-		path = [
-			["M", 50, 14], ["L", 74, 38], ["L", 74, 74],
-			["L", 64, 74], ["L", 50, 60], ["L", 36, 74],
-			["L", 26, 74], ["L", 26, 38], ["Z"]
-		],
-	},
-	ShipIcon.DRONE: {
-		name_zh = "无人机",
-		name_en = "Drone",
-		path = [
-			["M", 36, 32], ["L", 44, 40],
-			["M", 64, 32], ["L", 56, 40],
-			["M", 36, 68], ["L", 44, 60],
-			["M", 64, 68], ["L", 56, 60]
-		],
-	},
-	ShipIcon.INDUSTRIAL: {
-		name_zh = "工业舰",
-		name_en = "Industrial",
-		path = [
-			["M", 28, 50], ["L", 28, 38], ["L", 40, 26],
-			["L", 60, 26], ["L", 72, 38], ["L", 72, 50], ["Z"],
-			["M", 28, 64], ["L", 72, 64],
-			["M", 32, 74], ["L", 68, 74]
-		],
-	},
-	ShipIcon.SHUTTLE: {
-		name_zh = "穿梭机",
-		name_en = "Shuttle",
-		path = [
-			["M", 25, 58], ["L", 36, 58], ["L", 50, 42],
-			["L", 64, 58], ["L", 75, 58]
-		],
-	},
-	ShipIcon.FREIGHTER: {
-		name_zh = "货舰",
-		name_en = "Freighter",
-		path = [
-			["M", 28, 48], ["L", 28, 36], ["L", 40, 26],
-			["L", 60, 26], ["L", 72, 36], ["L", 72, 48], ["Z"],
-			["M", 36, 64], ["Q", 36, 56, 44, 56], ["L", 56, 56],
-			["Q", 64, 56, 64, 64], ["Q", 64, 72, 56, 72],
-			["L", 44, 72], ["Q", 36, 72, 36, 64], ["Z"]
-		],
-	},
-	ShipIcon.DREADNOUGHT: {
-		name_zh = "无畏舰",
-		name_en = "Dreadnought",
-		path = [
-			["M", 50, 16], ["L", 74, 42], ["L", 74, 76],
-			["L", 64, 76], ["L", 50, 62], ["L", 36, 76],
-			["L", 26, 76], ["L", 26, 42], ["Z"]
-		],
-	},
-	ShipIcon.CARRIER: {
-		name_zh = "航空母舰",
-		name_en = "Carrier",
-		path = [
-			["M", 50, 18], ["L", 74, 42], ["L", 74, 62],
-			["L", 58, 62], ["L", 50, 74], ["L", 42, 62],
-			["L", 26, 62], ["L", 26, 42], ["Z"]
-		],
-	},
-	ShipIcon.FIGHTER: {
-		name_zh = "舰载机",
-		name_en = "Fighter",
-		path = [
-			["M", 50, 30], ["L", 58, 38], ["M", 50, 30], ["L", 42, 38],
-			["M", 35, 58], ["L", 43, 66], ["M", 35, 58], ["L", 27, 66],
-			["M", 65, 58], ["L", 73, 66], ["M", 65, 58], ["L", 57, 66]
-		],
-	},
-	ShipIcon.SUPERCAPITAL: {
-		name_zh = "超级旗舰",
-		name_en = "Supercapital",
-		path = [
-			["M", 50, 18], ["L", 70, 38], ["L", 50, 58], ["L", 30, 38], ["Z"],
-			["M", 30, 66], ["L", 50, 82], ["L", 70, 66],
-			["M", 35, 76], ["L", 50, 90], ["L", 65, 76]
-		],
-	},
+	Category.SHIP: {},
+	Category.ENEMY: {},
+	Category.BUILDING: {},
 }
 
-static func get_icon_data(icon: ShipIcon) -> Dictionary:
-	return _data.get(icon, _data[ShipIcon.CAPSULE])
+static var _loaded: bool = false
 
-static func get_name_zh(icon: ShipIcon) -> String:
-	return _data[icon].name_zh
+static func _ensure_loaded() -> void:
+	if _loaded:
+		return
+	_loaded = true
+	_load_from_json()
 
-static func get_name_en(icon: ShipIcon) -> String:
-	return _data[icon].name_en
+static func _load_from_json() -> void:
+	var path_str := "res://resources/icon_definitions.json"
+	var file := FileAccess.open(path_str, FileAccess.READ)
+	if file == null:
+		push_warning("ShipIconGenerator: 无法加载 %s, 错误: %s" % [path_str, FileAccess.get_open_error()])
+		return
+	var json_str := file.get_as_text()
+	file.close()
+	var json := JSON.new()
+	if json.parse(json_str) != OK:
+		push_warning("ShipIconGenerator: JSON 解析失败")
+		return
+	var root: Dictionary = json.get_data()
+	_data[Category.SHIP] = {}
+	_data[Category.ENEMY] = {}
+	_data[Category.BUILDING] = {}
+	var cat_map := {
+		"ships": Category.SHIP,
+		"enemies": Category.ENEMY,
+		"buildings": Category.BUILDING,
+	}
+	for cat_key: String in cat_map:
+		if not root.has(cat_key):
+			continue
+		var list: Array = root[cat_key]
+		var cat: Category = cat_map[cat_key]
+		for entry: Dictionary in list:
+			var e := IconEntry.from_dict(entry, cat)
+			_data[cat][e.id] = e
 
-static func get_all_icons() -> Array[ShipIcon]:
-	return [
-		ShipIcon.CAPSULE,
-		ShipIcon.FRIGATE,
-		ShipIcon.DESTROYER,
-		ShipIcon.CRUISER,
-		ShipIcon.BATTLECRUISER,
-		ShipIcon.BATTLESHIP,
-		ShipIcon.DRONE,
-		ShipIcon.INDUSTRIAL,
-		ShipIcon.SHUTTLE,
-		ShipIcon.FREIGHTER,
-		ShipIcon.DREADNOUGHT,
-		ShipIcon.CARRIER,
-		ShipIcon.FIGHTER,
-		ShipIcon.SUPERCAPITAL,
-	]
+static func get_all_entries(category: Category) -> Array:
+	_ensure_loaded()
+	var result: Array = []
+	for e: IconEntry in _data[category].values():
+		result.append(e)
+	return result
 
-static func get_icon_for_ship_id(ship_id: int) -> ShipIcon:
-	var all := get_all_icons()
-	if ship_id < 0 or ship_id >= all.size():
-		return ShipIcon.FRIGATE
-	return all[ship_id]
+static func get_entry(category: Category, icon_id: String) -> IconEntry:
+	_ensure_loaded()
+	if _data[category].has(icon_id):
+		return _data[category][icon_id]
+	return null
 
-static func get_icon_for_enemy_type(enemy_type: String) -> ShipIcon:
-	match enemy_type:
-		"capsule":   return ShipIcon.CAPSULE
-		"frigate":   return ShipIcon.FRIGATE
-		"destroyer": return ShipIcon.DESTROYER
-		"cruiser":   return ShipIcon.CRUISER
-		"battlecruiser": return ShipIcon.BATTLECRUISER
-		"battleship":    return ShipIcon.BATTLESHIP
-		"drone":         return ShipIcon.DRONE
-		"industrial", "hauler": return ShipIcon.INDUSTRIAL
-		"shuttle":   return ShipIcon.SHUTTLE
-		"freighter": return ShipIcon.FREIGHTER
-		"dreadnought": return ShipIcon.DREADNOUGHT
-		"carrier":   return ShipIcon.CARRIER
-		"fighter":   return ShipIcon.FIGHTER
-		"supercapital": return ShipIcon.SUPERCAPITAL
-		_: return ShipIcon.FRIGATE
+static func get_icon_data_by_id(category: Category, icon_id: String) -> Dictionary:
+	var e := get_entry(category, icon_id)
+	if e == null:
+		return {}
+	return {
+		"id": e.id,
+		"name_zh": e.name_zh,
+		"name_en": e.name_en,
+		"path": e.path,
+	}
+
+static func get_icon_data(icon_id: String) -> Dictionary:
+	_ensure_loaded()
+	for cat: Category in [Category.SHIP, Category.ENEMY, Category.BUILDING]:
+		if _data[cat].has(icon_id):
+			return get_icon_data_by_id(cat, icon_id)
+	return {}
+
+static func get_all_icon_ids(category: Category) -> Array:
+	_ensure_loaded()
+	return Array(_data[category].keys(), TYPE_STRING, "", null)
+
+static func get_name_zh(icon_id: String) -> String:
+	var e := get_entry_by_id(icon_id)
+	return e.name_zh if e else icon_id
+
+static func get_name_en(icon_id: String) -> String:
+	var e := get_entry_by_id(icon_id)
+	return e.name_en if e else icon_id
+
+static func get_entry_by_id(icon_id: String) -> IconEntry:
+	_ensure_loaded()
+	for cat: Category in [Category.SHIP, Category.ENEMY, Category.BUILDING]:
+		if _data[cat].has(icon_id):
+			return _data[cat][icon_id]
+	return null
+
+static func get_category_by_id(icon_id: String) -> Category:
+	var e := get_entry_by_id(icon_id)
+	return e.category if e else Category.SHIP
+
+static func get_texture(category: Category, icon_id: String) -> Texture2D:
+	var e := get_entry(category, icon_id)
+	return e.get_texture() if e else null
+
+static func set_icon_path(icon_id: String, path_data: Array) -> bool:
+	var e := get_entry_by_id(icon_id)
+	if e == null:
+		return false
+	e.path = path_data
+	return true
+
+static func reload() -> void:
+	_loaded = false
+	_ensure_loaded()
+
+static func get_icon_for_ship_id(ship_id: int) -> String:
+	var ids := get_all_icon_ids(Category.SHIP)
+	if ship_id < 0 or ship_id >= ids.size():
+		return "frigate"
+	return ids[ship_id]

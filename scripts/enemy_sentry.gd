@@ -24,7 +24,7 @@ func _process_combat(delta: float) -> void:
 	contact_timer += delta
 	if contact_timer >= contact_cooldown:
 		contact_timer = 0.0
-		if dist < 30.0:
+		if dist < 64.0:
 			if player.has_method("on_player_take_damage"):
 				player.on_player_take_damage(damage)
 

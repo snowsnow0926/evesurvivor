@@ -40,10 +40,9 @@ func _update_movement(delta: float) -> void:
 			if flash_timer >= 0.1:
 				flash_timer = 0.0
 				is_flashing = !is_flashing
-				if is_flashing:
-					polygon.modulate = Color(2.0, 0.2, 0.2)
-				else:
-					polygon.modulate = Color(1.0, 1.0, 1.0)
+				var target: Node = ship_sprite if ship_sprite and ship_sprite.visible else polygon
+				if target:
+					target.modulate = Color(2.0, 0.2, 0.2) if is_flashing else Color(1.0, 1.0, 1.0)
 			if windup_timer >= explosion_windup:
 				_do_explosion()
 

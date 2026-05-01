@@ -29,12 +29,12 @@ func _debug(msg: String) -> void:
 	if DEBUG:
 		print("[HUD] ", msg)
 
-@onready var main_panel: PanelContainer = $TopRightAnchor/MainPanel
-@onready var hp_bar: ProgressBar = $TopRightAnchor/MainPanel/VBox/HPRow/HPBar
-@onready var hp_label: Label = $TopRightAnchor/MainPanel/VBox/HPRow/HPLabel
-@onready var xp_bar: ProgressBar = $TopRightAnchor/MainPanel/VBox/XPRow/XPBar
-@onready var xp_label: Label = $TopRightAnchor/MainPanel/VBox/XPRow/XPLabel
-@onready var info_label: Label = $TopRightAnchor/MainPanel/VBox/InfoLabel
+@onready var main_panel: PanelContainer = $BottomCenterAnchor/MainPanel
+@onready var hp_bar: ProgressBar = $BottomCenterAnchor/MainPanel/VBox/HPRow/HPBar
+@onready var hp_label: Label = $BottomCenterAnchor/MainPanel/VBox/HPRow/HPLabel
+@onready var xp_bar: ProgressBar = $BottomCenterAnchor/MainPanel/VBox/XPRow/XPBar
+@onready var xp_label: Label = $BottomCenterAnchor/MainPanel/VBox/XPRow/XPLabel
+@onready var info_label: Label = $BottomCenterAnchor/MainPanel/VBox/InfoLabel
 
 @onready var ship_panel: PanelContainer = $ShipInfoPanel
 @onready var ship_title: Label = $ShipInfoPanel/ShipInfoVBox/ShipTitle

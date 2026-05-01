@@ -1,6 +1,5 @@
 extends Node2D
 
-const ICON_SIZE: float = 80.0
 const COLS: int = 7
 const ROWS: int = 2
 const GAP_X: float = 150.0
@@ -15,29 +14,32 @@ func _ready() -> void:
 	queue_redraw()
 
 func _draw() -> void:
-	var icons := ShipIconGenerator.get_all_icons()
-	var total_w: float = COLS * ICON_SIZE + float(COLS - 1) * (GAP_X - ICON_SIZE)
-	var total_h: float = ROWS * ICON_SIZE + float(ROWS - 1) * (GAP_Y - ICON_SIZE)
+	var entries := ShipIconGenerator.get_all_entries(ShipIconGenerator.Category.SHIP)
+	var count := entries.size()
+	var rows_needed := ceili(float(count) / float(COLS))
+	var total_w: float = COLS * ShipIconGenerator.ICON_SIZE + float(COLS - 1) * (GAP_X - ShipIconGenerator.ICON_SIZE)
+	var total_h: float = rows_needed * ShipIconGenerator.ICON_SIZE + float(rows_needed - 1) * (GAP_Y - ShipIconGenerator.ICON_SIZE)
 	var offset_x: float = (get_viewport_rect().size.x - total_w) / 2.0
 	var offset_y: float = (get_viewport_rect().size.y - total_h) / 2.0
 
-	for i: int in icons.size():
+	for i: int in entries.size():
 		var col: int = i % COLS
 		var row: int = i / COLS
 		var cx: float = offset_x + col * GAP_X
 		var cy: float = offset_y + row * GAP_Y
-		_draw_icon(icons[i], cx, cy, ICON_SIZE, LINE_COLOR)
-		_draw_label(ShipIconGenerator.get_name_zh(icons[i]), cx, cy, ICON_SIZE)
+		_draw_icon(entries[i], cx, cy, ShipIconGenerator.ICON_SIZE, LINE_COLOR)
+		_draw_label(entries[i].name_zh, cx, cy, ShipIconGenerator.ICON_SIZE)
 
-func _draw_icon(icon: ShipIconGenerator.ShipIcon, cx: float, cy: float, size: float, col: Color) -> void:
+func _draw_icon(entry: ShipIconGenerator.IconEntry, cx: float, cy: float, size: float, col: Color) -> void:
 	var scale_val: float = size / ShipIconGenerator.ICON_VIEWBOX
-	var data: Dictionary = ShipIconGenerator.get_icon_data(icon)
-	var path: Array = data.path
+	var path: Array = entry.path
 	var last_pt := Vector2.ZERO
 	var sub_path: Array = []
 
-	draw_set_transform(Vector2(cx, cy), 0.0, Vector2(scale_val, -scale_val))
+	draw_set_transform(Vector2(cx, cy), 0.0, Vector2(scale_val, scale_val))
 	for cmd: Array in path:
+		if cmd.is_empty():
+			continue
 		var t: String = cmd[0]
 		match t:
 			"M":
@@ -48,19 +50,20 @@ func _draw_icon(icon: ShipIconGenerator.ShipIcon, cx: float, cy: float, size: fl
 				last_pt = Vector2(cmd[1], cmd[2])
 				sub_path.append(last_pt)
 			"Q":
-				var p0 := last_pt
-				var p1 := Vector2(cmd[1], cmd[2])
-				var p2 := Vector2(cmd[3], cmd[4])
-				for j: int in range(1, 13):
-					var tt: float = float(j) / 12.0
-					var mt: float = 1.0 - tt
-					var pt := Vector2(
-						mt * mt * p0.x + 2.0 * mt * tt * p1.x + tt * tt * p2.x,
-						mt * mt * p0.y + 2.0 * mt * tt * p1.y + tt * tt * p2.y
-					)
-					draw_line(last_pt, pt, col, LINE_WIDTH, true)
-					last_pt = pt
-				sub_path.append(last_pt)
+				if cmd.size() >= 5:
+					var p0 := last_pt
+					var p1 := Vector2(cmd[1], cmd[2])
+					var p2 := Vector2(cmd[3], cmd[4])
+					for j: int in range(1, 13):
+						var tt: float = float(j) / 12.0
+						var mt: float = 1.0 - tt
+						var pt := Vector2(
+							mt * mt * p0.x + 2.0 * mt * tt * p1.x + tt * tt * p2.x,
+							mt * mt * p0.y + 2.0 * mt * tt * p1.y + tt * tt * p2.y
+						)
+						draw_line(last_pt, pt, col, LINE_WIDTH, true)
+						last_pt = pt
+					sub_path.append(last_pt)
 			"Z":
 				if not sub_path.is_empty():
 					draw_line(last_pt, sub_path[0], col, LINE_WIDTH, true)

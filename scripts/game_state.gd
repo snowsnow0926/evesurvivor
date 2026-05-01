@@ -12,6 +12,7 @@ var minerals_low: int = 0
 var minerals_mid: int = 0
 var minerals_high: int = 0
 var upgraded_ships: Dictionary = {}
+var research_progress: Dictionary = {}
 var ship_damaged: bool = false
 var total_kills: int = 0
 var total_deaths: int = 0
@@ -56,6 +57,8 @@ func save_game() -> bool:
 
 	cfg.set_value("ships", "unlocked_ships", unlocked_ships)
 	cfg.set_value("ships", "upgraded_ships", upgraded_ships)
+
+	cfg.set_value("research", "research_progress", research_progress)
 
 	cfg.set_value("equipment", "equipment_inventory", equipment_inventory)
 	cfg.set_value("equipment", "equipped_weapons", equipped_weapons)
@@ -144,6 +147,8 @@ func save_save_slot(slot_idx: int) -> bool:
 	cfg.set_value("ships", "unlocked_ships", unlocked_ships)
 	cfg.set_value("ships", "upgraded_ships", upgraded_ships)
 
+	cfg.set_value("research", "research_progress", research_progress)
+
 	cfg.set_value("equipment", "equipment_inventory", equipment_inventory)
 	cfg.set_value("equipment", "equipped_weapons", equipped_weapons)
 	cfg.set_value("equipment", "equipped_armor", equipped_armor)
@@ -185,6 +190,8 @@ func load_save_slot(slot_idx: int) -> bool:
 	unlocked_ships = cfg.get_value("ships", "unlocked_ships", [])
 	upgraded_ships = cfg.get_value("ships", "upgraded_ships", {})
 
+	research_progress = cfg.get_value("research", "research_progress", {})
+
 	equipment_inventory = cfg.get_value("equipment", "equipment_inventory", [])
 	equipped_weapons = cfg.get_value("equipment", "equipped_weapons", {})
 	equipped_armor = cfg.get_value("equipment", "equipped_armor", {})
@@ -193,6 +200,29 @@ func load_save_slot(slot_idx: int) -> bool:
 	return true
 
 func reset_for_new_run() -> void:
+	pre_run_coin = star_coin
+	pre_run_minerals_total = minerals_low + minerals_mid + minerals_high
+
+func reset_all_data() -> void:
+	star_coin = 10_000_000
+	minerals_low = 200_000
+	minerals_mid = 200_000
+	minerals_high = 200_000
+	ship_damaged = false
+	total_kills = 0
+	total_deaths = 0
+	highest_level = 1
+	first_run = true
+	last_run_reason = ""
+	selected_race_id = 0
+	player_name = ""
+	selected_ship_id = 1
+	unlocked_ships = []
+	equipment_inventory = []
+	equipped_weapons = {}
+	equipped_armor = {}
+	upgraded_ships = {}
+	research_progress = {}
 	pre_run_coin = star_coin
 	pre_run_minerals_total = minerals_low + minerals_mid + minerals_high
 

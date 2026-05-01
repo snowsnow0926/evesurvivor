@@ -1,0 +1,544 @@
+{
+	"buildings": [
+		{
+			"id": "station_hub",
+			"name_en": "Station Hub",
+			"name_zh": "空间站核心",
+			"path": [
+				["M", 50.0, 20.0],
+				["L", 70.0, 40.0],
+				["L", 70.0, 70.0],
+				["L", 30.0, 70.0],
+				["L", 30.0, 40.0],
+				["Z"],
+				["M", 30.0, 30.0],
+				["L", 70.0, 30.0]
+			]
+		},
+		{
+			"id": "station",
+			"name_en": "Station",
+			"name_zh": "空间站",
+			"path": []
+		},
+		{
+			"id": "stargate",
+			"name_en": "Stargate",
+			"name_zh": "星门",
+			"path": []
+		},
+		{
+			"id": "warpGate",
+			"name_en": "WarpGate",
+			"name_zh": "跃迁门",
+			"path": []
+		}
+	],
+	"enemies": [
+		{
+			"id": "enemy_melee",
+			"name_en": "Melee Enemy",
+			"name_zh": "近战敌人",
+			"path": [
+				["M", 50.0, 20.0],
+				["L", 70.0, 40.0],
+				["L", 70.0, 70.0],
+				["L", 30.0, 70.0],
+				["L", 30.0, 40.0],
+				["Z"],
+				["M", 35.0, 30.0],
+				["L", 65.0, 30.0]
+			]
+		},
+		{
+			"id": "enemy_raven",
+			"name_en": "Raven Enemy",
+			"name_zh": "乌鸦型敌机",
+			"path": [
+				["M", 50.0, 25.0],
+				["L", 68.0, 50.0],
+				["L", 50.0, 75.0],
+				["L", 32.0, 50.0],
+				["Z"]
+			]
+		},
+		{
+			"id": "enemy_sentry",
+			"name_en": "Sentry Turret",
+			"name_zh": "哨兵炮台",
+			"path": [
+				["M", 50.0, 30.0],
+				["L", 65.0, 45.0],
+				["L", 65.0, 65.0],
+				["L", 35.0, 65.0],
+				["L", 35.0, 45.0],
+				["Z"],
+				["M", 50.0, 65.0],
+				["L", 50.0, 80.0]
+			]
+		}
+	],
+	"ships": [
+		{
+			"id": "battleship",
+			"name_en": "Battleship",
+			"name_zh": "战列舰",
+			"texture_path": "res://assets/32/battleship_32.png",
+			"path": [
+				["M", 50.0, 14.0],
+				["L", 74.0, 38.0],
+				["L", 74.0, 74.0],
+				["L", 64.0, 74.0],
+				["L", 50.0, 60.0],
+				["L", 36.0, 74.0],
+				["L", 26.0, 74.0],
+				["L", 26.0, 38.0],
+				["Z"]
+			]
+		},
+		{
+			"id": "battleCruiser",
+			"name_en": "Battlecruiser",
+			"name_zh": "战列巡洋舰",
+			"texture_path": "res://assets/32/battleCruiser_32.png",
+			"path": [
+				["M", 50.0, 18.0],
+				["L", 74.0, 40.0],
+				["L", 74.0, 66.0],
+				["L", 26.0, 66.0],
+				["L", 26.0, 40.0],
+				["Z"],
+				["M", 27.0, 80.0],
+				["L", 73.0, 80.0]
+			]
+		},
+		{
+			"id": "cruiser",
+			"name_en": "Cruiser",
+			"name_zh": "巡洋舰",
+			"texture_path": "res://assets/32/cruiser_32.png",
+			"path": [
+				["M", 50.0, 18.0],
+				["L", 74.0, 40.0],
+				["L", 74.0, 70.0],
+				["L", 26.0, 70.0],
+				["L", 26.0, 40.0],
+				["Z"]
+			]
+		},
+		{
+			"id": "destroyer",
+			"name_en": "Destroyer",
+			"name_zh": "驱逐舰",
+			"texture_path": "res://assets/32/destroyer_32.png",
+			"path": [
+				["M", 50.0, 26.0],
+				["L", 76.0, 62.0],
+				["L", 24.0, 62.0],
+				["Z"],
+				["M", 25.0, 76.0],
+				["L", 75.0, 76.0]
+			]
+		},
+		{
+			"id": "frigate",
+			"name_en": "Frigate",
+			"name_zh": "护卫舰",
+			"texture_path": "res://assets/32/frigate_32.png",
+			"path": [
+				["M", 50.0, 28.0],
+				["L", 76.0, 66.0],
+				["L", 24.0, 66.0],
+				["Z"]
+			]
+		},
+		{
+			"id": "dreadnought",
+			"name_en": "Dreadnought",
+			"name_zh": "无畏舰",
+			"texture_path": "res://assets/32/dreadnought_32.png",
+			"path": [
+				["M", 50.0, 16.0],
+				["L", 74.0, 42.0],
+				["L", 74.0, 76.0],
+				["L", 64.0, 76.0],
+				["L", 50.0, 62.0],
+				["L", 36.0, 76.0],
+				["L", 26.0, 76.0],
+				["L", 26.0, 42.0],
+				["Z"]
+			]
+		},
+		{
+			"id": "carrier",
+			"name_en": "Carrier",
+			"name_zh": "航空母舰",
+			"texture_path": "res://assets/32/carrier_32.png",
+			"path": [
+				["M", 50.0, 18.0],
+				["L", 74.0, 42.0],
+				["L", 74.0, 62.0],
+				["L", 58.0, 62.0],
+				["L", 50.0, 74.0],
+				["L", 42.0, 62.0],
+				["L", 26.0, 62.0],
+				["L", 26.0, 42.0],
+				["Z"]
+			]
+		},
+		{
+			"id": "superCarrier",
+			"name_en": "Supercapital",
+			"name_zh": "超级旗舰",
+			"texture_path": "res://assets/32/superCarrier_32.png",
+			"path": [
+				["M", 50.0, 18.0],
+				["L", 70.0, 38.0],
+				["L", 50.0, 58.0],
+				["L", 30.0, 38.0],
+				["Z"],
+				["M", 30.0, 66.0],
+				["L", 50.0, 82.0],
+				["L", 70.0, 66.0],
+				["M", 35.0, 76.0],
+				["L", 50.0, 90.0],
+				["L", 65.0, 76.0]
+			]
+		},
+		{
+			"id": "titan",
+			"name_en": "Titan",
+			"name_zh": "泰坦",
+			"texture_path": "res://assets/32/titan_32.png",
+			"path": [
+				["M", 50.0, 10.0],
+				["L", 72.0, 34.0],
+				["L", 72.0, 62.0],
+				["L", 62.0, 62.0],
+				["L", 62.0, 54.0],
+				["L", 38.0, 54.0],
+				["L", 38.0, 62.0],
+				["L", 28.0, 62.0],
+				["L", 28.0, 34.0],
+				["Z"],
+				["M", 28.0, 76.0],
+				["L", 72.0, 76.0],
+				["M", 30.0, 88.0],
+				["L", 70.0, 88.0]
+			]
+		},
+		{
+			"id": "freighter",
+			"name_en": "Freighter",
+			"name_zh": "货舰",
+			"texture_path": "res://assets/32/freighter_32.png",
+			"path": [
+				["M", 28.0, 48.0],
+				["L", 28.0, 36.0],
+				["L", 40.0, 26.0],
+				["L", 60.0, 26.0],
+				["L", 72.0, 36.0],
+				["L", 72.0, 48.0],
+				["Z"],
+				["M", 36.0, 64.0],
+				["Q", 36.0, 56.0, 44.0, 56.0],
+				["L", 56.0, 56.0],
+				["Q", 64.0, 56.0, 64.0, 64.0],
+				["Q", 64.0, 72.0, 56.0, 72.0],
+				["L", 44.0, 72.0],
+				["Q", 36.0, 72.0, 36.0, 64.0],
+				["Z"]
+			]
+		},
+		{
+			"id": "industrial",
+			"name_en": "Industrial",
+			"name_zh": "工业舰",
+			"texture_path": "res://assets/32/industrial_32.png",
+			"path": [
+				["M", 28.0, 50.0],
+				["L", 28.0, 38.0],
+				["L", 40.0, 26.0],
+				["L", 60.0, 26.0],
+				["L", 72.0, 38.0],
+				["L", 72.0, 50.0],
+				["Z"],
+				["M", 28.0, 64.0],
+				["L", 72.0, 64.0],
+				["M", 32.0, 74.0],
+				["L", 68.0, 74.0]
+			]
+		},
+		{
+			"id": "industrialCommand",
+			"name_en": "Industrial Command",
+			"name_zh": "工业指挥舰",
+			"texture_path": "res://assets/32/industrialCommand_32.png",
+			"path": [
+				["M", 28.0, 50.0],
+				["L", 28.0, 38.0],
+				["L", 40.0, 26.0],
+				["L", 60.0, 26.0],
+				["L", 72.0, 38.0],
+				["L", 72.0, 50.0],
+				["Z"],
+				["M", 28.0, 64.0],
+				["L", 72.0, 64.0],
+				["M", 32.0, 74.0],
+				["L", 68.0, 74.0]
+			]
+		},
+		{
+			"id": "miningBarge",
+			"name_en": "Mining Barge",
+			"name_zh": "采矿驳船",
+			"texture_path": "res://assets/32/miningBarge_32.png",
+			"path": [
+				["M", 28.0, 50.0],
+				["L", 28.0, 38.0],
+				["L", 40.0, 26.0],
+				["L", 60.0, 26.0],
+				["L", 72.0, 38.0],
+				["L", 72.0, 50.0],
+				["Z"]
+			]
+		},
+		{
+			"id": "miningFrigate",
+			"name_en": "Mining Frigate",
+			"name_zh": "采矿护卫舰",
+			"texture_path": "res://assets/32/miningFrigate_32.png",
+			"path": [
+				["M", 50.0, 28.0],
+				["L", 76.0, 66.0],
+				["L", 24.0, 66.0],
+				["Z"]
+			]
+		},
+		{
+			"id": "capsule",
+			"name_en": "Capsule",
+			"name_zh": "太空舱",
+			"texture_path": "res://assets/32/capsule_32.png",
+			"path": [
+				["M", 50.0, 14.0],
+				["L", 72.0, 36.0],
+				["L", 72.0, 70.0],
+				["L", 62.0, 70.0],
+				["L", 50.0, 57.0],
+				["L", 38.0, 70.0],
+				["L", 28.0, 70.0],
+				["L", 28.0, 36.0],
+				["Z"]
+			]
+		},
+		{
+			"id": "shuttle",
+			"name_en": "Shuttle",
+			"name_zh": "穿梭机",
+			"texture_path": "res://assets/32/shuttle_32.png",
+			"path": [
+				["M", 25.0, 58.0],
+				["L", 36.0, 58.0],
+				["L", 50.0, 42.0],
+				["L", 64.0, 58.0],
+				["L", 75.0, 58.0]
+			]
+		},
+		{
+			"id": "rookie",
+			"name_en": "Rookie",
+			"name_zh": "新手舰",
+			"texture_path": "res://assets/32/rookie_32.png",
+			"path": [
+				["M", 50.0, 28.0],
+				["L", 76.0, 66.0],
+				["L", 24.0, 66.0],
+				["Z"]
+			]
+		},
+		{
+			"id": "drone",
+			"name_en": "Drone",
+			"name_zh": "无人机",
+			"path": [
+				["M", 36.0, 32.0],
+				["L", 44.0, 40.0],
+				["M", 64.0, 32.0],
+				["L", 56.0, 40.0],
+				["M", 36.0, 68.0],
+				["L", 44.0, 60.0],
+				["M", 64.0, 68.0],
+				["L", 56.0, 60.0]
+			]
+		},
+		{
+			"id": "ship_001",
+			"name_en": "New_ship_001",
+			"name_zh": "新图标_ship_001",
+			"path": [
+				["M", 29.0, 33.0],
+				["L", 26.0, 58.0],
+				["M", 26.0, 58.0],
+				["L", 27.5, 84.5],
+				["M", 83.0, 62.5],
+				["L", 81.0, 27.0],
+				["M", 81.0, 27.0],
+				["L", 27.0, 32.5]
+			]
+		},
+		{
+			"id": "ship_002",
+			"name_en": "New_ship_002",
+			"name_zh": "新图标_ship_002",
+			"path": []
+		},
+		{
+			"id": "ship_003",
+			"name_en": "New_ship_003",
+			"name_zh": "新图标_ship_003",
+			"path": []
+		},
+		{
+			"id": "forceAuxiliary",
+			"name_en": "Force Auxiliary",
+			"name_zh": "特勤舰",
+			"texture_path": "res://assets/32/forceAuxiliary_32.png",
+			"path": [
+				["M", 28.0, 50.0],
+				["L", 28.0, 38.0],
+				["L", 40.0, 26.0],
+				["L", 60.0, 26.0],
+				["L", 72.0, 38.0],
+				["L", 72.0, 50.0],
+				["Z"]
+			]
+		},
+		{
+			"id": "npcbattleship",
+			"name_en": "NPC Battleship",
+			"name_zh": "NPC战列舰",
+			"texture_path": "res://assets/32/npcbattleship_32.png",
+			"path": []
+		},
+		{
+			"id": "npcbattleCruiser",
+			"name_en": "NPC Battlecruiser",
+			"name_zh": "NPC战列巡洋舰",
+			"texture_path": "res://assets/32/npcbattleCruiser_32.png",
+			"path": []
+		},
+		{
+			"id": "npccruiser",
+			"name_en": "NPC Cruiser",
+			"name_zh": "NPC巡洋舰",
+			"texture_path": "res://assets/32/npccruiser_32.png",
+			"path": []
+		},
+		{
+			"id": "npcdestroyer",
+			"name_en": "NPC Destroyer",
+			"name_zh": "NPC驱逐舰",
+			"texture_path": "res://assets/32/npcdestroyer_32.png",
+			"path": []
+		},
+		{
+			"id": "npfrigate",
+			"name_en": "NPC Frigate",
+			"name_zh": "NPC护卫舰",
+			"texture_path": "res://assets/32/npfrigate_32.png",
+			"path": []
+		},
+		{
+			"id": "npcdreadnought",
+			"name_en": "NPC Dreadnought",
+			"name_zh": "NPC无畏舰",
+			"texture_path": "res://assets/32/npcdreadnought_32.png",
+			"path": []
+		},
+		{
+			"id": "npccarrier",
+			"name_en": "NPC Carrier",
+			"name_zh": "NPC航母",
+			"texture_path": "res://assets/32/npccarrier_32.png",
+			"path": []
+		},
+		{
+			"id": "npcsuperCarrier",
+			"name_en": "NPC Supercarrier",
+			"name_zh": "NPC超级航母",
+			"texture_path": "res://assets/32/npcsuperCarrier_32.png",
+			"path": []
+		},
+		{
+			"id": "npctitan",
+			"name_en": "NPC Titan",
+			"name_zh": "NPC泰坦",
+			"texture_path": "res://assets/32/npctitan_32.png",
+			"path": []
+		},
+		{
+			"id": "npcfreighter",
+			"name_en": "NPC Freighter",
+			"name_zh": "NPC货船",
+			"texture_path": "res://assets/32/npcfreighter_32.png",
+			"path": []
+		},
+		{
+			"id": "npcindustrial",
+			"name_en": "NPC Industrial",
+			"name_zh": "NPC工业舰",
+			"texture_path": "res://assets/32/npcindustrial_32.png",
+			"path": []
+		},
+		{
+			"id": "npcindustrialCommand",
+			"name_en": "NPC Industrial Command",
+			"name_zh": "NPC工业指挥舰",
+			"texture_path": "res://assets/32/npcindustrialCommand_32.png",
+			"path": []
+		},
+		{
+			"id": "npcminingBarge",
+			"name_en": "NPC Mining Barge",
+			"name_zh": "NPC采矿驳船",
+			"texture_path": "res://assets/32/npcminingBarge_32.png",
+			"path": []
+		},
+		{
+			"id": "npcminingFrigate",
+			"name_en": "NPC Mining Frigate",
+			"name_zh": "NPC采矿护卫舰",
+			"texture_path": "res://assets/32/npcminingFrigate_32.png",
+			"path": []
+		},
+		{
+			"id": "npcforceAuxiliary",
+			"name_en": "NPC Force Auxiliary",
+			"name_zh": "NPC特勤舰",
+			"texture_path": "res://assets/32/npcforceAuxiliary_32.png",
+			"path": []
+		},
+		{
+			"id": "npccapsule",
+			"name_en": "NPC Capsule",
+			"name_zh": "NPC太空舱",
+			"texture_path": "res://assets/32/npccapsule_32.png",
+			"path": []
+		},
+		{
+			"id": "npcrookie",
+			"name_en": "NPC Rookie",
+			"name_zh": "NPC新手舰",
+			"texture_path": "res://assets/32/npcrookie_32.png",
+			"path": []
+		},
+		{
+			"id": "npcshuttle",
+			"name_en": "NPC Shuttle",
+			"name_zh": "NPC穿梭机",
+			"texture_path": "res://assets/32/npcshuttle_32.png",
+			"path": []
+		}
+	]
+}

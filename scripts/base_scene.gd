@@ -2,6 +2,7 @@ extends Control
 
 @onready var repair_btn: Button = $NavPanel/VBox/RepairBtn
 @onready var crafting_btn: Button = $NavPanel/VBox/CraftingBtn
+@onready var research_btn: Button = $NavPanel/VBox/ResearchBtn
 @onready var shop_btn: Button = $NavPanel/VBox/ShopBtn
 @onready var warehouse_btn: Button = $NavPanel/VBox/WarehouseBtn
 @onready var shipyard_btn: Button = $NavPanel/VBox/ShipyardBtn
@@ -13,6 +14,7 @@ extends Control
 
 @onready var repair_panel: Control = $RepairPanel
 @onready var crafting_panel: Control = $CraftingPanel
+@onready var research_panel: Control = $ResearchPanel
 @onready var storage_panel: Control = $StoragePanel
 @onready var shop_panel: Control = $ShopPanel
 @onready var warehouse_panel: Control = $WarehousePanel
@@ -35,6 +37,8 @@ func _bind_buttons() -> void:
 		repair_btn.pressed.connect(_show_repair)
 	if crafting_btn:
 		crafting_btn.pressed.connect(_show_crafting)
+	if research_btn:
+		research_btn.pressed.connect(_show_research)
 	if shop_btn:
 		shop_btn.pressed.connect(_show_shop)
 	if warehouse_btn:
@@ -87,6 +91,9 @@ func _show_warehouse() -> void:
 		if warehouse_panel.has_method("_build_all"):
 			warehouse_panel._build_all()
 
+func _show_research() -> void:
+	_switch_panel(research_panel)
+
 func _show_shop() -> void:
 	_switch_panel(shop_panel)
 
@@ -107,7 +114,7 @@ func close_all_panels() -> void:
 	if current_panel and is_instance_valid(current_panel):
 		current_panel.visible = false
 		current_panel = null
-	for p in [repair_panel, crafting_panel, storage_panel, shop_panel, warehouse_panel, shipyard_panel]:
+	for p in [repair_panel, crafting_panel, research_panel, storage_panel, shop_panel, warehouse_panel, shipyard_panel]:
 		if p:
 			p.visible = false
 

@@ -48,6 +48,9 @@ GameScene.tscn (战斗场景)
   ├─ PauseMenu.tscn (pause_menu.gd)
   └─ BossWarning.tscn (boss_warning.gd)
 
+ShipIconEditor.tscn (图标编辑器)
+  └─ ship_icon_editor.gd (drawing canvas, tool panel, JSON save/load)
+
 SettlementScene.tscn
   └─ settlement_scene.gd
 ```
@@ -87,6 +90,17 @@ SettlementScene.tscn
 | Cannon | `cannon_bullet.gd` (piercing) |
 | Railgun | `railgun_bullet.gd` (high-crit burst) |
 | Laser | `laser_beam.gd` (continuous beam) |
+
+### 2.6 Icon System
+
+All ship, enemy, and building visuals are defined as vector path data (M/L/Q/Z commands) in `icon_definitions.json`, rendered via `_draw()`. The `ShipIconEditor.tscn` provides an in-engine drawing tool.
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| Data Layer | `ship_icon_generator.gd` | JSON loader, query interface, `IconEntry` class |
+| Editor Tool | `ship_icon_editor.gd` | Drawing canvas, tools, save/load |
+| Gallery Preview | `ship_icon_preview.gd` | Renders all icons in a grid |
+| Data File | `icon_definitions.json` | Ship/Enemy/Building icon definitions |
 
 ---
 
@@ -292,8 +306,16 @@ resources/
 ├── equipment_data.gd
 ├── shop_data.gd
 ├── race_data.gd
-└── game_balance.json      (TO CREATE)
+├── icon_definitions.json     (Ship/Enemy/Building icon definitions)
+└── game_balance.json        (TO CREATE)
 
-scenes/   (30+ .tscn files)
-└── [See directory]
+scenes/
+├── ShipIconEditor.tscn      (Icon editor tool)
+├── ShipIconPreview.tscn     (Icon gallery preview)
+└── [30+ other .tscn files]
+
+scripts/
+├── ship_icon_generator.gd    (Icon data loader/query interface)
+├── ship_icon_editor.gd      (Icon drawing editor)
+└── ship_icon_preview.gd     (Icon gallery renderer)
 ```

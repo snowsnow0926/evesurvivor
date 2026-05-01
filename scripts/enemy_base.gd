@@ -13,6 +13,7 @@ var move_speed: float = 100.0
 
 # === Shared Nodes ===
 var polygon: Node2D
+var ship_sprite: Sprite2D
 var hp_bar: ColorRect
 
 # === Death Effect Config (override in subclasses) ===
@@ -29,6 +30,7 @@ signal enemy_dead(enemy: Node2D, enemy_type: String)
 
 func _ready() -> void:
 	polygon = $Polygon2D
+	ship_sprite = $ShipSprite
 	hp_bar = $HPBar
 	if polygon:
 		polygon.rotation = PI / 2
@@ -109,13 +111,6 @@ func _spawn_damage_number(amount: float, is_crit: bool) -> void:
 	parent.call_deferred("add_child", timer)
 	timer.call_deferred("start")
 
-func _start_hit_flash() -> void:
-	if polygon:
-		var original_color = polygon.modulate if not polygon.modulate is Color else polygon.modulate
-		polygon.modulate = Color(2.0, 2.0, 2.0)
-		var tween = create_tween()
-		tween.tween_property(polygon, "modulate", original_color, 0.15)
-
 func _spawn_death_effect() -> void:
 	var parent = get_parent()
 	if not parent:
@@ -137,6 +132,15 @@ func _spawn_death_effect() -> void:
 	parent.call_deferred("add_child", particles)
 	particles.emitting = true
 	particles.finished.connect(particles.queue_free)
+
+func _start_hit_flash() -> void:
+	var target: Node = ship_sprite if ship_sprite and ship_sprite.visible else polygon
+	if not target:
+		return
+	var original_color = target.modulate if target.modulate is Color else Color.WHITE
+	target.modulate = Color(2.0, 2.0, 2.0)
+	var tween = create_tween()
+	tween.tween_property(target, "modulate", original_color, 0.15)
 
 func _die() -> void:
 	SoundManager.play_sfx("enemy_death")

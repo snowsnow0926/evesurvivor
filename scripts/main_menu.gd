@@ -40,8 +40,8 @@ func _update_display() -> void:
 
 func _on_start_pressed() -> void:
 	SoundManager.play_sfx("button_click")
-	GameState.reset_for_new_run()
-	get_tree().change_scene_to_file("res://scenes/BaseScene.tscn")
+	GameState.reset_all_data()
+	get_tree().change_scene_to_file("res://scenes/CharacterCreate.tscn")
 
 func _on_repair_pressed() -> void:
 	if GameState.repair_ship():

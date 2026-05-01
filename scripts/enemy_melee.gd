@@ -20,7 +20,7 @@ func _process_combat(_delta: float) -> void:
 		return
 
 	var dist = global_position.distance_to(player.global_position)
-	if dist < 30.0:
+	if dist < 64.0:
 		can_attack = false
 		attack_timer = 0.0
 		if player.has_method("on_player_take_damage"):

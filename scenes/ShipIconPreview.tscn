@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cpe7dbc21wgka"]
 
-[ext_resource type="Script" path="res://scripts/ship_icon_preview.gd" id="1_preview"]
+[ext_resource type="Script" uid="uid://cpe7dbc21wgka" path="res://scripts/ship_icon_preview.gd" id="1_preview"]
 
-[node name="ShipIconPreview" type="Node2D"]
+[node name="ShipIconPreview" type="Node2D" unique_id=886852186]
 script = ExtResource("1_preview")

@@ -8,6 +8,7 @@ func _debug(msg: String) -> void:
 
 const ShipData = preload("res://resources/ship_data.gd")
 const WeaponData = preload("res://resources/weapon_data.gd")
+const ShipIconGenerator = preload("res://scripts/ship_icon_generator.gd")
 
 var game_manager: Node2D
 
@@ -76,14 +77,110 @@ var target_angle: float = 0.0
 var turn_time: float = 0.12
 
 var polygon: Node2D
+var ship_sprite: Sprite2D
+
+const _SHIP_ICON_MAP: Dictionary = {
+	ShipData.ShipID.FRIGATE:      "frigate",
+	ShipData.ShipID.CRUISER:       "cruiser",
+	ShipData.ShipID.BATTLECRUISER: "battlecruiser",
+	ShipData.ShipID.BATTLESHIP:    "battleship",
+	ShipData.ShipID.DREADNOUGHT:   "dreadnought",
+	ShipData.ShipID.TITAN:         "titan",
+}
+
+func set_ship_icon() -> void:
+	var sid = int(GameState.selected_ship_id)
+	if sid == 0:
+		sid = ShipData.ShipID.FRIGATE
+	var icon_id: String = _SHIP_ICON_MAP.get(sid, "frigate")
+	var entry: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.SHIP, icon_id)
+	if entry == null:
+		return
+	var tex: Texture2D = entry.get_texture()
+	if tex != null and ship_sprite != null:
+		ship_sprite.texture = tex
+		ship_sprite.visible = true
+		if polygon != null:
+			polygon.visible = false
+	else:
+		# fall back to polygon
+		if entry.path.is_empty():
+			return
+		var polygon_points := _build_polygon_from_path(entry.path)
+		if polygon_points.is_empty():
+			return
+		if polygon != null:
+			polygon.visible = false
+		if ship_sprite != null:
+			ship_sprite.visible = false
+		queue_redraw()
+
+func _build_polygon_from_path(path: Array) -> PackedVector2Array:
+	var closed_polygons: Array[PackedVector2Array] = []
+	var current_open: Array[Vector2] = []
+	var last_pt := Vector2.ZERO
+	var sub_start := Vector2.ZERO
+
+	for cmd: Array in path:
+		if cmd.is_empty():
+			continue
+		var t: String = cmd[0]
+		match t:
+			"M":
+				if not current_open.is_empty() and current_open.size() >= 2:
+					closed_polygons.append(PackedVector2Array(current_open))
+				current_open.clear()
+				last_pt = Vector2(cmd[1], cmd[2])
+				current_open.append(last_pt)
+				sub_start = last_pt
+			"L":
+				var p: Vector2 = Vector2(cmd[1], cmd[2])
+				current_open.append(p)
+				last_pt = p
+			"Q":
+				if cmd.size() >= 5:
+					var p0 := last_pt
+					var p1 := Vector2(cmd[1], cmd[2])
+					var p2 := Vector2(cmd[3], cmd[4])
+					for j: int in range(1, 13):
+						var tt: float = float(j) / 12.0
+						var mt: float = 1.0 - tt
+						var pt := Vector2(
+							mt * mt * p0.x + 2.0 * mt * tt * p1.x + tt * tt * p2.x,
+							mt * mt * p0.y + 2.0 * mt * tt * p1.y + tt * tt * p2.y
+						)
+						current_open.append(pt)
+					last_pt = p2
+			"Z":
+				if not current_open.is_empty() and current_open.size() >= 2:
+					current_open.append(sub_start)
+
+	if not current_open.is_empty() and current_open.size() >= 2:
+		closed_polygons.append(PackedVector2Array(current_open))
+
+	if closed_polygons.is_empty():
+		return PackedVector2Array()
+
+	var primary := closed_polygons[0]
+	var icon_size: float = ShipIconGenerator.ICON_SIZE
+	var icon_viewbox: float = ShipIconGenerator.ICON_VIEWBOX
+	var scale_val: float = icon_size / icon_viewbox
+	var offset := Vector2(-50.0 * scale_val, -50.0 * scale_val)
+
+	var result := PackedVector2Array()
+	for p: Vector2 in primary:
+		result.append(p * scale_val + offset)
+	return result
 
 func _ready() -> void:
 	polygon = $Polygon2D
-	_debug("_ready called, polygon=" + str(polygon))
+	ship_sprite = $ShipSprite
+	_debug("_ready called, polygon=" + str(polygon) + ", sprite=" + str(ship_sprite))
 	_debug("viewport size=" + str(get_viewport_rect().size))
 	if polygon:
 		polygon.rotation = -PI / 2
 	_debug("polygon setup done")
+	set_ship_icon()
 
 func init_weapons() -> void:
 	active_weapons.clear()
@@ -225,8 +322,12 @@ func _update_movement(delta: float) -> void:
 	velocity = input_dir * move_speed
 	move_and_slide()
 
-	if polygon:
+	if ship_sprite and ship_sprite.visible:
+		ship_sprite.rotation = current_angle + PI / 2
+	elif polygon:
 		polygon.rotation = current_angle + PI / 2
+	if not ship_sprite or not ship_sprite.visible:
+		queue_redraw()
 
 func _update_firing(delta: float) -> void:
 	if active_weapons.is_empty():
@@ -553,6 +654,7 @@ func apply_race_data(race: RaceData) -> void:
 	_apply_race_talents()
 	_apply_armor_bonuses()
 	_debug("Applied race data: " + race.display_name)
+	set_ship_icon()
 
 func _apply_race_talents() -> void:
 	for talent in race_talents:
@@ -643,3 +745,27 @@ func reset_state() -> void:
 
 func _input(event: InputEvent) -> void:
 	pass
+
+func _draw() -> void:
+	if ship_sprite and ship_sprite.visible:
+		return
+	if polygon and polygon.visible:
+		return
+	var sid = int(GameState.selected_ship_id)
+	if sid == 0:
+		sid = ShipData.ShipID.FRIGATE
+	var icon_id: String = _SHIP_ICON_MAP.get(sid, "frigate")
+	var entry: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.SHIP, icon_id)
+	if entry == null:
+		return
+	var tex: Texture2D = entry.get_texture(Color(0.0, 0.9, 1.0, 1.0))
+	if tex == null:
+		return
+
+	# draw texture centered at origin, rotated around its center
+	var rot: float = current_angle + PI / 2
+	# upper-left of texture at (-half, -half), so center is at origin
+	var half := 24.0
+	var rect := Rect2(-half, -half, 48.0, 48.0)
+	draw_set_transform(Vector2.ZERO, rot, Vector2.ONE)
+	draw_texture_rect(tex, rect, false, Color.WHITE, true)

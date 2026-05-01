@@ -9,7 +9,7 @@ var lifetime: float = 0.0
 var max_lifetime: float = 3.0
 var has_hit: bool = false
 
-const PLAYER_RADIUS: float = 16.0
+const PLAYER_RADIUS: float = 32.0
 const BULLET_RADIUS: float = 6.0
 
 func _physics_process(delta: float) -> void:
