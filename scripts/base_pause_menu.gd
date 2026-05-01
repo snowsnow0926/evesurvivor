@@ -2,6 +2,8 @@ extends Control
 
 @onready var overlay: ColorRect = $Overlay
 @onready var continue_btn: Button = $Panel/VBox/ContinueBtn
+@onready var save_game_btn: Button = $Panel/VBox/SaveGameBtn
+@onready var load_game_btn: Button = $Panel/VBox/LoadGameBtn
 @onready var main_menu_btn: Button = $Panel/VBox/MainMenuBtn
 @onready var quit_btn: Button = $Panel/VBox/QuitBtn
 
@@ -13,6 +15,10 @@ func _ready() -> void:
 func _connect_buttons() -> void:
 	if continue_btn:
 		continue_btn.pressed.connect(_on_continue_pressed)
+	if save_game_btn:
+		save_game_btn.pressed.connect(_on_save_game_pressed)
+	if load_game_btn:
+		load_game_btn.pressed.connect(_on_load_game_pressed)
 	if main_menu_btn:
 		main_menu_btn.pressed.connect(_on_main_menu_pressed)
 	if quit_btn:
@@ -29,6 +35,14 @@ func close_menu() -> void:
 func _on_continue_pressed() -> void:
 	SoundManager.play_sfx("button_click")
 	close_menu()
+
+func _on_save_game_pressed() -> void:
+	SoundManager.play_sfx("button_click")
+	print("[BasePauseMenu] 保存游戏 pressed — 功能预留")
+
+func _on_load_game_pressed() -> void:
+	SoundManager.play_sfx("button_click")
+	print("[BasePauseMenu] 读取游戏 pressed — 功能预留")
 
 func _on_main_menu_pressed() -> void:
 	SoundManager.play_sfx("button_click")

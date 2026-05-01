@@ -25,10 +25,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -460.0
-offset_top = -300.0
-offset_right = 460.0
-offset_bottom = 300.0
+offset_left = -480.0
+offset_top = -320.0
+offset_right = 480.0
+offset_bottom = 320.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -41,42 +41,58 @@ layout_mode = 2
 text = "护卫舰 | 武器槽: 1 | 防御槽: 1"
 horizontal_alignment = 1
 
+[node name="EquippedSection" type="VBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="EquippedWeaponsTitle" type="Label" parent="Panel/VBox/EquippedSection"]
+layout_mode = 2
+text = "武器槽"
+horizontal_alignment = 1
+
+[node name="EquippedWeaponsScroll" type="ScrollContainer" parent="Panel/VBox/EquippedSection"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 1
+custom_minimum_size = Vector2(0, 100)
+
+[node name="EquippedWeaponsGrid" type="HBoxContainer" parent="Panel/VBox/EquippedSection/EquippedWeaponsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 8
+
+[node name="EquippedArmorTitle" type="Label" parent="Panel/VBox/EquippedSection"]
+layout_mode = 2
+text = "防御槽"
+horizontal_alignment = 1
+
+[node name="EquippedArmorScroll" type="ScrollContainer" parent="Panel/VBox/EquippedSection"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 1
+custom_minimum_size = Vector2(0, 100)
+
+[node name="EquippedArmorGrid" type="HBoxContainer" parent="Panel/VBox/EquippedSection/EquippedArmorScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 8
+
+[node name="Divider" type="HSeparator" parent="Panel/VBox"]
+layout_mode = 2
+
 [node name="ContentHBox" type="HBoxContainer" parent="Panel/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 16
-
-[node name="EquippedSide" type="VBoxContainer" parent="Panel/VBox/ContentHBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 6
-
-[node name="EquippedTitle" type="Label" parent="Panel/VBox/ContentHBox/EquippedSide"]
-layout_mode = 2
-text = "已装备"
-horizontal_alignment = 1
-
-[node name="EquippedScroll" type="ScrollContainer" parent="Panel/VBox/ContentHBox/EquippedSide"]
-layout_mode = 2
-size_flags_vertical = 3
-horizontal_scroll_mode = 0
-custom_minimum_size = Vector2(0, 260)
-
-[node name="EquippedGrid" type="GridContainer" parent="Panel/VBox/ContentHBox/EquippedSide/EquippedScroll"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 8
-columns = 3
-custom_minimum_size = Vector2(0, 240)
 
 [node name="InventorySide" type="VBoxContainer" parent="Panel/VBox/ContentHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="InventoryTitle" type="Label" parent="Panel/VBox/ContentHBox/InventorySide"]
+[node name="InventoryListLabel" type="Label" parent="Panel/VBox/ContentHBox/InventorySide"]
 layout_mode = 2
 text = "仓库库存"
 horizontal_alignment = 1
@@ -98,8 +114,6 @@ custom_minimum_size = Vector2(0, 240)
 
 [node name="DetailPanel" type="PanelContainer" parent="Panel/VBox"]
 layout_mode = 2
-theme_override_styles/normal/corner_radius_top_left = 0
-theme_override_styles/normal/corner_radius_top_right = 0
 custom_minimum_size = Vector2(0, 64)
 
 [node name="DetailHBox" type="HBoxContainer" parent="Panel/VBox/DetailPanel"]

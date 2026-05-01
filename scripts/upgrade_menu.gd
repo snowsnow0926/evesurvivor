@@ -54,24 +54,39 @@ func _filter_by_equipped_weapon(pool: Array, gm: Node2D) -> Array:
 	var weapon_upgrade_ids: Array = []
 	var equipped_types = _get_all_equipped_weapon_types(gm)
 
+	var missile_ids = [
+		WeaponData.WeaponID.MISSILE, WeaponData.WeaponID.SMALL_MISSILE,
+		WeaponData.WeaponID.MEDIUM_MISSILE, WeaponData.WeaponID.LARGE_MISSILE, WeaponData.WeaponID.FLAGSHIP_MISSILE
+	]
+	var cannon_ids = [
+		WeaponData.WeaponID.CANNON, WeaponData.WeaponID.SMALL_CANNON,
+		WeaponData.WeaponID.MEDIUM_CANNON, WeaponData.WeaponID.LARGE_CANNON, WeaponData.WeaponID.FLAGSHIP_CANNON
+	]
+	var railgun_ids = [
+		WeaponData.WeaponID.RAILGUN, WeaponData.WeaponID.SMALL_RAILGUN,
+		WeaponData.WeaponID.MEDIUM_RAILGUN, WeaponData.WeaponID.LARGE_RAILGUN, WeaponData.WeaponID.FLAGSHIP_RAILGUN
+	]
+	var laser_ids = [
+		WeaponData.WeaponID.LASER, WeaponData.WeaponID.SMALL_LASER,
+		WeaponData.WeaponID.MEDIUM_LASER, WeaponData.WeaponID.LARGE_LASER, WeaponData.WeaponID.FLAGSHIP_LASER
+	]
 	for wtype in equipped_types:
-		match wtype:
-			WeaponData.WeaponID.MISSILE, WeaponData.WeaponID.SMALL_MISSILE:
-				if not weapon_upgrade_ids.has("fire_coverage"): weapon_upgrade_ids.append("fire_coverage")
-				if not weapon_upgrade_ids.has("silent_hunter"): weapon_upgrade_ids.append("silent_hunter")
-				if not weapon_upgrade_ids.has("precision_kill"): weapon_upgrade_ids.append("precision_kill")
-			WeaponData.WeaponID.CANNON, WeaponData.WeaponID.SMALL_CANNON:
-				if not weapon_upgrade_ids.has("cannon_bloodthirst"): weapon_upgrade_ids.append("cannon_bloodthirst")
-				if not weapon_upgrade_ids.has("cannon_rush"): weapon_upgrade_ids.append("cannon_rush")
-				if not weapon_upgrade_ids.has("cannon_vengeance"): weapon_upgrade_ids.append("cannon_vengeance")
-			WeaponData.WeaponID.RAILGUN, WeaponData.WeaponID.SMALL_RAILGUN:
-				if not weapon_upgrade_ids.has("railgun_damage"): weapon_upgrade_ids.append("railgun_damage")
-				if not weapon_upgrade_ids.has("railgun_crit"): weapon_upgrade_ids.append("railgun_crit")
-				if not weapon_upgrade_ids.has("railgun_multi"): weapon_upgrade_ids.append("railgun_multi")
-			WeaponData.WeaponID.LASER, WeaponData.WeaponID.SMALL_LASER:
-				if not weapon_upgrade_ids.has("laser_duration"): weapon_upgrade_ids.append("laser_duration")
-				if not weapon_upgrade_ids.has("laser_width"): weapon_upgrade_ids.append("laser_width")
-				if not weapon_upgrade_ids.has("laser_shield"): weapon_upgrade_ids.append("laser_shield")
+		if wtype in missile_ids:
+			if not weapon_upgrade_ids.has("fire_coverage"): weapon_upgrade_ids.append("fire_coverage")
+			if not weapon_upgrade_ids.has("silent_hunter"): weapon_upgrade_ids.append("silent_hunter")
+			if not weapon_upgrade_ids.has("precision_kill"): weapon_upgrade_ids.append("precision_kill")
+		elif wtype in cannon_ids:
+			if not weapon_upgrade_ids.has("cannon_bloodthirst"): weapon_upgrade_ids.append("cannon_bloodthirst")
+			if not weapon_upgrade_ids.has("cannon_rush"): weapon_upgrade_ids.append("cannon_rush")
+			if not weapon_upgrade_ids.has("cannon_vengeance"): weapon_upgrade_ids.append("cannon_vengeance")
+		elif wtype in railgun_ids:
+			if not weapon_upgrade_ids.has("railgun_damage"): weapon_upgrade_ids.append("railgun_damage")
+			if not weapon_upgrade_ids.has("railgun_crit"): weapon_upgrade_ids.append("railgun_crit")
+			if not weapon_upgrade_ids.has("railgun_multi"): weapon_upgrade_ids.append("railgun_multi")
+		elif wtype in laser_ids:
+			if not weapon_upgrade_ids.has("laser_duration"): weapon_upgrade_ids.append("laser_duration")
+			if not weapon_upgrade_ids.has("laser_width"): weapon_upgrade_ids.append("laser_width")
+			if not weapon_upgrade_ids.has("laser_shield"): weapon_upgrade_ids.append("laser_shield")
 
 	var general_ids = ["damage", "shield_max", "shield_regen"]
 	var result: Array = []

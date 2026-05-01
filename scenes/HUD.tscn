@@ -152,6 +152,90 @@ text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="WeaponSlot3" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.0
+
+[node name="WeaponSlot3VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot3"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot3/WeaponSlot3VBox"]
+layout_mode = 2
+text = "[武器]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot3/WeaponSlot3VBox"]
+layout_mode = 2
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="WeaponSlot4" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.0
+
+[node name="WeaponSlot4VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot4"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot4/WeaponSlot4VBox"]
+layout_mode = 2
+text = "[武器]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot4/WeaponSlot4VBox"]
+layout_mode = 2
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="WeaponSlot5" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.0
+
+[node name="WeaponSlot5VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot5"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot5/WeaponSlot5VBox"]
+layout_mode = 2
+text = "[武器]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot5/WeaponSlot5VBox"]
+layout_mode = 2
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="WeaponSlot6" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.0
+
+[node name="WeaponSlot6VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot6"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot6/WeaponSlot6VBox"]
+layout_mode = 2
+text = "[武器]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot6/WeaponSlot6VBox"]
+layout_mode = 2
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="DefenseSlot" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -175,14 +259,16 @@ vertical_alignment = 1
 
 [node name="TopRightAnchor" type="Control" parent="."]
 layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.0
+anchor_right = 0.5
+anchor_bottom = 0.0
 offset_left = -320.0
 offset_top = 10.0
-offset_right = -10.0
+offset_right = 320.0
 offset_bottom = 210.0
-grow_horizontal = 0
+grow_horizontal = 2
 
 [node name="MainPanel" type="PanelContainer" parent="TopRightAnchor"]
 layout_mode = 1
@@ -228,11 +314,9 @@ horizontal_alignment = 1
 
 [node name="TimerLabel" type="Label" parent="TopRightAnchor"]
 layout_mode = 1
-anchors_preset = 3
+anchors_preset = 1
 anchor_left = 1.0
-anchor_top = 0.0
 anchor_right = 1.0
-anchor_bottom = 0.0
 offset_left = -150.0
 offset_top = 0.0
 offset_right = -10.0
@@ -244,16 +328,16 @@ vertical_alignment = 1
 
 [node name="BottomRightAnchor" type="Control" parent="."]
 layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
+anchors_preset = 8
+anchor_left = 0.5
 anchor_top = 1.0
-anchor_right = 1.0
+anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -310.0
-offset_top = -300.0
-offset_right = -10.0
+offset_left = -155.0
+offset_top = -150.0
+offset_right = 155.0
 offset_bottom = -10.0
-grow_horizontal = 0
+grow_horizontal = 2
 grow_vertical = 0
 
 [node name="UpgradeListPanel" type="PanelContainer" parent="BottomRightAnchor"]

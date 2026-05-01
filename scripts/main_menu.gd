@@ -1,21 +1,27 @@
 extends Control
 
 @onready var start_btn: Button = $Panel/VBox/StartBtn
+@onready var load_game_btn: Button = $Panel/VBox/LoadGameBtn
+@onready var quit_btn: Button = $Panel/VBox/QuitBtn
 @onready var coin_label: Label = $Panel/VBox/CoinLabel
 @onready var minerals_label: Label = $Panel/VBox/MineralsLabel
 @onready var ship_status: Label = $Panel/VBox/ShipStatus
 @onready var repairs_btn: Button = $Panel/VBox/RepairsBtn
+@onready var save_ui: Control = $SaveUI
 
 func _ready() -> void:
 	SoundManager.play_music("menu")
 	_update_display()
 	if start_btn:
 		start_btn.pressed.connect(_on_start_pressed)
+	if load_game_btn:
+		load_game_btn.pressed.connect(_on_load_game_pressed)
+	if quit_btn:
+		quit_btn.pressed.connect(_on_quit_pressed)
 	if repairs_btn:
 		repairs_btn.pressed.connect(_on_repair_pressed)
-
-func _process(_delta: float) -> void:
-	_update_display()
+	save_ui.save_loaded.connect(_on_save_loaded)
+	save_ui.new_game_requested.connect(_on_new_game_requested)
 
 func _update_display() -> void:
 	if coin_label:
@@ -34,10 +40,23 @@ func _update_display() -> void:
 
 func _on_start_pressed() -> void:
 	SoundManager.play_sfx("button_click")
-	print("[MainMenu] START pressed, switching to CharacterCreate...")
-	get_tree().change_scene_to_file("res://scenes/CharacterCreate.tscn")
-	print("[MainMenu] change_scene_to_file called")
+	GameState.reset_for_new_run()
+	get_tree().change_scene_to_file("res://scenes/BaseScene.tscn")
 
 func _on_repair_pressed() -> void:
 	if GameState.repair_ship():
 		_update_display()
+
+func _on_load_game_pressed() -> void:
+	SoundManager.play_sfx("button_click")
+	save_ui.visible = true
+
+func _on_save_loaded(_slot_idx: int) -> void:
+	save_ui.visible = false
+
+func _on_new_game_requested() -> void:
+	save_ui.visible = false
+
+func _on_quit_pressed() -> void:
+	SoundManager.play_sfx("button_click")
+	get_tree().quit()

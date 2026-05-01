@@ -16,18 +16,18 @@ enum RaceID { HUMAN, ORC, PLANT, SILICON, DIVINE }
 @export var base_weapon_scene: String
 @export var talents: Array
 
+static var _cache: Dictionary = {}
+
+static func _ensure_cache() -> void:
+	if _cache.is_empty():
+		_cache[RaceID.HUMAN] = _human_data()
+		_cache[RaceID.ORC] = _orc_data()
+		_cache[RaceID.PLANT] = _plant_data()
+		_cache[RaceID.SILICON] = _silicon_data()
+
 static func get_race(race_id: RaceID) -> RaceData:
-	match race_id:
-		RaceID.HUMAN:
-			return _human_data()
-		RaceID.ORC:
-			return _orc_data()
-		RaceID.PLANT:
-			return _plant_data()
-		RaceID.SILICON:
-			return _silicon_data()
-		_:
-			return _human_data()
+	_ensure_cache()
+	return _cache.get(race_id, _cache[RaceID.HUMAN])
 
 static func _human_data() -> RaceData:
 	var r = RaceData.new()

@@ -21,15 +21,180 @@ var last_run_reason: String = ""
 var pre_run_coin: int = 0
 var pre_run_minerals_total: int = 0
 
-const REPAIR_COST_FRIGATE: int = 500
-const REPAIR_COST_CRUISER: int = 2000
-const REPAIR_COST_BATTLECRUISER: int = 5000
-const REPAIR_COST_BATTLESHIP: int = 15000
-const REPAIR_COST_DREADNOUGHT: int = 50000
-const REPAIR_COST_TITAN: int = 200000
+const SAVE_PATH := "user://game_save.cfg"
+const SAVE_SLOTS := 3
+const DEBUG := false
+
+var current_save_slot: int = -1
+
+func _debug(msg: String) -> void:
+	if DEBUG:
+		print("[GameState] ", msg)
 
 func _ready() -> void:
-	pass
+	load_game()
+
+func save_game() -> bool:
+	var cfg = ConfigFile.new()
+	cfg.set_value("meta", "version", 1)
+	cfg.set_value("meta", "saved_at", Time.get_datetime_string_from_system())
+
+	cfg.set_value("progress", "star_coin", star_coin)
+	cfg.set_value("progress", "minerals_low", minerals_low)
+	cfg.set_value("progress", "minerals_mid", minerals_mid)
+	cfg.set_value("progress", "minerals_high", minerals_high)
+	cfg.set_value("progress", "total_kills", total_kills)
+	cfg.set_value("progress", "total_deaths", total_deaths)
+	cfg.set_value("progress", "highest_level", highest_level)
+
+	cfg.set_value("progress", "ship_damaged", ship_damaged)
+	cfg.set_value("progress", "first_run", first_run)
+
+	cfg.set_value("player", "selected_race_id", selected_race_id)
+	cfg.set_value("player", "selected_ship_id", selected_ship_id)
+	cfg.set_value("player", "player_name", player_name)
+
+	cfg.set_value("ships", "unlocked_ships", unlocked_ships)
+	cfg.set_value("ships", "upgraded_ships", upgraded_ships)
+
+	cfg.set_value("equipment", "equipment_inventory", equipment_inventory)
+	cfg.set_value("equipment", "equipped_weapons", equipped_weapons)
+	cfg.set_value("equipment", "equipped_armor", equipped_armor)
+
+	var path = get_save_slot_path(current_save_slot)
+	var err = cfg.save(path)
+	if err != OK:
+		push_error("[GameState] Failed to save game: error " + str(err))
+		return false
+	print("[GameState] Game saved to ", path)
+	return true
+
+func load_game() -> bool:
+	var path = get_save_slot_path(current_save_slot)
+	if not FileAccess.file_exists(path):
+		if current_save_slot >= 0:
+			print("[GameState] No save file for slot %d, trying legacy path" % current_save_slot)
+		if FileAccess.file_exists(SAVE_PATH):
+			path = SAVE_PATH
+		else:
+			print("[GameState] No save file found, starting fresh")
+			return false
+
+	var cfg = ConfigFile.new()
+	var err = cfg.load(path)
+	if err != OK:
+		push_error("[GameState] Failed to load game: error " + str(err))
+		return false
+
+	star_coin = cfg.get_value("progress", "star_coin", 0)
+	minerals_low = cfg.get_value("progress", "minerals_low", 0)
+	minerals_mid = cfg.get_value("progress", "minerals_mid", 0)
+	minerals_high = cfg.get_value("progress", "minerals_high", 0)
+	total_kills = cfg.get_value("progress", "total_kills", 0)
+	total_deaths = cfg.get_value("progress", "total_deaths", 0)
+	highest_level = cfg.get_value("progress", "highest_level", 1)
+	ship_damaged = cfg.get_value("progress", "ship_damaged", false)
+	first_run = cfg.get_value("progress", "first_run", true)
+
+	selected_race_id = cfg.get_value("player", "selected_race_id", 0)
+	selected_ship_id = cfg.get_value("player", "selected_ship_id", 1)
+	player_name = cfg.get_value("player", "player_name", "")
+
+	unlocked_ships = cfg.get_value("ships", "unlocked_ships", [])
+	upgraded_ships = cfg.get_value("ships", "upgraded_ships", {})
+
+	equipment_inventory = cfg.get_value("equipment", "equipment_inventory", [])
+	equipped_weapons = cfg.get_value("equipment", "equipped_weapons", {})
+	equipped_armor = cfg.get_value("equipment", "equipped_armor", {})
+
+	print("[GameState] Game loaded from ", SAVE_PATH)
+	return true
+
+func delete_save() -> void:
+	if FileAccess.file_exists(SAVE_PATH):
+		DirAccess.remove_absolute(SAVE_PATH)
+		print("[GameState] Save file deleted")
+
+func get_save_slot_path(slot_idx: int) -> String:
+	return "user://save_slot_%d.cfg" % slot_idx
+
+func save_save_slot(slot_idx: int) -> bool:
+	if slot_idx < 0:
+		print("[GameState] No save slot selected, skipping save")
+		return false
+	var cfg = ConfigFile.new()
+	cfg.set_value("meta", "version", 1)
+	cfg.set_value("meta", "saved_at", Time.get_datetime_string_from_system())
+
+	cfg.set_value("progress", "star_coin", star_coin)
+	cfg.set_value("progress", "minerals_low", minerals_low)
+	cfg.set_value("progress", "minerals_mid", minerals_mid)
+	cfg.set_value("progress", "minerals_high", minerals_high)
+	cfg.set_value("progress", "total_kills", total_kills)
+	cfg.set_value("progress", "total_deaths", total_deaths)
+	cfg.set_value("progress", "highest_level", highest_level)
+
+	cfg.set_value("progress", "ship_damaged", ship_damaged)
+	cfg.set_value("progress", "first_run", first_run)
+
+	cfg.set_value("player", "selected_race_id", selected_race_id)
+	cfg.set_value("player", "selected_ship_id", selected_ship_id)
+	cfg.set_value("player", "player_name", player_name)
+
+	cfg.set_value("ships", "unlocked_ships", unlocked_ships)
+	cfg.set_value("ships", "upgraded_ships", upgraded_ships)
+
+	cfg.set_value("equipment", "equipment_inventory", equipment_inventory)
+	cfg.set_value("equipment", "equipped_weapons", equipped_weapons)
+	cfg.set_value("equipment", "equipped_armor", equipped_armor)
+
+	var path = get_save_slot_path(slot_idx)
+	var err = cfg.save(path)
+	if err != OK:
+		push_error("[GameState] Failed to save slot %d: error %d" % [slot_idx, err])
+		return false
+	print("[GameState] Saved to slot %d: %s" % [slot_idx, path])
+	return true
+
+func load_save_slot(slot_idx: int) -> bool:
+	var path = get_save_slot_path(slot_idx)
+	if not FileAccess.file_exists(path):
+		print("[GameState] No save file for slot %d" % slot_idx)
+		return false
+
+	var cfg = ConfigFile.new()
+	var err = cfg.load(path)
+	if err != OK:
+		push_error("[GameState] Failed to load slot %d: error %d" % [slot_idx, err])
+		return false
+
+	star_coin = cfg.get_value("progress", "star_coin", 0)
+	minerals_low = cfg.get_value("progress", "minerals_low", 0)
+	minerals_mid = cfg.get_value("progress", "minerals_mid", 0)
+	minerals_high = cfg.get_value("progress", "minerals_high", 0)
+	total_kills = cfg.get_value("progress", "total_kills", 0)
+	total_deaths = cfg.get_value("progress", "total_deaths", 0)
+	highest_level = cfg.get_value("progress", "highest_level", 1)
+	ship_damaged = cfg.get_value("progress", "ship_damaged", false)
+	first_run = cfg.get_value("progress", "first_run", false)
+
+	selected_race_id = cfg.get_value("player", "selected_race_id", 0)
+	selected_ship_id = cfg.get_value("player", "selected_ship_id", 1)
+	player_name = cfg.get_value("player", "player_name", "")
+
+	unlocked_ships = cfg.get_value("ships", "unlocked_ships", [])
+	upgraded_ships = cfg.get_value("ships", "upgraded_ships", {})
+
+	equipment_inventory = cfg.get_value("equipment", "equipment_inventory", [])
+	equipped_weapons = cfg.get_value("equipment", "equipped_weapons", {})
+	equipped_armor = cfg.get_value("equipment", "equipped_armor", {})
+
+	print("[GameState] Loaded from slot %d: %s" % [slot_idx, path])
+	return true
+
+func reset_for_new_run() -> void:
+	pre_run_coin = star_coin
+	pre_run_minerals_total = minerals_low + minerals_mid + minerals_high
 
 func get_repair_cost() -> int:
 	var ship = ShipData.get_ship(selected_ship_id)
@@ -50,6 +215,10 @@ func repair_ship() -> bool:
 		return false
 	star_coin -= get_repair_cost()
 	ship_damaged = false
+	if current_save_slot >= 0:
+		save_save_slot(current_save_slot)
+	else:
+		save_game()
 	return true
 
 func add_rewards(coin: int, minrl: int) -> void:
@@ -60,6 +229,10 @@ func add_rewards(coin: int, minrl: int) -> void:
 	minerals_low += low
 	minerals_mid += mid
 	minerals_high += high
+	if current_save_slot >= 0:
+		save_save_slot(current_save_slot)
+	else:
+		save_game()
 
 func on_run_started() -> void:
 	if first_run:
@@ -86,10 +259,10 @@ func get_earned_minerals() -> int:
 	return (minerals_low + minerals_mid + minerals_high) - pre_run_minerals_total
 
 func reset_progress() -> void:
-	star_coin = 0
-	minerals_low = 0
-	minerals_mid = 0
-	minerals_high = 0
+	star_coin = 10000000
+	minerals_low = 10000
+	minerals_mid = 10000
+	minerals_high = 10000
 	ship_damaged = false
 	total_kills = 0
 	total_deaths = 0
@@ -103,3 +276,7 @@ func reset_progress() -> void:
 	equipped_weapons = {}
 	equipped_armor = {}
 	upgraded_ships = {}
+	if current_save_slot >= 0:
+		save_save_slot(current_save_slot)
+	else:
+		save_game()

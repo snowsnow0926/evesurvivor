@@ -90,11 +90,11 @@ text = "物品仓库"
 
 [node name="ShipyardBtn" type="Button" parent="NavPanel/VBox"]
 layout_mode = 2
-text = "船坞"
+text = "造船厂"
 
 [node name="StorageBtn" type="Button" parent="NavPanel/VBox"]
 layout_mode = 2
-text = "舰船仓库"
+text = "星港"
 
 [node name="Spacer2" type="Control" parent="NavPanel/VBox"]
 layout_mode = 2
@@ -267,6 +267,10 @@ layout_mode = 2
 text = "合成"
 disabled = true
 
+[node name="QuickCraftBtn" type="Button" parent="CraftingPanel/Panel/VBox"]
+layout_mode = 2
+text = "一键合成"
+
 [node name="BackBtn" type="Button" parent="CraftingPanel/Panel/VBox"]
 layout_mode = 2
 text = "返回"
@@ -308,7 +312,7 @@ theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="StoragePanel/Panel/VBox"]
 layout_mode = 2
-text = "舰船仓库"
+text = "星港"
 horizontal_alignment = 1
 
 [node name="ShipList" type="VBoxContainer" parent="StoragePanel/Panel/VBox"]
@@ -400,6 +404,47 @@ size_flags_horizontal = 3
 toggle_mode = true
 text = "防御"
 
+[node name="FilterHBox" type="HBoxContainer" parent="ShopPanel/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="FilterLabel" type="Label" parent="ShopPanel/Panel/VBox/FilterHBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "吨位:"
+valign = 1
+
+[node name="FilterAll" type="Button" parent="ShopPanel/Panel/VBox/FilterHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+button_pressed = true
+text = "全部"
+
+[node name="FilterSmall" type="Button" parent="ShopPanel/Panel/VBox/FilterHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "小型"
+
+[node name="FilterMedium" type="Button" parent="ShopPanel/Panel/VBox/FilterHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "中型"
+
+[node name="FilterLarge" type="Button" parent="ShopPanel/Panel/VBox/FilterHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "大型"
+
+[node name="FilterFlag" type="Button" parent="ShopPanel/Panel/VBox/FilterHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "旗舰级"
+
 [node name="HBox" type="HBoxContainer" parent="ShopPanel/Panel/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 16
@@ -411,7 +456,7 @@ theme_override_constants/separation = 8
 
 [node name="WeaponListLabel" type="Label" parent="ShopPanel/Panel/VBox/HBox/LeftPanel"]
 layout_mode = 2
-text = "装备列表"
+text = "装备列表 (全部)"
 
 [node name="WeaponList" type="ScrollContainer" parent="ShopPanel/Panel/VBox/HBox/LeftPanel"]
 layout_mode = 2
@@ -479,102 +524,102 @@ size_flags_horizontal = 3
 layout_mode = 2
 text = "返回"
 
-[node name="Panel" type="Panel" parent="WarehousePanel"]
+[node name="Panel" type="PanelContainer" parent="WarehousePanel"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -420.0
+offset_left = -480.0
 offset_top = -320.0
-offset_right = 420.0
+offset_right = 480.0
 offset_bottom = 320.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="WarehousePanel/Panel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 16.0
-offset_top = 16.0
-offset_right = -16.0
-offset_bottom = -16.0
-theme_override_constants/separation = 12
-
-[node name="Title" type="Label" parent="WarehousePanel/Panel/VBox"]
 layout_mode = 2
-text = "物品仓库"
-horizontal_alignment = 1
+theme_override_constants/separation = 10
 
 [node name="ShipInfoBar" type="Label" parent="WarehousePanel/Panel/VBox"]
 layout_mode = 2
 text = "舰船信息"
 horizontal_alignment = 1
 
-[node name="HBox" type="HBoxContainer" parent="WarehousePanel/Panel/VBox"]
+[node name="EquippedSection" type="VBoxContainer" parent="WarehousePanel/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="EquippedWeaponsTitle" type="Label" parent="WarehousePanel/Panel/VBox/EquippedSection"]
+layout_mode = 2
+text = "武器槽"
+horizontal_alignment = 1
+
+[node name="EquippedWeaponsScroll" type="ScrollContainer" parent="WarehousePanel/Panel/VBox/EquippedSection"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 1
+custom_minimum_size = Vector2(0, 100)
+
+[node name="EquippedWeaponsGrid" type="HBoxContainer" parent="WarehousePanel/Panel/VBox/EquippedSection/EquippedWeaponsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 8
+
+[node name="EquippedArmorTitle" type="Label" parent="WarehousePanel/Panel/VBox/EquippedSection"]
+layout_mode = 2
+text = "防御槽"
+horizontal_alignment = 1
+
+[node name="EquippedArmorScroll" type="ScrollContainer" parent="WarehousePanel/Panel/VBox/EquippedSection"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 1
+custom_minimum_size = Vector2(0, 100)
+
+[node name="EquippedArmorGrid" type="HBoxContainer" parent="WarehousePanel/Panel/VBox/EquippedSection/EquippedArmorScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 8
+
+[node name="Divider" type="HSeparator" parent="WarehousePanel/Panel/VBox"]
+layout_mode = 2
+
+[node name="ContentHBox" type="HBoxContainer" parent="WarehousePanel/Panel/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 16
 
-[node name="LeftPanel" type="VBoxContainer" parent="WarehousePanel/Panel/VBox/HBox"]
+[node name="InventorySide" type="VBoxContainer" parent="WarehousePanel/Panel/VBox/ContentHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
-[node name="InventoryListLabel" type="Label" parent="WarehousePanel/Panel/VBox/HBox/LeftPanel"]
+[node name="InventoryListLabel" type="Label" parent="WarehousePanel/Panel/VBox/ContentHBox/InventorySide"]
 layout_mode = 2
 text = "仓库库存"
 horizontal_alignment = 1
 
-[node name="InventoryScroll" type="ScrollContainer" parent="WarehousePanel/Panel/VBox/HBox/LeftPanel"]
+[node name="InventoryScroll" type="ScrollContainer" parent="WarehousePanel/Panel/VBox/ContentHBox/InventorySide"]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
-custom_minimum_size = Vector2(0, 220)
+custom_minimum_size = Vector2(0, 260)
 
-[node name="InventoryGrid" type="GridContainer" parent="WarehousePanel/Panel/VBox/HBox/LeftPanel/InventoryScroll"]
+[node name="InventoryGrid" type="GridContainer" parent="WarehousePanel/Panel/VBox/ContentHBox/InventorySide/InventoryScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 8
 columns = 4
-custom_minimum_size = Vector2(0, 200)
-
-[node name="RightPanel" type="VBoxContainer" parent="WarehousePanel/Panel/VBox/HBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 2
-theme_override_constants/separation = 8
-
-[node name="EquippedListLabel" type="Label" parent="WarehousePanel/Panel/VBox/HBox/RightPanel"]
-layout_mode = 2
-text = "已装备"
-horizontal_alignment = 1
-
-[node name="EquippedScroll" type="ScrollContainer" parent="WarehousePanel/Panel/VBox/HBox/RightPanel"]
-layout_mode = 2
-size_flags_vertical = 3
-horizontal_scroll_mode = 0
-custom_minimum_size = Vector2(0, 220)
-
-[node name="EquippedGrid" type="GridContainer" parent="WarehousePanel/Panel/VBox/HBox/RightPanel/EquippedScroll"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 8
-columns = 4
-custom_minimum_size = Vector2(0, 200)
+custom_minimum_size = Vector2(0, 240)
 
 [node name="DetailPanel" type="PanelContainer" parent="WarehousePanel/Panel/VBox"]
 layout_mode = 2
-theme_override_styles/normal/corner_radius_top_left = 0
-theme_override_styles/normal/corner_radius_top_right = 0
 custom_minimum_size = Vector2(0, 64)
 
 [node name="DetailHBox" type="HBoxContainer" parent="WarehousePanel/Panel/VBox/DetailPanel"]
@@ -623,6 +668,7 @@ theme_override_font_sizes/font_size = 12
 
 [node name="BtnRow" type="HBoxContainer" parent="WarehousePanel/Panel/VBox"]
 layout_mode = 2
+alignment = 2
 theme_override_constants/separation = 12
 
 [node name="EquipBtn" type="Button" parent="WarehousePanel/Panel/VBox/BtnRow"]
@@ -640,11 +686,7 @@ layout_mode = 2
 text = "出售"
 disabled = true
 
-[node name="Spacer" type="Control" parent="WarehousePanel/Panel/VBox/BtnRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="BackBtn" type="Button" parent="WarehousePanel/Panel/VBox/BtnRow"]
+[node name="BackBtn" type="Button" parent="WarehousePanel/Panel/VBox"]
 layout_mode = 2
 text = "返回基地"
 
@@ -675,7 +717,7 @@ theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="ShipyardPanel/Panel/VBox"]
 layout_mode = 2
-text = "船坞 — 舰船升级"
+text = "造船厂 — 舰船升级"
 horizontal_alignment = 1
 
 [node name="HBox" type="HBoxContainer" parent="ShipyardPanel/Panel/VBox"]
@@ -783,9 +825,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -200.0
-offset_top = -160.0
+offset_top = -200.0
 offset_right = 200.0
-offset_bottom = 160.0
+offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -808,6 +850,14 @@ horizontal_alignment = 1
 [node name="ContinueBtn" type="Button" parent="BasePauseMenu/Panel/VBox"]
 layout_mode = 2
 text = "返回游戏"
+
+[node name="SaveGameBtn" type="Button" parent="BasePauseMenu/Panel/VBox"]
+layout_mode = 2
+text = "保存游戏"
+
+[node name="LoadGameBtn" type="Button" parent="BasePauseMenu/Panel/VBox"]
+layout_mode = 2
+text = "读取游戏"
 
 [node name="MainMenuBtn" type="Button" parent="BasePauseMenu/Panel/VBox"]
 layout_mode = 2

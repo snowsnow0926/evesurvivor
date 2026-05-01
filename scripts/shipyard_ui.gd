@@ -56,9 +56,8 @@ func _build_ship_list() -> void:
 
 	var ships = ShipData.get_all_ships()
 	for ship in ships:
-		var is_unlocked = ship.is_unlocked or GameState.unlocked_ships.has(ship.ship_id)
-		if not is_unlocked:
-			continue
+		var is_unlocked = ship.is_unlocked or GameState.unlocked_ships.has(int(ship.ship_id))
+		var is_upgraded = GameState.upgraded_ships.get(int(ship.ship_id), false)
 
 		var row = HBoxContainer.new()
 		row.custom_minimum_size = Vector2(0, 48)
@@ -68,21 +67,25 @@ func _build_ship_list() -> void:
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(name_lbl)
 
-		var is_upgraded = GameState.upgraded_ships.get(int(ship.ship_id), false)
 		var status_lbl = Label.new()
 		if is_upgraded:
 			status_lbl.text = "[已升级]"
 			status_lbl.add_theme_color_override("font_color", Color(0.3, 1.0, 0.3))
-		else:
+		elif is_unlocked:
 			status_lbl.text = "[可升级]"
 			status_lbl.add_theme_color_override("font_color", Color(0.5, 0.8, 1.0))
+		else:
+			status_lbl.text = "[锁定]"
+			status_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
 		row.add_child(status_lbl)
 
 		var btn = Button.new()
 		if is_upgraded:
 			btn.text = "查看"
-		else:
+		elif is_unlocked:
 			btn.text = "升级"
+		else:
+			btn.text = "解锁"
 		btn.pressed.connect(_on_ship_row_selected.bind(ship))
 		row.add_child(btn)
 		ship_list_vbox.add_child(row)
@@ -106,11 +109,25 @@ func _update_preview_panel() -> void:
 	if preview_title: preview_title.text = ""
 	if ship_name_lbl: ship_name_lbl.text = selected_ship.display_name
 
+	var is_unlocked = selected_ship.is_unlocked or GameState.unlocked_ships.has(int(selected_ship.ship_id))
 	var is_upgraded = GameState.upgraded_ships.get(int(selected_ship.ship_id), false)
-	if current_slots_lbl:
-		current_slots_lbl.text = "当前: 武器x%d 防御x%d" % [selected_ship.weapon_slot_count, selected_ship.armor_slot_count]
 
-	if is_upgraded:
+	if not is_unlocked:
+		if current_slots_lbl: current_slots_lbl.text = "武器槽: %d | 防御槽: %d" % [selected_ship.weapon_slot_count, selected_ship.armor_slot_count]
+		if upgraded_slots_lbl: upgraded_slots_lbl.text = ""
+		var tier_name = "低级矿物" if selected_ship.unlock_mineral_tier == 0 else ("中级矿物" if selected_ship.unlock_mineral_tier == 1 else "高级矿物")
+		if cost_info_lbl:
+			cost_info_lbl.text = "解锁费用:\n%d 星币 + %s x%d\n\n当前余额:\n星币: %d\n%s: %d" % [
+				selected_ship.unlock_cost,
+				tier_name, selected_ship.unlock_mineral_count,
+				GameState.star_coin,
+				tier_name,
+				_get_mineral_count(selected_ship.unlock_mineral_tier)
+			]
+		if upgrade_btn:
+			upgrade_btn.disabled = not _can_afford_unlock(selected_ship)
+			upgrade_btn.text = "解锁"
+	elif is_upgraded:
 		if current_slots_lbl:
 			current_slots_lbl.text = "当前: 武器x%d 防御x%d" % [selected_ship.upgraded_weapon_slots, selected_ship.upgraded_armor_slots]
 		if upgraded_slots_lbl: upgraded_slots_lbl.text = "已升级至最大"
@@ -136,6 +153,12 @@ func _update_preview_panel() -> void:
 			upgrade_btn.disabled = not _can_afford_upgrade(selected_ship)
 			upgrade_btn.text = "升级"
 
+func _can_afford_unlock(ship: ShipData) -> bool:
+	if GameState.star_coin < ship.unlock_cost:
+		return false
+	var mineral_count = _get_mineral_count(ship.unlock_mineral_tier)
+	return mineral_count >= ship.unlock_mineral_count
+
 func _can_afford_upgrade(ship: ShipData) -> bool:
 	if GameState.star_coin < ship.upgrade_star_coin:
 		return false
@@ -150,17 +173,34 @@ func _get_mineral_count(tier: int) -> int:
 	return 0
 
 func _on_upgrade() -> void:
-	if selected_ship == null or not _can_afford_upgrade(selected_ship):
+	if selected_ship == null:
 		return
 
-	GameState.star_coin -= selected_ship.upgrade_star_coin
-	match selected_ship.upgrade_mineral_tier:
-		0: GameState.minerals_low -= selected_ship.upgrade_mineral_count
-		1: GameState.minerals_mid -= selected_ship.upgrade_mineral_count
-		2: GameState.minerals_high -= selected_ship.upgrade_mineral_count
+	var is_unlocked = selected_ship.is_unlocked or GameState.unlocked_ships.has(int(selected_ship.ship_id))
+	var is_upgraded = GameState.upgraded_ships.get(int(selected_ship.ship_id), false)
 
-	GameState.upgraded_ships[int(selected_ship.ship_id)] = true
+	if not is_unlocked:
+		if not _can_afford_unlock(selected_ship):
+			return
+		GameState.star_coin -= selected_ship.unlock_cost
+		match selected_ship.unlock_mineral_tier:
+			0: GameState.minerals_low -= selected_ship.unlock_mineral_count
+			1: GameState.minerals_mid -= selected_ship.unlock_mineral_count
+			2: GameState.minerals_high -= selected_ship.unlock_mineral_count
+		GameState.unlocked_ships.append(int(selected_ship.ship_id))
+		GameState.save_game()
+	elif not is_upgraded:
+		if not _can_afford_upgrade(selected_ship):
+			return
+		GameState.star_coin -= selected_ship.upgrade_star_coin
+		match selected_ship.upgrade_mineral_tier:
+			0: GameState.minerals_low -= selected_ship.upgrade_mineral_count
+			1: GameState.minerals_mid -= selected_ship.upgrade_mineral_count
+			2: GameState.minerals_high -= selected_ship.upgrade_mineral_count
+		GameState.upgraded_ships[int(selected_ship.ship_id)] = true
+
 	_build_ship_list()
+	GameState.save_game()
 	_update_preview_panel()
 	_update_currency_display()
 

@@ -1,5 +1,11 @@
 extends Node2D
 
+const DEBUG := false
+
+func _debug(msg: String) -> void:
+	if DEBUG:
+		print("[GameManager] ", msg)
+
 signal player_dead
 signal upgrade_requested
 signal game_paused(is_paused: bool)
@@ -12,6 +18,7 @@ const ENEMY_SENTRY_PATH = "res://scenes/EnemySentry.tscn"
 const ENEMY_RAVEN_PATH = "res://scenes/EnemyRaven.tscn"
 const EXP_ORB_SCENE_PATH = "res://scenes/ExpOrb.tscn"
 const BOSS_SCENE_PATH = "res://scenes/BossVoid.tscn"
+const ShipData = preload("res://resources/ship_data.gd")
 
 var player: Node2D
 var enemy_root: Node2D
@@ -144,8 +151,10 @@ func _setup_references() -> void:
 	boss_warning = game_scene.get_node_or_null("UIRoot/BossWarning")
 
 func _apply_race_to_gm(race: RaceData) -> void:
-	player_hp = int(race.base_hp)
-	player_max_hp = int(race.base_hp)
+	var ship = ShipData.get_ship(GameState.selected_ship_id)
+	var ship_base_hp = ship.base_hp if ship else 100
+	player_hp = ship_base_hp
+	player_max_hp = ship_base_hp
 	player_shield_max = race.shield_max
 	player_shield = race.shield_max
 	player_shield_regen = race.shield_regen
@@ -269,7 +278,7 @@ func _spawn_player() -> void:
 		get_parent().get_node("PlayerRoot").add_child(p)
 		player = p
 		player.global_position = get_viewport_rect().size / 2.0
-		print("[GameManager] Player spawned at: ", player.global_position)
+		_debug("Player spawned at: " + str(player.global_position))
 		if player.has_method("set_game_manager"):
 			player.set_game_manager(self)
 		var race = RaceData.get_race(GameState.selected_race_id)
@@ -362,10 +371,13 @@ func _spawn_enemy() -> void:
 	match enemy_path:
 		ENEMY_MELEE_PATH:
 			enemy.setup_enemy(self, enemy_hp, enemy_damage, enemy_move_speed)
+			enemy.enemy_dead.connect(_on_enemy_dead)
 		ENEMY_SENTRY_PATH:
 			enemy.setup_enemy(self, enemy_hp * 0.7, enemy_damage * 0.8, 60.0)
+			enemy.enemy_dead.connect(_on_enemy_dead)
 		ENEMY_RAVEN_PATH:
 			enemy.setup_enemy(self, enemy_hp * 0.5, enemy_damage * 1.5, 200.0)
+			enemy.enemy_dead.connect(_on_enemy_dead)
 
 func _choose_enemy_type() -> String:
 	var rng = randf()
@@ -433,6 +445,7 @@ func _spawn_boss() -> void:
 	boss.global_position = player.global_position + Vector2.from_angle(spawn_angle) * spawn_dist
 
 	boss.setup_boss(self)
+	boss.enemy_dead.connect(_on_enemy_dead)
 
 func on_boss_killed(boss_node: Node2D) -> void:
 	SoundManager.play_music("battle")
@@ -487,6 +500,13 @@ func _get_combo_multiplier() -> float:
 		return 1.5
 	return 1.0
 
+func _on_enemy_dead(enemy: Node2D, enemy_type: String) -> void:
+	match enemy_type:
+		"boss":
+			on_boss_killed(enemy)
+		_:
+			on_enemy_killed(enemy, enemy_type)
+
 func on_enemy_killed(enemy: Node2D, enemy_type: String) -> void:
 	kill_count += 1
 	total_kills += 1
@@ -521,7 +541,7 @@ func _difficulty_scale() -> void:
 	spawn_interval = maxf(0.8, spawn_interval - 0.1)
 
 func on_exp_orb_collected(amount: float) -> void:
-	print("[GameManager] on_exp_orb_collected: amount=", amount, " current_xp=", current_xp)
+	_debug("on_exp_orb_collected: amount=" + str(amount) + " current_xp=" + str(current_xp))
 	current_xp += amount * xp_boost
 	var leveled_up = false
 	while current_xp >= xp_to_next_level:
@@ -546,21 +566,21 @@ func _get_equipped_weapon_id() -> int:
 	return 0
 
 func apply_upgrade(upgrade_id: String) -> void:
-	print("[GameManager] apply_upgrade: ", upgrade_id, " upgrade_counts=", upgrade_counts)
+	_debug("apply_upgrade: " + upgrade_id + " upgrade_counts=" + str(upgrade_counts))
 
 	if not upgrade_counts.has(upgrade_id):
 		upgrade_counts[upgrade_id] = 0
 
 	var upgrade_data = upgrade_pool.filter(func(u): return u["id"] == upgrade_id)
 	if upgrade_data.is_empty():
-		print("[GameManager] upgrade not found in pool!")
+		_debug("upgrade not found in pool!")
 		is_upgrading = false
 		get_tree().paused = false
 		return
 
 	var data = upgrade_data[0]
 	if upgrade_counts[upgrade_id] >= data["max"]:
-		print("[GameManager] upgrade max reached!")
+		_debug("upgrade max reached!")
 		is_upgrading = false
 		get_tree().paused = false
 		return

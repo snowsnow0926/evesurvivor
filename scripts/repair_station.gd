@@ -62,11 +62,10 @@ func _on_select_ship(ship: ShipData) -> void:
 func _on_repair_pressed() -> void:
 	if not current_ship:
 		return
-	if GameState.star_coin >= current_ship.repair_cost:
-		GameState.star_coin -= current_ship.repair_cost
-		GameState.ship_damaged = false
+	if GameState.repair_ship():
 		_build_ship_list()
 		detail_label.text = "维修完成！"
+		GameState.save_game()
 	else:
 		detail_label.text = "星币不足！"
 

@@ -201,11 +201,14 @@ func _on_confirm() -> void:
 	if name.is_empty():
 		name = RaceData.get_race(selected_race_id).display_name + "号舰"
 	GameState.player_name = name
-	GameState.star_coin = 100000
-	GameState.minerals_low = 10000
-	GameState.minerals_mid = 10000
-	GameState.minerals_high = 10000
+	GameState.star_coin = 10000000
+	GameState.minerals_low = 200000
+	GameState.minerals_mid = 200000
+	GameState.minerals_high = 200000
 	GameState.selected_ship_id = ShipData.ShipID.FRIGATE
+	GameState.first_run = false
+	GameState.current_save_slot = 0
+	GameState.save_save_slot(0)
 	get_tree().change_scene_to_file("res://scenes/BaseScene.tscn")
 
 func _on_back() -> void:

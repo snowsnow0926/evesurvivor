@@ -8,7 +8,8 @@ var unequip_btn: Button
 var sell_btn: Button
 var back_btn: Button
 var ship_info_label: Label
-var equipped_grid: GridContainer
+var equipped_weapons_grid: HBoxContainer
+var equipped_armor_grid: HBoxContainer
 var inventory_grid: GridContainer
 
 var selected_item: Dictionary = {}
@@ -20,7 +21,8 @@ var detail_desc: Label
 var detail_icon: Label
 var sell_price_label: Label
 
-var equipped_title: Label
+var equipped_weapons_title: Label
+var equipped_armor_title: Label
 var inventory_title: Label
 
 func _ready() -> void:
@@ -29,7 +31,8 @@ func _ready() -> void:
 
 func _deferred_init() -> void:
 	ship_info_label = find_child("ShipInfoBar", true, false)
-	equipped_grid = find_child("EquippedGrid", true, false)
+	equipped_weapons_grid = find_child("EquippedWeaponsGrid", true, false)
+	equipped_armor_grid = find_child("EquippedArmorGrid", true, false)
 	inventory_grid = find_child("InventoryGrid", true, false)
 	equip_btn = find_child("EquipBtn", true, false)
 	unequip_btn = find_child("UnequipBtn", true, false)
@@ -40,11 +43,14 @@ func _deferred_init() -> void:
 	detail_desc = find_child("DetailDesc", true, false)
 	detail_icon = find_child("DetailIcon", true, false)
 	sell_price_label = find_child("SellPriceLabel", true, false)
-	equipped_title = find_child("EquippedListLabel", true, false)
+	equipped_weapons_title = find_child("EquippedWeaponsTitle", true, false)
+	equipped_armor_title = find_child("EquippedArmorTitle", true, false)
 	inventory_title = find_child("InventoryListLabel", true, false)
 
-	if equipped_title:
-		equipped_title.text = "已装备"
+	if equipped_weapons_title:
+		equipped_weapons_title.text = "武器槽"
+	if equipped_armor_title:
+		equipped_armor_title.text = "防御槽"
 	if inventory_title:
 		inventory_title.text = "仓库库存"
 
@@ -63,7 +69,8 @@ func _deferred_init() -> void:
 func _build_all() -> void:
 	_build_ship_info_bar()
 	_update_side_titles()
-	_build_equipped_list()
+	_build_equipped_weapons()
+	_build_equipped_armor()
 	_build_inventory()
 	_update_button_states()
 
@@ -76,12 +83,9 @@ func _update_side_titles() -> void:
 	var a_max = ship.upgraded_armor_slots if GameState.upgraded_ships.get(ship_id, false) else ship.armor_slot_count if ship else 1
 
 	var equipped_weapons = GameState.equipped_weapons.get(ship_id, [])
-	var equipped_armor = GameState.equipped_armor.get(ship_id, {})
-	var eq_count = 0
-	if equipped_weapons is Array:
-		eq_count += equipped_weapons.size()
-	if equipped_armor is Dictionary and not equipped_armor.is_empty():
-		eq_count += 1
+	var equipped_armor_list = GameState.equipped_armor.get(ship_id, {})
+	var w_count = equipped_weapons.size() if equipped_weapons is Array else 0
+	var a_count = 1 if (equipped_armor_list is Dictionary and not equipped_armor_list.is_empty()) else 0
 
 	var inv_items: Array = []
 	var equipped_ids: Array = []
@@ -89,14 +93,16 @@ func _update_side_titles() -> void:
 		for w in equipped_weapons:
 			if w is Dictionary:
 				equipped_ids.append(w.get("equip_id", ""))
-	if equipped_armor is Dictionary and not equipped_armor.is_empty():
-		equipped_ids.append(equipped_armor.get("equip_id", ""))
+	if equipped_armor_list is Dictionary and not equipped_armor_list.is_empty():
+		equipped_ids.append(equipped_armor_list.get("equip_id", ""))
 	for item in GameState.equipment_inventory:
 		if not equipped_ids.has(item.get("equip_id", "")):
 			inv_items.append(item)
 
-	if equipped_title:
-		equipped_title.text = "已装备 (%d/%d)" % [eq_count, w_max + a_max]
+	if equipped_weapons_title:
+		equipped_weapons_title.text = "武器槽 (%d/%d)" % [w_count, w_max]
+	if equipped_armor_title:
+		equipped_armor_title.text = "防御槽 (%d/%d)" % [a_count, a_max]
 	if inventory_title:
 		inventory_title.text = "仓库库存 (%d)" % inv_items.size()
 
@@ -112,43 +118,88 @@ func _build_ship_info_bar() -> void:
 	var a_max = ship.upgraded_armor_slots if GameState.upgraded_ships.get(ship_id, false) else ship.armor_slot_count if ship else 1
 	ship_info_label.text = "%s | 武器槽: %d | 防御槽: %d" % [ship_name, w_max, a_max]
 
-func _build_equipped_list() -> void:
-	if not equipped_grid:
-		push_warning("[WarehouseUI] equipped_grid is null!")
+func _get_ship_slot_counts() -> Dictionary:
+	var ship_id = int(GameState.selected_ship_id)
+	if ship_id == 0:
+		ship_id = ShipData.ShipID.FRIGATE
+	var ship = ShipData.get_ship(ship_id)
+	var w_max = ship.upgraded_weapon_slots if GameState.upgraded_ships.get(ship_id, false) else ship.weapon_slot_count if ship else 1
+	var a_max = ship.upgraded_armor_slots if GameState.upgraded_ships.get(ship_id, false) else ship.armor_slot_count if ship else 1
+	return {"weapon": w_max, "armor": a_max}
+
+func _get_ship_tonnage() -> int:
+	var ship_id = int(GameState.selected_ship_id)
+	if ship_id == 0:
+		ship_id = ShipData.ShipID.FRIGATE
+	var ship = ShipData.get_ship(ship_id)
+	return ship.tonnage_tier if ship else EquipmentData.TonnageTier.SMALL
+
+func _can_equip(item: Dictionary) -> bool:
+	var equip_tonnage = item.get("tonnage_tier", EquipmentData.TonnageTier.SMALL)
+	var ship_tonnage = _get_ship_tonnage()
+	return EquipmentData.can_equip_on_ship(ship_tonnage, equip_tonnage)
+
+func _build_equipped_weapons() -> void:
+	if not equipped_weapons_grid:
 		return
 
-	for child in equipped_grid.get_children():
+	for child in equipped_weapons_grid.get_children():
 		child.queue_free()
 
 	var ship_id = int(GameState.selected_ship_id)
 	if ship_id == 0:
 		ship_id = ShipData.ShipID.FRIGATE
 
+	var slots = _get_ship_slot_counts()
+	var w_max = slots["weapon"]
+
 	var equipped_weapons = GameState.equipped_weapons.get(ship_id, [])
-	var equipped_armor = GameState.equipped_armor.get(ship_id, {})
+	if not (equipped_weapons is Array):
+		equipped_weapons = []
 
-	var items: Array = []
-	if equipped_weapons is Array:
-		for w in equipped_weapons:
-			if w is Dictionary:
-				items.append(w)
-	if equipped_armor is Dictionary and not equipped_armor.is_empty():
-		items.append(equipped_armor)
+	var equipped_count = 0
+	for w in equipped_weapons:
+		if w is Dictionary:
+			var btn = _make_item_btn(w, true, false)
+			equipped_weapons_grid.add_child(btn)
+			_apply_item_btn_styles(btn, w, true)
+			equipped_count += 1
 
-	if items.is_empty():
-		var lbl = Label.new()
-		lbl.text = "(无已装备)"
-		lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
-		equipped_grid.add_child(lbl)
+	for i in range(equipped_count, w_max):
+		var empty_btn = _make_empty_slot_btn(false)
+		equipped_weapons_grid.add_child(empty_btn)
+
+func _build_equipped_armor() -> void:
+	if not equipped_armor_grid:
+		return
+
+	for child in equipped_armor_grid.get_children():
+		child.queue_free()
+
+	var ship_id = int(GameState.selected_ship_id)
+	if ship_id == 0:
+		ship_id = ShipData.ShipID.FRIGATE
+
+	var slots = _get_ship_slot_counts()
+	var a_max = slots["armor"]
+
+	var equipped_armor_list = GameState.equipped_armor.get(ship_id, {})
+
+	if equipped_armor_list is Dictionary and not equipped_armor_list.is_empty():
+		var btn = _make_item_btn(equipped_armor_list, true, true)
+		equipped_armor_grid.add_child(btn)
+		_apply_item_btn_styles(btn, equipped_armor_list, true)
 	else:
-		for item in items:
-			var btn = _make_item_btn(item, true)
-			equipped_grid.add_child(btn)
-			_apply_item_btn_styles(btn, item, true)
+		var empty_btn = _make_empty_slot_btn(true)
+		equipped_armor_grid.add_child(empty_btn)
+
+	var empty_count = 1
+	for i in range(empty_count, a_max):
+		var empty_btn = _make_empty_slot_btn(true)
+		equipped_armor_grid.add_child(empty_btn)
 
 func _build_inventory() -> void:
 	if not inventory_grid:
-		push_warning("[WarehouseUI] inventory_grid is null!")
 		return
 
 	for child in inventory_grid.get_children():
@@ -164,9 +215,9 @@ func _build_inventory() -> void:
 		for w in equipped_weapons:
 			if w is Dictionary:
 				equipped_ids.append(w.get("equip_id", ""))
-	var equipped_armor = GameState.equipped_armor.get(ship_id, {})
-	if equipped_armor is Dictionary and not equipped_armor.is_empty():
-		equipped_ids.append(equipped_armor.get("equip_id", ""))
+	var equipped_armor_list = GameState.equipped_armor.get(ship_id, {})
+	if equipped_armor_list is Dictionary and not equipped_armor_list.is_empty():
+		equipped_ids.append(equipped_armor_list.get("equip_id", ""))
 
 	var items: Array = []
 	for item in GameState.equipment_inventory:
@@ -181,11 +232,11 @@ func _build_inventory() -> void:
 		inventory_grid.add_child(lbl)
 	else:
 		for item in items:
-			var btn = _make_item_btn(item, false)
+			var btn = _make_item_btn(item, false, false)
 			inventory_grid.add_child(btn)
 			_apply_item_btn_styles(btn, item, false)
 
-func _make_item_btn(item: Dictionary, is_equipped: bool) -> Button:
+func _make_item_btn(item: Dictionary, is_equipped: bool, is_armor: bool) -> Button:
 	var btn = Button.new()
 	btn.custom_minimum_size = Vector2(80, 80)
 
@@ -198,6 +249,29 @@ func _make_item_btn(item: Dictionary, is_equipped: bool) -> Button:
 	btn.text = "%s\n%s" % [prefix, name_short]
 
 	btn.pressed.connect(_on_item_selected.bind(item, is_equipped))
+	return btn
+
+func _make_empty_slot_btn(is_armor: bool) -> Button:
+	var btn = Button.new()
+	btn.custom_minimum_size = Vector2(80, 80)
+	btn.text = "空%s槽" % ("防御" if is_armor else "武器")
+	btn.disabled = true
+	btn.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
+
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.08, 0.12, 0.8)
+	style.border_color = Color(0.3, 0.3, 0.3, 0.5)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	btn.add_theme_stylebox_override("normal", style)
+
+	var hover_style = StyleBoxFlat.new()
+	hover_style.bg_color = Color(0.08, 0.08, 0.12, 0.8)
+	hover_style.border_color = Color(0.3, 0.3, 0.3, 0.5)
+	hover_style.set_border_width_all(1)
+	hover_style.set_corner_radius_all(4)
+	btn.add_theme_stylebox_override("hover", hover_style)
+
 	return btn
 
 func _apply_item_btn_styles(btn: Button, item: Dictionary, is_equipped: bool) -> void:
@@ -242,25 +316,23 @@ func _on_item_selected(item: Dictionary, from_equipped: bool) -> void:
 
 func _update_button_states() -> void:
 	var has_selection = not selected_item.is_empty()
+	var can_equip = true
+	if has_selection and not _selected_equipped:
+		can_equip = _can_equip(selected_item)
 	if equip_btn:
-		equip_btn.disabled = not has_selection or _selected_equipped
+		equip_btn.disabled = not has_selection or _selected_equipped or not can_equip
 	if unequip_btn:
 		unequip_btn.disabled = not has_selection or not _selected_equipped
 	if sell_btn:
 		sell_btn.disabled = not has_selection
 
-func _get_ship_slot_counts() -> Dictionary:
-	var ship_id = int(GameState.selected_ship_id)
-	if ship_id == 0:
-		ship_id = ShipData.ShipID.FRIGATE
-	var ship = ShipData.get_ship(ship_id)
-	var w_max = ship.upgraded_weapon_slots if GameState.upgraded_ships.get(ship_id, false) else ship.weapon_slot_count if ship else 1
-	var a_max = ship.upgraded_armor_slots if GameState.upgraded_ships.get(ship_id, false) else ship.armor_slot_count if ship else 1
-	return {"weapon": w_max, "armor": a_max}
-
 func _on_equip() -> void:
 	if selected_item.is_empty() or _selected_equipped:
 		return
+	if not _can_equip(selected_item):
+		_show_tonnage_warning()
+		return
+
 	var ship_id = int(GameState.selected_ship_id)
 	if ship_id == 0:
 		ship_id = ShipData.ShipID.FRIGATE
@@ -272,7 +344,9 @@ func _on_equip() -> void:
 
 	if is_armor:
 		var slots = _get_ship_slot_counts()
-		if slots["armor"] <= 0:
+		var current_armor = GameState.equipped_armor.get(ship_id, {})
+		var armor_count = 1 if (current_armor is Dictionary and not current_armor.is_empty()) else 0
+		if armor_count >= slots["armor"]:
 			return
 		GameState.equipped_armor[ship_id] = selected_item.duplicate(true)
 	else:
@@ -287,6 +361,19 @@ func _on_equip() -> void:
 
 	selected_item = {}
 	_build_all()
+	GameState.save_game()
+
+func _show_tonnage_warning() -> void:
+	var tonnage = _get_ship_tonnage()
+	var t_name = EquipmentData.get_tonnage_name(tonnage)
+	var msg = "当前舰船无法装备此吨位装备\n%s只能装备 %s 及以下吨位装备" % [GameState.selected_ship_id, t_name]
+	if has_node("TonnageWarning"):
+		var w = find_child("TonnageWarning", true, false)
+		if w:
+			w.text = msg
+			w.visible = true
+			return
+	print("[WarehouseUI] ", msg)
 
 func _on_unequip() -> void:
 	if selected_item.is_empty() or not _selected_equipped:
@@ -317,6 +404,7 @@ func _on_unequip() -> void:
 
 	selected_item = {}
 	_build_all()
+	GameState.save_game()
 
 func _update_detail_panel() -> void:
 	if selected_item.is_empty():
@@ -348,7 +436,12 @@ func _update_detail_panel() -> void:
 
 	if detail_name:
 		var prefix = "[已装备] " if _selected_equipped else "[仓库] "
-		detail_name.text = prefix + name
+		var tonnage_tier = selected_item.get("tonnage_tier", EquipmentData.TonnageTier.SMALL)
+		var t_name = EquipmentData.get_tonnage_name(tonnage_tier)
+		var can_eq = _can_equip(selected_item) if not _selected_equipped else true
+		var tonnage_hint = " [%s]" % t_name if selected_item.has("tonnage_tier") else ""
+		var tonnage_warn = " (不可装备)" if not can_eq else ""
+		detail_name.text = prefix + name + tonnage_hint + tonnage_warn
 		detail_name.add_theme_color_override("font_color", color)
 
 	var stats_text = ""
@@ -399,6 +492,7 @@ func _on_sell() -> void:
 	selected_item = {}
 	_update_detail_panel()
 	_build_all()
+	GameState.save_game()
 
 func _on_back() -> void:
 	get_parent().close_all_panels()

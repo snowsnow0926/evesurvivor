@@ -19,7 +19,7 @@ func _load_balance() -> void:
 	var json = JSON.new()
 	var err = json.parse(content)
 	if err != OK:
-		push_warning("[GameBalance] JSON parse error: " + json.get_error_message())
+		push_warning("[GameBalance] JSON parse error: " + json.get_error_message() + " at line " + str(json.get_error_line()))
 		return
 	data = json.data
 	print("[GameBalance] Loaded ", data.size(), " top-level sections")

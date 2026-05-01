@@ -1,5 +1,11 @@
 extends CharacterBody2D
 
+const DEBUG := false
+
+func _debug(msg: String) -> void:
+	if DEBUG:
+		print("[Player] ", msg)
+
 const ShipData = preload("res://resources/ship_data.gd")
 const WeaponData = preload("res://resources/weapon_data.gd")
 
@@ -73,11 +79,11 @@ var polygon: Node2D
 
 func _ready() -> void:
 	polygon = $Polygon2D
-	print("[Player] _ready called, polygon=", polygon)
-	print("[Player] viewport size=", get_viewport_rect().size)
+	_debug("_ready called, polygon=" + str(polygon))
+	_debug("viewport size=" + str(get_viewport_rect().size))
 	if polygon:
 		polygon.rotation = -PI / 2
-		print("[Player] polygon setup done")
+	_debug("polygon setup done")
 
 func init_weapons() -> void:
 	active_weapons.clear()
@@ -94,36 +100,52 @@ func init_weapons() -> void:
 	if sid == 0:
 		sid = ShipData.ShipID.FRIGATE
 	var equipped_list = GameState.equipped_weapons.get(sid)
-	print("[Player.init_weapons] selected_ship_id=", sid, " equipped_list=", equipped_list)
+	_debug("init_weapons: selected_ship_id=" + str(sid) + " equipped_list=" + str(equipped_list))
 	var added_any = false
+	var item_id: int = -1
+	var weapon_type_map: Dictionary = {}
 
 	if equipped_list is Array and not equipped_list.is_empty():
 		for equipped_dict in equipped_list:
 			if equipped_dict is Dictionary and equipped_dict.has("scene_path"):
 				var scene_path = equipped_dict.get("scene_path", default_weapon_scene)
 				var weapon_type = scene_to_weapon_type.get(scene_path, WeaponData.WeaponID.MISSILE)
+				var quality = equipped_dict.get("quality", 0)
 				if equipped_dict.has("shop_item_id"):
-					match equipped_dict.get("shop_item_id"):
-						0: weapon_type = WeaponData.WeaponID.SMALL_MISSILE
-						1: weapon_type = WeaponData.WeaponID.SMALL_CANNON
-						2: weapon_type = WeaponData.WeaponID.SMALL_RAILGUN
-						3: weapon_type = WeaponData.WeaponID.SMALL_LASER
-				var weapon_data = WeaponData.get_weapon(weapon_type)
+					item_id = equipped_dict.get("shop_item_id")
+					weapon_type_map = {
+						0: WeaponData.WeaponID.SMALL_MISSILE,
+						1: WeaponData.WeaponID.MEDIUM_MISSILE,
+						2: WeaponData.WeaponID.LARGE_MISSILE,
+						3: WeaponData.WeaponID.FLAGSHIP_MISSILE,
+						4: WeaponData.WeaponID.SMALL_CANNON,
+						5: WeaponData.WeaponID.MEDIUM_CANNON,
+						6: WeaponData.WeaponID.LARGE_CANNON,
+						7: WeaponData.WeaponID.FLAGSHIP_CANNON,
+						8: WeaponData.WeaponID.SMALL_RAILGUN,
+						9: WeaponData.WeaponID.MEDIUM_RAILGUN,
+						10: WeaponData.WeaponID.LARGE_RAILGUN,
+						11: WeaponData.WeaponID.FLAGSHIP_RAILGUN,
+						12: WeaponData.WeaponID.SMALL_LASER,
+						13: WeaponData.WeaponID.MEDIUM_LASER,
+						14: WeaponData.WeaponID.LARGE_LASER,
+						15: WeaponData.WeaponID.FLAGSHIP_LASER,
+					}
+				if weapon_type_map:
+					weapon_type = weapon_type_map.get(item_id, weapon_type)
+				var weapon_data = WeaponData.get_weapon(weapon_type, quality)
 				active_weapons.append(weapon_data)
 				weapon_fire_timers[weapon_data.weapon_id] = 0.0
 				added_any = true
-				if weapon_type == WeaponData.WeaponID.SMALL_LASER:
-					laser_damage = 10.0
-					laser_fire_interval = 2.5
 
 	if not added_any:
-		print("[Player.init_weapons] NO shop weapons found, using race default: ", default_weapon_scene)
+		_debug("NO shop weapons found, using race default: " + default_weapon_scene)
 		var weapon_type = scene_to_weapon_type.get(default_weapon_scene, WeaponData.WeaponID.MISSILE)
 		var weapon_data = WeaponData.get_weapon(weapon_type)
 		active_weapons.append(weapon_data)
 		weapon_fire_timers[weapon_data.weapon_id] = 0.0
 	else:
-		print("[Player.init_weapons] loaded ", active_weapons.size(), " weapon(s) from shop")
+		_debug("loaded " + str(active_weapons.size()) + " weapon(s) from shop")
 
 	cannon_fire_interval = 1.2
 	cannon_pierce_count = 1
@@ -143,8 +165,8 @@ func init_weapons() -> void:
 
 func _physics_process(delta: float) -> void:
 	_physics_tick_counter += 1
-	if _physics_tick_counter % 120 == 0:
-		print("[Player._physics_process] alive tick=", _physics_tick_counter, _debug_player_state())
+	if DEBUG and _physics_tick_counter % 120 == 0:
+		_debug("alive tick=" + str(_physics_tick_counter) + _debug_player_state())
 	if game_manager and game_manager.is_game_over:
 		velocity = Vector2.ZERO
 		move_and_slide()
@@ -215,61 +237,62 @@ func _update_firing(delta: float) -> void:
 			weapon_fire_timers[wt] = 0.0
 		weapon_fire_timers[wt] += delta
 
-		if wt == WeaponData.WeaponID.RAILGUN or wt == WeaponData.WeaponID.SMALL_RAILGUN:
+		var missile_ids = [
+			WeaponData.WeaponID.MISSILE, WeaponData.WeaponID.SMALL_MISSILE,
+			WeaponData.WeaponID.MEDIUM_MISSILE, WeaponData.WeaponID.LARGE_MISSILE, WeaponData.WeaponID.FLAGSHIP_MISSILE
+		]
+		var railgun_ids = [
+			WeaponData.WeaponID.RAILGUN, WeaponData.WeaponID.SMALL_RAILGUN,
+			WeaponData.WeaponID.MEDIUM_RAILGUN, WeaponData.WeaponID.LARGE_RAILGUN, WeaponData.WeaponID.FLAGSHIP_RAILGUN
+		]
+		if wt in railgun_ids:
 			_update_railgun_firing(delta, weapon)
-		elif wt == WeaponData.WeaponID.MISSILE or wt == WeaponData.WeaponID.SMALL_MISSILE:
+		elif wt in missile_ids:
 			_update_missile_firing(delta, weapon)
 		else:
 			var interval = _get_fire_interval(weapon)
 			if weapon_fire_timers[wt] >= interval:
 				weapon_fire_timers[wt] = 0.0
-				print("[Player._update_firing] FIRES! weapon_id=", wt, " interval=", interval, _debug_player_state())
 				_fire_weapon(weapon)
-			else:
-				if weapon_fire_timers[wt] < 0.05 and wt == 4:
-					print("[Player._update_firing] waiting weapon_id=", wt, " timer=", weapon_fire_timers[wt], "/", interval, _debug_player_state())
 
 func _get_fire_interval(weapon: WeaponData) -> float:
 	var base = weapon.fire_interval
-	match weapon.weapon_id:
-		WeaponData.WeaponID.MISSILE:
-			var mult = 1.0
-			if silent_hunter_active:
-				mult = pow(0.85, float(silent_hunter_level))
-			if _is_moving and game_manager and game_manager.cannon_rush_level > 0:
-				mult *= (1.0 - 0.15 * float(game_manager.cannon_rush_level))
-			return base * mult
-		WeaponData.WeaponID.SMALL_MISSILE:
-			var mult = 1.0
-			if silent_hunter_active:
-				mult = pow(0.85, float(silent_hunter_level))
-			if _is_moving and game_manager and game_manager.cannon_rush_level > 0:
-				mult *= (1.0 - 0.15 * float(game_manager.cannon_rush_level))
-			return base * mult
-		WeaponData.WeaponID.CANNON:
-			var interval = cannon_fire_interval
-			if game_manager:
-				if _is_moving and game_manager.cannon_rush_level > 0:
-					interval *= (1.0 - 0.15 * float(game_manager.cannon_rush_level))
-				if is_injured and game_manager.cannon_vengeance_level > 0:
-					interval *= (1.0 - 0.15 * float(game_manager.cannon_vengeance_level))
-			return interval
-		WeaponData.WeaponID.SMALL_CANNON:
-			var interval = cannon_fire_interval
-			if game_manager:
-				if _is_moving and game_manager.cannon_rush_level > 0:
-					interval *= (1.0 - 0.15 * float(game_manager.cannon_rush_level))
-				if is_injured and game_manager.cannon_vengeance_level > 0:
-					interval *= (1.0 - 0.15 * float(game_manager.cannon_vengeance_level))
-			return interval
-		WeaponData.WeaponID.RAILGUN:
-			return railgun_fire_interval
-		WeaponData.WeaponID.SMALL_RAILGUN:
-			return railgun_fire_interval
-		WeaponData.WeaponID.LASER:
-			return laser_fire_interval
-		WeaponData.WeaponID.SMALL_LASER:
-			return laser_fire_interval
+	var wt = weapon.weapon_id
+	var missile_ids = [
+		WeaponData.WeaponID.MISSILE, WeaponData.WeaponID.SMALL_MISSILE,
+		WeaponData.WeaponID.MEDIUM_MISSILE, WeaponData.WeaponID.LARGE_MISSILE, WeaponData.WeaponID.FLAGSHIP_MISSILE
+	]
+	var cannon_ids = [
+		WeaponData.WeaponID.CANNON, WeaponData.WeaponID.SMALL_CANNON,
+		WeaponData.WeaponID.MEDIUM_CANNON, WeaponData.WeaponID.LARGE_CANNON, WeaponData.WeaponID.FLAGSHIP_CANNON
+	]
+	var railgun_ids = [
+		WeaponData.WeaponID.RAILGUN, WeaponData.WeaponID.SMALL_RAILGUN,
+		WeaponData.WeaponID.MEDIUM_RAILGUN, WeaponData.WeaponID.LARGE_RAILGUN, WeaponData.WeaponID.FLAGSHIP_RAILGUN
+	]
+	var laser_ids = [
+		WeaponData.WeaponID.LASER, WeaponData.WeaponID.SMALL_LASER,
+		WeaponData.WeaponID.MEDIUM_LASER, WeaponData.WeaponID.LARGE_LASER, WeaponData.WeaponID.FLAGSHIP_LASER
+	]
+	if wt in missile_ids:
+		var mult = 1.0
+		if silent_hunter_active:
+			mult = pow(0.85, float(silent_hunter_level))
+		if _is_moving and game_manager and game_manager.cannon_rush_level > 0:
+			mult *= (1.0 - 0.15 * float(game_manager.cannon_rush_level))
+		return base * mult
+	elif wt in cannon_ids:
+		var interval = cannon_fire_interval
+		if game_manager:
+			if _is_moving and game_manager.cannon_rush_level > 0:
+				interval *= (1.0 - 0.15 * float(game_manager.cannon_rush_level))
+			if is_injured and game_manager.cannon_vengeance_level > 0:
+				interval *= (1.0 - 0.15 * float(game_manager.cannon_vengeance_level))
+		return interval
+	elif wt in railgun_ids:
+		return railgun_fire_interval
+	elif wt in laser_ids:
+		return laser_fire_interval
 	return base
 
 func _update_railgun_firing(delta: float, weapon: WeaponData) -> void:
@@ -302,43 +325,26 @@ func get_talent_bonus(talent_type: String) -> float:
 
 func _fire_weapon(weapon: WeaponData) -> void:
 	if not game_manager or not is_instance_valid(game_manager):
-		print("[Player._fire_weapon] FAIL: no game_manager")
+		_debug("FAIL: no game_manager")
 		return
 	var enemy_root = game_manager.get("enemy_root")
 	if not enemy_root or not is_instance_valid(enemy_root):
-		print("[Player._fire_weapon] FAIL: no enemy_root")
+		_debug("FAIL: no enemy_root")
 		return
 
 	var target_pos = _find_closest_enemy(weapon.range)
 	if target_pos == Vector2.ZERO:
-		print("[Player._fire_weapon] FAIL: no target found, range=", weapon.range, " enemy_count=", enemy_root.get_child_count())
+		_debug("FAIL: no target found, range=" + str(weapon.range) + " enemy_count=" + str(enemy_root.get_child_count()))
 		return
-	print("[Player._fire_weapon] OK: target_pos=", target_pos, " weapon_id=", weapon.weapon_id)
 
 	match weapon.weapon_id:
-		WeaponData.WeaponID.MISSILE:
-			print("[Player._fire_weapon] branch: MISSILE")
+		WeaponData.WeaponID.MISSILE or WeaponData.WeaponID.SMALL_MISSILE or WeaponData.WeaponID.MEDIUM_MISSILE or WeaponData.WeaponID.LARGE_MISSILE or WeaponData.WeaponID.FLAGSHIP_MISSILE:
 			_fire_missiles_at(target_pos, weapon)
-		WeaponData.WeaponID.SMALL_MISSILE:
-			print("[Player._fire_weapon] branch: SMALL_MISSILE")
-			_fire_missiles_at(target_pos, weapon)
-		WeaponData.WeaponID.CANNON:
-			print("[Player._fire_weapon] branch: CANNON")
+		WeaponData.WeaponID.CANNON or WeaponData.WeaponID.SMALL_CANNON or WeaponData.WeaponID.MEDIUM_CANNON or WeaponData.WeaponID.LARGE_CANNON or WeaponData.WeaponID.FLAGSHIP_CANNON:
 			_fire_cannon_at(target_pos)
-		WeaponData.WeaponID.SMALL_CANNON:
-			print("[Player._fire_weapon] branch: SMALL_CANNON")
-			_fire_cannon_at(target_pos)
-		WeaponData.WeaponID.RAILGUN:
-			print("[Player._fire_weapon] branch: RAILGUN")
+		WeaponData.WeaponID.RAILGUN or WeaponData.WeaponID.SMALL_RAILGUN or WeaponData.WeaponID.MEDIUM_RAILGUN or WeaponData.WeaponID.LARGE_RAILGUN or WeaponData.WeaponID.FLAGSHIP_RAILGUN:
 			_fire_railgun_at(target_pos)
-		WeaponData.WeaponID.SMALL_RAILGUN:
-			print("[Player._fire_weapon] branch: SMALL_RAILGUN")
-			_fire_railgun_at(target_pos)
-		WeaponData.WeaponID.LASER:
-			print("[Player._fire_weapon] branch: LASER")
-			_fire_laser_at(target_pos)
-		WeaponData.WeaponID.SMALL_LASER:
-			print("[Player._fire_weapon] branch: SMALL_LASER")
+		WeaponData.WeaponID.LASER or WeaponData.WeaponID.SMALL_LASER or WeaponData.WeaponID.MEDIUM_LASER or WeaponData.WeaponID.LARGE_LASER or WeaponData.WeaponID.FLAGSHIP_LASER:
 			_fire_laser_at(target_pos)
 
 func _find_closest_enemy(max_range: float) -> Vector2:
@@ -359,7 +365,7 @@ func _find_closest_enemy(max_range: float) -> Vector2:
 	return Vector2.ZERO
 
 func _fire_missiles_at(target_pos: Vector2, weapon) -> void:
-	print("[Player._fire_missiles_at] called target_pos=", target_pos, " bullet_root=", game_manager.get("bullet_root") if game_manager else null)
+	_debug("firing missiles at " + str(target_pos))
 	SoundManager.play_sfx("shoot_missile")
 	if not game_manager:
 		return
@@ -394,7 +400,6 @@ func _update_missile_firing(delta: float, weapon) -> void:
 	var interval = _get_fire_interval(weapon)
 	if weapon_fire_timers[wt] >= interval:
 		weapon_fire_timers[wt] = 0.0
-		print("[Player._update_firing] FIRES! weapon_id=", wt, " interval=", interval, _debug_player_state())
 		_fire_missiles_at(_find_closest_enemy(weapon.range), weapon)
 
 func _fire_single_missile_for_burst(weapon) -> void:
@@ -547,7 +552,7 @@ func apply_race_data(race: RaceData) -> void:
 	init_weapons()
 	_apply_race_talents()
 	_apply_armor_bonuses()
-	print("[Player] Applied race data: ", race.display_name)
+	_debug("Applied race data: " + race.display_name)
 
 func _apply_race_talents() -> void:
 	for talent in race_talents:
@@ -618,8 +623,6 @@ func sync_from_game_manager(gm: Node2D) -> void:
 	railgun_crit_bonus = gm.railgun_crit_bonus
 	railgun_multi_count = gm.railgun_multi_count
 	laser_damage = gm.laser_damage
-	if _has_small_laser_equipped():
-		laser_damage = 10.0
 	laser_duration = gm.laser_duration
 	laser_width = gm.laser_width
 	laser_fire_interval = gm.laser_fire_interval
@@ -634,12 +637,6 @@ func get_secondary_weapon() -> WeaponData:
 	if active_weapons.size() > 1:
 		return active_weapons[1]
 	return null
-
-func _has_small_laser_equipped() -> bool:
-	for weapon in active_weapons:
-		if weapon.weapon_id == WeaponData.WeaponID.SMALL_LASER:
-			return true
-	return false
 
 func reset_state() -> void:
 	pass

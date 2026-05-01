@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://cf8menu001"]
+[gd_scene load_steps=3 format=3 uid="uid://cf8menu001"]
 
 [ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_menu"]
+[ext_resource type="PackedScene" uid="uid://csaveui001" path="res://scenes/SaveUI.tscn" id="2_save"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -55,7 +56,15 @@ horizontal_alignment = 1
 
 [node name="StartBtn" type="Button" parent="Panel/VBox"]
 layout_mode = 2
-text = "START MISSION"
+text = "开始新游戏"
+
+[node name="LoadGameBtn" type="Button" parent="Panel/VBox"]
+layout_mode = 2
+text = "读取游戏"
+
+[node name="QuitBtn" type="Button" parent="Panel/VBox"]
+layout_mode = 2
+text = "结束游戏"
 
 [node name="HSeparator" type="HSeparator" parent="Panel/VBox"]
 layout_mode = 2
@@ -79,3 +88,6 @@ horizontal_alignment = 1
 layout_mode = 2
 text = "REPAIR (500星币)"
 disabled = true
+
+[node name="SaveUI" parent="." instance=ExtResource("2_save")]
+visible = false

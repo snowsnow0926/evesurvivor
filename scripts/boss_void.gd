@@ -1,11 +1,6 @@
-extends CharacterBody2D
+extends EnemyBase
 
-var game_manager: Node2D
-
-var max_hp: float = 500.0
-var hp: float = 500.0
 var base_move_speed: float = 80.0
-var move_speed: float = 80.0
 var collision_damage: float = 15.0
 var contact_cooldown: float = 0.5
 var contact_timer: float = 0.0
@@ -17,11 +12,10 @@ var bullet_speed: float = 400.0
 var bullet_damage: float = 10.0
 var is_rage: bool = false
 
-var polygon: Node2D
-var hp_bar: ColorRect
 var hp_bar_bg: ColorRect
 
 func _ready() -> void:
+	super._ready()
 	polygon = $Polygon2D
 	hp_bar = $HPBar
 	hp_bar_bg = $HPBarBg
@@ -29,29 +23,22 @@ func _ready() -> void:
 		polygon.rotation = PI / 2
 	scale = Vector2(3.0, 3.0)
 
+	_death_particle_color = Color(0.5, 0.0, 0.5, 1.0)
+
 func _physics_process(delta: float) -> void:
-	if not game_manager or game_manager.is_game_over or game_manager.is_paused:
-		velocity = Vector2.ZERO
-		move_and_slide()
-		return
+	super._physics_process(delta)
 
-	var player = game_manager.get("player")
+func _process_combat(delta: float) -> void:
+	var player = _get_player()
 	if not is_instance_valid(player):
-		velocity = Vector2.ZERO
-		move_and_slide()
 		return
-
-	var dir = global_position.direction_to(player.global_position).normalized()
-	velocity = dir * move_speed
-	move_and_slide()
 
 	contact_timer += delta
 	if contact_timer >= contact_cooldown:
 		contact_timer = 0.0
-		var player_node = player
-		if global_position.distance_to(player_node.global_position) < 50.0:
-			if player_node.has_method("on_player_take_damage"):
-				player_node.on_player_take_damage(collision_damage)
+		if global_position.distance_to(player.global_position) < 50.0:
+			if player.has_method("on_player_take_damage"):
+				player.on_player_take_damage(collision_damage)
 
 	if hp / max_hp <= 0.6 and not is_rage:
 		_enter_rage_mode()
@@ -69,9 +56,7 @@ func _enter_rage_mode() -> void:
 		polygon.modulate = Color(1.5, 0.3, 0.3)
 
 func _fire_spread() -> void:
-	if not game_manager:
-		return
-	var player = game_manager.get("player")
+	var player = _get_player()
 	if not is_instance_valid(player):
 		return
 
@@ -107,22 +92,6 @@ func setup_boss(gm: Node2D) -> void:
 	fire_timer = 0.0
 	contact_timer = 0.0
 
-func take_damage(amount: float, is_crit: bool = false) -> void:
-	SoundManager.play_sfx("hit")
-	hp -= amount
-
-	_spawn_damage_number(amount, is_crit)
-
-	if hp_bar:
-		hp_bar.scale.x = clamp(hp / max_hp, 0.0, 1.0)
-		if hp_bar_bg:
-			hp_bar.position.x = -51.0 * clamp(hp / max_hp, 0.0, 1.0)
-
-	_start_hit_flash()
-
-	if hp <= 0:
-		_die()
-
 func _spawn_damage_number(amount: float, is_crit: bool) -> void:
 	var parent = get_parent()
 	if not parent:
@@ -152,20 +121,19 @@ func _spawn_damage_number(amount: float, is_crit: bool) -> void:
 	parent.call_deferred("add_child", timer)
 	timer.call_deferred("start")
 
+func _update_hp_bar() -> void:
+	if hp_bar:
+		var ratio = clampf(hp / maxf(max_hp, 1.0), 0.0, 1.0)
+		hp_bar.scale.x = ratio
+		if hp_bar_bg:
+			hp_bar.position.x = -51.0 * ratio
+
 func _start_hit_flash() -> void:
 	if polygon:
 		var original_color = polygon.modulate if not is_rage else Color(1.5, 0.3, 0.3)
 		polygon.modulate = Color(3.0, 3.0, 3.0)
 		var tween = create_tween()
 		tween.tween_property(polygon, "modulate", original_color, 0.15)
-
-func _die() -> void:
-	SoundManager.play_sfx("boss_death")
-	_spawn_death_effect()
-	_spawn_rewards()
-	if game_manager and is_instance_valid(game_manager):
-		game_manager.on_boss_killed(self)
-	queue_free()
 
 func _spawn_death_effect() -> void:
 	var parent = get_parent()
@@ -185,14 +153,14 @@ func _spawn_death_effect() -> void:
 		particles.initial_velocity_max = 300.0
 		particles.scale_amount_min = 5.0
 		particles.scale_amount_max = 15.0
-		particles.color = Color(0.5, 0.0, 0.5, 1.0)
+		particles.color = _death_particle_color
 		particles.position = global_position + offset
 		parent.call_deferred("add_child", particles)
 		particles.emitting = true
 		particles.finished.connect(particles.queue_free)
 
 func _spawn_rewards() -> void:
-	if not game_manager or not is_instance_valid(game_manager):
+	if not is_instance_valid(game_manager):
 		return
 
 	var parent = game_manager.get("exp_orb_root")
@@ -205,3 +173,13 @@ func _spawn_rewards() -> void:
 				orb.set_game_manager(game_manager)
 				orb.global_position = global_position + Vector2.from_angle(angle) * 60.0
 				parent.call_deferred("add_child", orb)
+
+func _die() -> void:
+	SoundManager.play_sfx("boss_death")
+	_spawn_death_effect()
+	_spawn_rewards()
+	enemy_dead.emit(self, "boss")
+	queue_free()
+
+func _get_enemy_type() -> String:
+	return "boss"

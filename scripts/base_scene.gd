@@ -27,6 +27,8 @@ func _ready() -> void:
 	_bind_buttons()
 	_update_currency_display()
 	base_pause_menu = find_child("BasePauseMenu", true, false)
+	if GameState.player_name.is_empty() or GameState.first_run:
+		get_tree().change_scene_to_file("res://scenes/CharacterCreate.tscn")
 
 func _bind_buttons() -> void:
 	if repair_btn:
@@ -123,7 +125,7 @@ func _on_start_battle() -> void:
 	if not has_weapon:
 		_show_no_weapon_warning()
 		return
-	get_tree().change_scene_to_file("res://scenes/ShipSelectUI.tscn")
+	get_tree().change_scene_to_file("res://scenes/GameScene.tscn")
 
 func _show_no_weapon_warning() -> void:
 	no_weapon_warning.visible = true

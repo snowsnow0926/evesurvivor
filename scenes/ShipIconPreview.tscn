@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cpe7dbc21wgka"]
+
+[ext_resource type="Script" path="res://scripts/ship_icon_preview.gd" id="1_preview"]
+
+[node name="ShipIconPreview" type="Node2D"]
+script = ExtResource("1_preview")

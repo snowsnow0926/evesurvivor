@@ -3,15 +3,7 @@ extends Resource
 
 enum EquipType { WEAPON, ARMOR }
 enum Quality { COMMON, UNCOMMON, RARE, LEGENDARY, EPIC, MYTHIC }
-
-@export var equip_id: String
-@export var equip_type: EquipType
-@export var quality: Quality
-@export var display_name: String
-@export var description: String
-@export var base_damage: float
-@export var base_armor: float
-@export var icon: String
+enum TonnageTier { SMALL, MEDIUM, LARGE, FLAGSHIP }
 
 static func get_quality_name(q: Quality) -> String:
 	match q:
@@ -36,25 +28,33 @@ static func get_quality_color(q: Quality) -> Color:
 static func get_quality_mult(q: Quality) -> float:
 	match q:
 		Quality.COMMON: return 1.0
-		Quality.UNCOMMON: return 1.2
-		Quality.RARE: return 1.5
+		Quality.UNCOMMON: return 1.3
+		Quality.RARE: return 1.6
 		Quality.LEGENDARY: return 2.0
 		Quality.EPIC: return 2.8
 		Quality.MYTHIC: return 4.0
 	return 1.0
 
-static func create_random_equipment(equip_type: EquipType, quality: Quality) -> EquipmentData:
-	var e = EquipmentData.new()
-	e.equip_type = equip_type
-	e.quality = quality
-	e.equip_id = str(equip_type) + "_" + str(quality) + "_" + str(randi())
-	e.base_damage = 0.0
-	e.base_armor = 0.0
-	e.display_name = get_quality_name(quality)
-	if equip_type == EquipType.WEAPON:
-		e.display_name += " 武器"
-		e.base_damage = 10.0 * get_quality_mult(quality)
-	else:
-		e.display_name += " 护甲"
-		e.base_armor = 5.0 * get_quality_mult(quality)
-	return e
+static func get_tonnage_name(t: int) -> String:
+	match t:
+		0: return "小型"
+		1: return "中型"
+		2: return "大型"
+		3: return "旗舰级"
+	return "?"
+
+static func get_tonnage_color(t: int) -> Color:
+	match t:
+		0: return Color(0.7, 0.7, 0.7)
+		1: return Color(0.118, 1.0, 0.369)
+		2: return Color(0.302, 0.651, 1.0)
+		3: return Color(1.0, 0.549, 0.0)
+	return Color.WHITE
+
+static func can_equip_on_ship(ship_tonnage: int, equip_tonnage: int) -> bool:
+	match ship_tonnage:
+		0: return equip_tonnage == TonnageTier.SMALL
+		1: return equip_tonnage <= TonnageTier.MEDIUM
+		2: return equip_tonnage <= TonnageTier.LARGE
+		3: return true
+	return false
