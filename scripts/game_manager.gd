@@ -22,6 +22,7 @@ const ShipData = preload("res://resources/ship_data.gd")
 const StageData = preload("res://resources/stage_data.gd")
 const WeaponData = preload("res://resources/weapon_data.gd")
 const EquipmentData = preload("res://resources/equipment_data.gd")
+const ShopItemData = preload("res://resources/shop_data.gd")
 
 var player: Node2D
 var enemy_root: Node2D
@@ -144,7 +145,28 @@ func try_drop_equipment(enemy_pos: Vector2) -> void:
 	var loot: Dictionary = {}
 	if loot_type == "weapon":
 		var wid := DROP_WEAPONS[randi() % DROP_WEAPONS.size()]
-		loot = {"type": "weapon", "weapon_id": wid, "quality": EquipmentData.Quality.COMMON, "pos": enemy_pos}
+		var shop_item_id_map: Dictionary = {
+			WeaponData.WeaponID.SMALL_MISSILE: ShopItemData.ShopItemID.SMALL_MISSILE,
+			WeaponData.WeaponID.SMALL_CANNON: ShopItemData.ShopItemID.SMALL_CANNON,
+			WeaponData.WeaponID.SMALL_RAILGUN: ShopItemData.ShopItemID.SMALL_RAILGUN,
+			WeaponData.WeaponID.SMALL_LASER: ShopItemData.ShopItemID.SMALL_LASER,
+		}
+		var sid = shop_item_id_map.get(wid, ShopItemData.ShopItemID.SMALL_MISSILE)
+		var shop_item = ShopItemData.get_item(sid)
+		loot = {
+			"type": "weapon",
+			"shop_item_id": sid,
+			"scene_path": shop_item.scene_path,
+			"quality": EquipmentData.Quality.COMMON,
+			"name": shop_item.display_name,
+			"base_damage": shop_item.base_damage,
+			"fire_interval": shop_item.fire_interval,
+			"range": shop_item.range,
+			"crit_rate": shop_item.crit_rate,
+			"crit_mult": shop_item.crit_mult,
+			"tonnage_tier": shop_item.tonnage_tier,
+			"pos": enemy_pos
+		}
 	else:
 		var aid := DROP_ARMOR[randi() % DROP_ARMOR.size()]
 		loot = {"type": "armor", "armor_id": aid, "quality": EquipmentData.Quality.COMMON, "pos": enemy_pos}
@@ -156,7 +178,28 @@ func spawn_boss_loot(enemy_pos: Vector2) -> void:
 	var loot: Dictionary = {}
 	if loot_type == "weapon":
 		var wid := DROP_WEAPONS[randi() % DROP_WEAPONS.size()]
-		loot = {"type": "weapon", "weapon_id": wid, "quality": EquipmentData.Quality.COMMON, "pos": enemy_pos}
+		var shop_item_id_map: Dictionary = {
+			WeaponData.WeaponID.SMALL_MISSILE: ShopItemData.ShopItemID.SMALL_MISSILE,
+			WeaponData.WeaponID.SMALL_CANNON: ShopItemData.ShopItemID.SMALL_CANNON,
+			WeaponData.WeaponID.SMALL_RAILGUN: ShopItemData.ShopItemID.SMALL_RAILGUN,
+			WeaponData.WeaponID.SMALL_LASER: ShopItemData.ShopItemID.SMALL_LASER,
+		}
+		var sid = shop_item_id_map.get(wid, ShopItemData.ShopItemID.SMALL_MISSILE)
+		var shop_item = ShopItemData.get_item(sid)
+		loot = {
+			"type": "weapon",
+			"shop_item_id": sid,
+			"scene_path": shop_item.scene_path,
+			"quality": EquipmentData.Quality.COMMON,
+			"name": shop_item.display_name,
+			"base_damage": shop_item.base_damage,
+			"fire_interval": shop_item.fire_interval,
+			"range": shop_item.range,
+			"crit_rate": shop_item.crit_rate,
+			"crit_mult": shop_item.crit_mult,
+			"tonnage_tier": shop_item.tonnage_tier,
+			"pos": enemy_pos
+		}
 	else:
 		var aid := DROP_ARMOR[randi() % DROP_ARMOR.size()]
 		loot = {"type": "armor", "armor_id": aid, "quality": EquipmentData.Quality.COMMON, "pos": enemy_pos}

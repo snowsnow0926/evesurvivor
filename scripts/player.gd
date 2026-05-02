@@ -182,16 +182,40 @@ func _ready() -> void:
 	_debug("polygon setup done")
 	set_ship_icon()
 
+const _SCENE_TO_BASE_WEAPON: Dictionary = {
+	"res://scenes/Missile.tscn": WeaponData.WeaponID.MISSILE,
+	"res://scenes/CannonBullet.tscn": WeaponData.WeaponID.CANNON,
+	"res://scenes/RailgunBullet.tscn": WeaponData.WeaponID.RAILGUN,
+	"res://scenes/LaserBeam.tscn": WeaponData.WeaponID.LASER,
+}
+
+func _get_weapon_type_from_equipped(equipped_dict: Dictionary, scene_path: String) -> int:
+	if equipped_dict.has("shop_item_id"):
+		var sid = equipped_dict.get("shop_item_id")
+		var shop_to_weapon_type: Dictionary = {
+			0: WeaponData.WeaponID.SMALL_MISSILE,
+			1: WeaponData.WeaponID.MEDIUM_MISSILE,
+			2: WeaponData.WeaponID.LARGE_MISSILE,
+			3: WeaponData.WeaponID.FLAGSHIP_MISSILE,
+			4: WeaponData.WeaponID.SMALL_CANNON,
+			5: WeaponData.WeaponID.MEDIUM_CANNON,
+			6: WeaponData.WeaponID.LARGE_CANNON,
+			7: WeaponData.WeaponID.FLAGSHIP_CANNON,
+			8: WeaponData.WeaponID.SMALL_RAILGUN,
+			9: WeaponData.WeaponID.MEDIUM_RAILGUN,
+			10: WeaponData.WeaponID.LARGE_RAILGUN,
+			11: WeaponData.WeaponID.FLAGSHIP_RAILGUN,
+			12: WeaponData.WeaponID.SMALL_LASER,
+			13: WeaponData.WeaponID.MEDIUM_LASER,
+			14: WeaponData.WeaponID.LARGE_LASER,
+			15: WeaponData.WeaponID.FLAGSHIP_LASER,
+		}
+		return shop_to_weapon_type.get(sid, _SCENE_TO_BASE_WEAPON.get(scene_path, WeaponData.WeaponID.MISSILE))
+	return _SCENE_TO_BASE_WEAPON.get(scene_path, WeaponData.WeaponID.MISSILE)
+
 func init_weapons() -> void:
 	active_weapons.clear()
 	weapon_fire_timers.clear()
-
-	var scene_to_weapon_type = {
-		"res://scenes/Missile.tscn": WeaponData.WeaponID.MISSILE,
-		"res://scenes/CannonBullet.tscn": WeaponData.WeaponID.CANNON,
-		"res://scenes/RailgunBullet.tscn": WeaponData.WeaponID.RAILGUN,
-		"res://scenes/LaserBeam.tscn": WeaponData.WeaponID.LASER,
-	}
 
 	var sid = int(GameState.selected_ship_id)
 	if sid == 0:
@@ -199,37 +223,13 @@ func init_weapons() -> void:
 	var equipped_list = GameState.equipped_weapons.get(sid)
 	_debug("init_weapons: selected_ship_id=" + str(sid) + " equipped_list=" + str(equipped_list))
 	var added_any = false
-	var item_id: int = -1
-	var weapon_type_map: Dictionary = {}
 
 	if equipped_list is Array and not equipped_list.is_empty():
 		for equipped_dict in equipped_list:
 			if equipped_dict is Dictionary and equipped_dict.has("scene_path"):
 				var scene_path = equipped_dict.get("scene_path", default_weapon_scene)
-				var weapon_type = scene_to_weapon_type.get(scene_path, WeaponData.WeaponID.MISSILE)
+				var weapon_type = _get_weapon_type_from_equipped(equipped_dict, scene_path)
 				var quality = equipped_dict.get("quality", 0)
-				if equipped_dict.has("shop_item_id"):
-					item_id = equipped_dict.get("shop_item_id")
-					weapon_type_map = {
-						0: WeaponData.WeaponID.SMALL_MISSILE,
-						1: WeaponData.WeaponID.MEDIUM_MISSILE,
-						2: WeaponData.WeaponID.LARGE_MISSILE,
-						3: WeaponData.WeaponID.FLAGSHIP_MISSILE,
-						4: WeaponData.WeaponID.SMALL_CANNON,
-						5: WeaponData.WeaponID.MEDIUM_CANNON,
-						6: WeaponData.WeaponID.LARGE_CANNON,
-						7: WeaponData.WeaponID.FLAGSHIP_CANNON,
-						8: WeaponData.WeaponID.SMALL_RAILGUN,
-						9: WeaponData.WeaponID.MEDIUM_RAILGUN,
-						10: WeaponData.WeaponID.LARGE_RAILGUN,
-						11: WeaponData.WeaponID.FLAGSHIP_RAILGUN,
-						12: WeaponData.WeaponID.SMALL_LASER,
-						13: WeaponData.WeaponID.MEDIUM_LASER,
-						14: WeaponData.WeaponID.LARGE_LASER,
-						15: WeaponData.WeaponID.FLAGSHIP_LASER,
-					}
-				if weapon_type_map:
-					weapon_type = weapon_type_map.get(item_id, weapon_type)
 				var weapon_data = WeaponData.get_weapon(weapon_type, quality)
 				active_weapons.append(weapon_data)
 				weapon_fire_timers[weapon_data.weapon_id] = 0.0
@@ -237,7 +237,7 @@ func init_weapons() -> void:
 
 	if not added_any:
 		_debug("NO shop weapons found, using race default: " + default_weapon_scene)
-		var weapon_type = scene_to_weapon_type.get(default_weapon_scene, WeaponData.WeaponID.MISSILE)
+		var weapon_type = _SCENE_TO_BASE_WEAPON.get(default_weapon_scene, WeaponData.WeaponID.MISSILE)
 		var weapon_data = WeaponData.get_weapon(weapon_type)
 		active_weapons.append(weapon_data)
 		weapon_fire_timers[weapon_data.weapon_id] = 0.0
@@ -388,7 +388,7 @@ func _get_fire_interval(weapon: WeaponData) -> float:
 			mult *= (1.0 - 0.15 * float(game_manager.cannon_rush_level))
 		return base * mult
 	elif wt in cannon_ids:
-		var interval = cannon_fire_interval
+		var interval = weapon.fire_interval
 		if game_manager:
 			if _is_moving and game_manager.cannon_rush_level > 0:
 				interval *= (1.0 - 0.15 * float(game_manager.cannon_rush_level))
@@ -396,9 +396,9 @@ func _get_fire_interval(weapon: WeaponData) -> float:
 				interval *= (1.0 - 0.15 * float(game_manager.cannon_vengeance_level))
 		return interval
 	elif wt in railgun_ids:
-		return railgun_fire_interval
+		return weapon.fire_interval
 	elif wt in laser_ids:
-		return laser_fire_interval
+		return weapon.fire_interval
 	return base
 
 func _update_railgun_firing(delta: float, weapon: WeaponData) -> void:
@@ -447,11 +447,11 @@ func _fire_weapon(weapon: WeaponData) -> void:
 		WeaponData.WeaponID.MISSILE or WeaponData.WeaponID.SMALL_MISSILE or WeaponData.WeaponID.MEDIUM_MISSILE or WeaponData.WeaponID.LARGE_MISSILE or WeaponData.WeaponID.FLAGSHIP_MISSILE:
 			_fire_missiles_at(target_pos, weapon)
 		WeaponData.WeaponID.CANNON or WeaponData.WeaponID.SMALL_CANNON or WeaponData.WeaponID.MEDIUM_CANNON or WeaponData.WeaponID.LARGE_CANNON or WeaponData.WeaponID.FLAGSHIP_CANNON:
-			_fire_cannon_at(target_pos)
+			_fire_cannon_at(target_pos, weapon)
 		WeaponData.WeaponID.RAILGUN or WeaponData.WeaponID.SMALL_RAILGUN or WeaponData.WeaponID.MEDIUM_RAILGUN or WeaponData.WeaponID.LARGE_RAILGUN or WeaponData.WeaponID.FLAGSHIP_RAILGUN:
 			_fire_railgun_at(target_pos)
 		WeaponData.WeaponID.LASER or WeaponData.WeaponID.SMALL_LASER or WeaponData.WeaponID.MEDIUM_LASER or WeaponData.WeaponID.LARGE_LASER or WeaponData.WeaponID.FLAGSHIP_LASER:
-			_fire_laser_at(target_pos)
+			_fire_laser_at(target_pos, weapon)
 
 func _find_closest_enemy(max_range: float) -> Vector2:
 	var enemy_root = game_manager.get("enemy_root")
@@ -526,7 +526,7 @@ func _spawn_single_missile(target_pos: Vector2, missile_scene_path: String, bull
 	missile.global_position = global_position
 	missile.setup_target_direction(Vector2.from_angle(base_angle), damage, missile_speed, crit_rate, crit_mult, game_manager, splash_radius, splash_count, missile_range)
 
-func _fire_cannon_at(target_pos: Vector2) -> void:
+func _fire_cannon_at(target_pos: Vector2, weapon: WeaponData) -> void:
 	SoundManager.play_sfx("shoot_cannon")
 	if not game_manager:
 		return
@@ -540,6 +540,9 @@ func _fire_cannon_at(target_pos: Vector2) -> void:
 	var dir = global_position.angle_to_point(target_pos)
 	var bullet_count = 1 + cannon_bloodthirst
 	var spacing = 10.0
+	var final_damage = weapon.damage
+	var final_speed = weapon.projectile_speed
+	var final_range = weapon.range
 
 	for i in range(bullet_count):
 		var offset_x = (i - (bullet_count - 1) * 0.5) * spacing
@@ -552,9 +555,9 @@ func _fire_cannon_at(target_pos: Vector2) -> void:
 
 		bullet.setup(
 			Vector2.from_angle(dir),
-			cannon_damage,
-			800.0,
-			400.0,
+			final_damage,
+			final_speed,
+			final_range,
 			crit_rate,
 			crit_mult,
 			game_manager,
@@ -615,7 +618,7 @@ func _fire_single_railgun(target_pos: Vector2) -> void:
 			game_manager
 		)
 
-func _fire_laser_at(target_pos: Vector2) -> void:
+func _fire_laser_at(target_pos: Vector2, weapon: WeaponData) -> void:
 	SoundManager.play_sfx("shoot_laser")
 	if not game_manager:
 		return
@@ -635,7 +638,7 @@ func _fire_laser_at(target_pos: Vector2) -> void:
 	laser.owner_player = self
 	laser.setup(
 		dir,
-		laser_damage,
+		weapon.damage,
 		laser_duration,
 		crit_rate,
 		crit_mult,

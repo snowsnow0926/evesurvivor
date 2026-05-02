@@ -45,10 +45,10 @@ func _connect_signals() -> void:
 	if upgrade_menu:
 		upgrade_menu.upgrade_selected.connect(_on_upgrade_selected)
 
-	var pause_menu = $UIRoot/PauseMenu
-	if pause_menu:
-		pause_menu.retreat_requested.connect(_on_retreat_requested)
-		pause_menu.self_destruct_requested.connect(_on_self_destruct_requested)
+	var pause_menu_sig = $UIRoot/PauseMenu
+	if pause_menu_sig:
+		pause_menu_sig.retreat_requested.connect(_on_retreat_requested)
+		pause_menu_sig.self_destruct_requested.connect(_on_self_destruct_requested)
 
 func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("pause"):

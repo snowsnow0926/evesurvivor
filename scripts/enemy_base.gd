@@ -10,6 +10,30 @@ var max_hp: float = 30.0
 var hp: float = 30.0
 var damage: float = 10.0
 var move_speed: float = 100.0
+var tonnage: String = "frigate"
+
+# === Icon ===
+const ShipIconGenerator = preload("res://scripts/ship_icon_generator.gd")
+var _icon_id: String = "enemy_melee"
+var _current_angle: float = 0.0
+var _turn_speed: float = 4.0
+var _icon_tex: Texture2D
+var _locked_tex: Texture2D
+
+# === Lock State ===
+enum LockState { LOCKING, FLASHING, LOCKED }
+const LOCK_DURATION: float = 1.0
+const FLASH_INTERVAL: float = 0.25
+const FLASH_COUNT: int = 3
+const ATTACK_FLASH_INTERVAL: float = 1.5
+var _lock_state: LockState = LockState.LOCKING
+var _lock_timer: float = 0.0
+var _flash_timer: float = 0.0
+var _flash_count: int = 0
+var _flash_visible: bool = true
+var _attack_flash_timer: float = 0.0
+var _attack_flash_cooldown: float = 0.0
+var _is_locked: bool = false
 
 # === Shared Nodes ===
 var polygon: Node2D
@@ -34,6 +58,9 @@ func _ready() -> void:
 	hp_bar = $HPBar
 	if polygon:
 		polygon.rotation = PI / 2
+		polygon.visible = false
+	set_enemy_icon()
+	_init_lock()
 
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(game_manager) or game_manager.is_game_over or game_manager.is_paused:
@@ -41,8 +68,11 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
-	_update_movement(delta)
-	_process_combat(delta)
+	_update_lock(delta)
+	if _lock_state == LockState.LOCKED:
+		_update_movement(delta)
+		_process_combat(delta)
+	_update_rotation(delta)
 
 func _process_combat(_delta: float) -> void:
 	pass
@@ -62,8 +92,146 @@ func setup_enemy(gm: Node2D, e_hp: float, e_damage: float, e_speed: float) -> vo
 	damage = e_damage
 	move_speed = e_speed
 
+func _init_lock() -> void:
+	_lock_state = LockState.LOCKING
+	_lock_timer = 0.0
+	_flash_timer = 0.0
+	_flash_count = 0
+	_flash_visible = true
+	_attack_flash_timer = 0.0
+	_attack_flash_cooldown = ATTACK_FLASH_INTERVAL
+	_is_locked = false
+	queue_redraw()
+
+func _update_lock(delta: float) -> void:
+	match _lock_state:
+		LockState.LOCKING:
+			_lock_timer += delta
+			queue_redraw()
+			if _lock_timer >= LOCK_DURATION:
+				_lock_state = LockState.FLASHING
+				_flash_timer = 0.0
+				_flash_count = 0
+				_flash_visible = true
+		LockState.FLASHING:
+			_flash_timer += delta
+			if _flash_timer >= FLASH_INTERVAL:
+				_flash_timer = 0.0
+				_flash_visible = not _flash_visible
+				_flash_count += 1
+				queue_redraw()
+				if _flash_count >= FLASH_COUNT:
+					_lock_state = LockState.LOCKED
+					_is_locked = true
+					queue_redraw()
+		LockState.LOCKED:
+			if _attack_flash_timer > 0.0:
+				_attack_flash_timer -= delta
+				if _attack_flash_timer <= 0.0:
+					_attack_flash_timer = 0.0
+					_attack_flash_cooldown = ATTACK_FLASH_INTERVAL
+					queue_redraw()
+			elif _attack_flash_cooldown > 0.0:
+				_attack_flash_cooldown -= delta
+
+func trigger_attack_flash() -> void:
+	if _lock_state != LockState.LOCKED:
+		return
+	if _attack_flash_timer <= 0.0 and _attack_flash_cooldown <= 0.0:
+		_attack_flash_timer = 0.2
+		queue_redraw()
+
+func is_locked() -> bool:
+	return _is_locked
+
+func is_windup_blinking() -> bool:
+	return false
+
+func get_windup_blink_visible() -> bool:
+	return true
+
+func get_locked_bracket_color() -> Color:
+	return Color(1.0, 0.2, 0.2)
+
+func is_windup_state() -> bool:
+	return false
+
+func set_enemy_icon() -> void:
+	var entry: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.ENEMY, _icon_id)
+	if entry == null:
+		return
+	_icon_tex = entry.get_texture()
+	_locked_tex = entry.get_texture(Color(1.8, 0.3, 0.3))
+	if ship_sprite != null:
+		ship_sprite.visible = false
+	if polygon != null:
+		polygon.visible = false
+
+func _build_polygon_from_path(path: Array) -> PackedVector2Array:
+	var closed_polygons: Array[PackedVector2Array] = []
+	var current_open: Array[Vector2] = []
+	var last_pt := Vector2.ZERO
+	var sub_start := Vector2.ZERO
+
+	for cmd: Array in path:
+		if cmd.is_empty():
+			continue
+		var t: String = cmd[0]
+		match t:
+			"M":
+				if not current_open.is_empty() and current_open.size() >= 2:
+					closed_polygons.append(PackedVector2Array(current_open))
+				current_open.clear()
+				last_pt = Vector2(cmd[1], cmd[2])
+				current_open.append(last_pt)
+				sub_start = last_pt
+			"L":
+				var p: Vector2 = Vector2(cmd[1], cmd[2])
+				current_open.append(p)
+				last_pt = p
+			"Q":
+				if cmd.size() >= 5:
+					var p0 := last_pt
+					var p1 := Vector2(cmd[1], cmd[2])
+					var p2 := Vector2(cmd[3], cmd[4])
+					for j: int in range(1, 13):
+						var tt: float = float(j) / 12.0
+						var mt: float = 1.0 - tt
+						var pt := Vector2(
+							mt * mt * p0.x + 2.0 * mt * tt * p1.x + tt * tt * p2.x,
+							mt * mt * p0.y + 2.0 * mt * tt * p1.y + tt * tt * p2.y
+						)
+						current_open.append(pt)
+					last_pt = p2
+			"Z":
+				if not current_open.is_empty() and current_open.size() >= 2:
+					current_open.append(sub_start)
+
+	if not current_open.is_empty() and current_open.size() >= 2:
+		closed_polygons.append(PackedVector2Array(current_open))
+
+	if closed_polygons.is_empty():
+		return PackedVector2Array()
+
+	var primary := closed_polygons[0]
+	var icon_size: float = ShipIconGenerator.ICON_SIZE
+	var icon_viewbox: float = ShipIconGenerator.ICON_VIEWBOX
+	var scale_val: float = icon_size / icon_viewbox
+	var offset := Vector2(-50.0 * scale_val, -50.0 * scale_val)
+
+	var result := PackedVector2Array()
+	for p: Vector2 in primary:
+		result.append(p * scale_val + offset)
+	return result
+
+func set_icon_rotation(angle: float) -> void:
+	_current_angle = angle
+	queue_redraw()
+
 func take_damage(amount: float, is_crit: bool = false) -> void:
 	if hp <= 0:
+		return
+	if _lock_state != LockState.LOCKED:
 		return
 	SoundManager.play_sfx("hit")
 	hp -= amount
@@ -152,3 +320,81 @@ func _die() -> void:
 
 func _get_enemy_type() -> String:
 	return "melee"
+
+func _update_rotation(delta: float) -> void:
+	var player = _get_player()
+	if not is_instance_valid(player):
+		return
+	var target_angle = global_position.angle_to_point(player.global_position)
+	var angle_diff = target_angle - _current_angle
+	while angle_diff > PI:
+		angle_diff -= 2 * PI
+	while angle_diff < -PI:
+		angle_diff += 2 * PI
+	_current_angle += angle_diff * minf(delta * _turn_speed, 1.0)
+	set_icon_rotation(_current_angle)
+
+func _draw() -> void:
+	# Raven windup blink: hide entire enemy during "off" frames
+	if is_windup_blinking() and not get_windup_blink_visible():
+		return
+
+	var tex: Texture2D
+	if _lock_state == LockState.LOCKED:
+		tex = _locked_tex
+	else:
+		tex = _icon_tex
+
+	if tex == null:
+		return
+
+	var tex_size: Vector2 = tex.get_size()
+	var half_w := tex_size.x * 0.5
+	var half_h := tex_size.y * 0.5
+	var offset := Vector2(-half_w, -half_h)
+
+	draw_set_transform(Vector2.ZERO, _current_angle + PI / 2, Vector2.ONE)
+
+	draw_texture(tex, offset)
+
+	# Corner bracket
+	var draw_frame: bool = false
+	var bracket_color: Color
+	var bracket_alpha: float = 1.0
+
+	match _lock_state:
+		LockState.LOCKING:
+			draw_frame = true
+			bracket_color = Color(1.0, 0.85, 0.0)
+		LockState.FLASHING:
+			draw_frame = _flash_visible
+			bracket_color = Color(1.0, 0.85, 0.0)
+		LockState.LOCKED:
+			bracket_color = get_locked_bracket_color()
+			if _attack_flash_timer > 0.0:
+				draw_frame = true
+				bracket_alpha = 0.3 + 0.7 * (_attack_flash_timer / 0.2)
+			else:
+				draw_frame = true
+				bracket_alpha = 1.0
+
+	if draw_frame:
+		var thick := 3.0
+		var c := bracket_color
+		c.a = bracket_alpha
+
+		# top-left L
+		draw_line(Vector2(-half_w, -half_h), Vector2(-half_w + half_w * 0.5, -half_h), c, thick, true)
+		draw_line(Vector2(-half_w, -half_h), Vector2(-half_w, -half_h + half_h * 0.5), c, thick, true)
+
+		# top-right L
+		draw_line(Vector2(half_w, -half_h), Vector2(half_w - half_w * 0.5, -half_h), c, thick, true)
+		draw_line(Vector2(half_w, -half_h), Vector2(half_w, -half_h + half_h * 0.5), c, thick, true)
+
+		# bottom-left L
+		draw_line(Vector2(-half_w, half_h), Vector2(-half_w + half_w * 0.5, half_h), c, thick, true)
+		draw_line(Vector2(-half_w, half_h), Vector2(-half_w, half_h - half_h * 0.5), c, thick, true)
+
+		# bottom-right L
+		draw_line(Vector2(half_w, half_h), Vector2(half_w - half_w * 0.5, half_h), c, thick, true)
+		draw_line(Vector2(half_w, half_h), Vector2(half_w, half_h - half_h * 0.5), c, thick, true)

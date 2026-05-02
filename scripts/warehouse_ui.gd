@@ -13,6 +13,7 @@ var equipped_armor_grid: HBoxContainer
 var inventory_grid: GridContainer
 
 var selected_item: Dictionary = {}
+var _selected_equip_id: String = ""
 var _selected_equipped: bool = false
 var _initialized: bool = false
 var detail_name: Label
@@ -310,6 +311,7 @@ func _apply_item_btn_styles(btn: Button, item: Dictionary, is_equipped: bool) ->
 
 func _on_item_selected(item: Dictionary, from_equipped: bool) -> void:
 	selected_item = item
+	_selected_equip_id = item.get("equip_id", "")
 	_selected_equipped = from_equipped
 	_update_button_states()
 	_update_detail_panel()
@@ -337,10 +339,21 @@ func _on_equip() -> void:
 	if ship_id == 0:
 		ship_id = ShipData.ShipID.FRIGATE
 
+	var equip_id = selected_item.get("equip_id", "")
+
 	var equip_type_val = selected_item.get("equip_type", "")
 	var is_armor = false
 	if typeof(equip_type_val) == TYPE_STRING:
 		is_armor = equip_type_val.to_upper() == "ARMOR"
+
+	var inventory_item: Dictionary = {}
+	for item in GameState.equipment_inventory:
+		if item.get("equip_id", "") == equip_id:
+			inventory_item = item
+			break
+
+	if inventory_item.is_empty():
+		return
 
 	if is_armor:
 		var slots = _get_ship_slot_counts()
@@ -348,7 +361,7 @@ func _on_equip() -> void:
 		var armor_count = 1 if (current_armor is Dictionary and not current_armor.is_empty()) else 0
 		if armor_count >= slots["armor"]:
 			return
-		GameState.equipped_armor[ship_id] = selected_item.duplicate(true)
+		GameState.equipped_armor[ship_id] = inventory_item.duplicate(true)
 	else:
 		var slots = _get_ship_slot_counts()
 		var equipped_list: Array = GameState.equipped_weapons.get(ship_id, [])
@@ -356,10 +369,12 @@ func _on_equip() -> void:
 			equipped_list = []
 		if equipped_list.size() >= slots["weapon"]:
 			return
-		equipped_list.append(selected_item.duplicate(true))
+		equipped_list.append(inventory_item.duplicate(true))
 		GameState.equipped_weapons[ship_id] = equipped_list
 
+	GameState.equipment_inventory.erase(inventory_item)
 	selected_item = {}
+	_selected_equip_id = ""
 	_build_all()
 	GameState.save_game()
 
@@ -382,6 +397,8 @@ func _on_unequip() -> void:
 	if ship_id == 0:
 		ship_id = ShipData.ShipID.FRIGATE
 
+	var equip_id = _selected_equip_id
+
 	var equip_type_val = selected_item.get("equip_type", "")
 	var is_armor = false
 	if typeof(equip_type_val) == TYPE_STRING:
@@ -389,20 +406,26 @@ func _on_unequip() -> void:
 
 	if is_armor:
 		GameState.equipped_armor.erase(ship_id)
-		GameState.equipment_inventory.append(selected_item.duplicate(true))
+		var already_in_inventory = GameState.equipment_inventory.any(
+			func(it): return it.get("equip_id", "") == equip_id)
+		if not already_in_inventory:
+			GameState.equipment_inventory.append(selected_item.duplicate(true))
 	else:
 		var equipped_list: Array = GameState.equipped_weapons.get(ship_id, [])
 		if equipped_list is Array:
-			var equip_id = selected_item.get("equip_id", "")
 			for i in range(equipped_list.size()):
 				var w = equipped_list[i]
 				if w is Dictionary and w.get("equip_id", "") == equip_id:
 					equipped_list.remove_at(i)
 					break
 			GameState.equipped_weapons[ship_id] = equipped_list
-		GameState.equipment_inventory.append(selected_item.duplicate(true))
+		var already_in_inventory = GameState.equipment_inventory.any(
+			func(it): return it.get("equip_id", "") == equip_id)
+		if not already_in_inventory:
+			GameState.equipment_inventory.append(selected_item.duplicate(true))
 
 	selected_item = {}
+	_selected_equip_id = ""
 	_build_all()
 	GameState.save_game()
 
@@ -488,8 +511,20 @@ func _on_sell() -> void:
 		return
 	var sell_price = _calc_sell_price(selected_item)
 	GameState.star_coin += sell_price
-	GameState.equipment_inventory.erase(selected_item)
+
+	var equip_id_to_remove = _selected_equip_id if _selected_equip_id != "" else selected_item.get("equip_id", "")
+	var removed = false
+	for item in GameState.equipment_inventory:
+		if item.get("equip_id", "") == equip_id_to_remove:
+			GameState.equipment_inventory.erase(item)
+			removed = true
+			break
+
+	if not removed:
+		GameState.equipment_inventory.erase(selected_item)
+
 	selected_item = {}
+	_selected_equip_id = ""
 	_update_detail_panel()
 	_build_all()
 	GameState.save_game()

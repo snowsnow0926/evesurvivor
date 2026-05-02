@@ -4,6 +4,12 @@ var attack_cooldown: float = 0.5
 var attack_timer: float = 0.0
 var can_attack: bool = true
 
+func _ready() -> void:
+	super()
+	_icon_id = "enemy_melee"
+	tonnage = "destroyer"
+	_death_particle_color = Color(1.0, 0.2, 0.2, 1.0)
+
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
 
@@ -23,6 +29,7 @@ func _process_combat(_delta: float) -> void:
 	if dist < 64.0:
 		can_attack = false
 		attack_timer = 0.0
+		trigger_attack_flash()
 		if player.has_method("on_player_take_damage"):
 			player.on_player_take_damage(damage)
 

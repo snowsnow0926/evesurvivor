@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://cjfh5rtpggo4x" path="res://scripts/shop_ui.gd" id="1_shop"]
 
 [node name="ShopUI" type="Control" unique_id=488987604]
-layout_mode = 1
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -42,10 +42,6 @@ theme_override_constants/separation = 12
 layout_mode = 2
 text = "装备商店"
 horizontal_alignment = 1
-
-[node name="TopSpacer" type="Control" parent="Panel/VBox" unique_id=1513207504]
-layout_mode = 2
-size_flags_vertical = 3
 
 [node name="TabHBox" type="HBoxContainer" parent="Panel/VBox" unique_id=1336010604]
 layout_mode = 2

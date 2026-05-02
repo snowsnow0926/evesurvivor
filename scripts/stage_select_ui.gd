@@ -58,6 +58,7 @@ func _on_stage_pressed(stage_id: int) -> void:
 	SoundManager.play_sfx("button_click")
 	GameState.selected_stage_id = stage_id
 	GameState.reset_for_new_run()
+	queue_free()
 	get_tree().change_scene_to_file("res://scenes/GameScene.tscn")
 
 func _on_back_pressed() -> void:

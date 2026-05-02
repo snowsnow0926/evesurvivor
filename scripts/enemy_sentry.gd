@@ -11,6 +11,12 @@ var contact_cooldown: float = 0.5
 var contact_timer: float = 0.0
 var current_state: String = "idle"
 
+func _ready() -> void:
+	super()
+	_icon_id = "enemy_sentry"
+	tonnage = "cruiser"
+	_death_particle_color = Color(0.5, 0.2, 1.0, 1.0)
+
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
 
@@ -61,11 +67,15 @@ func _update_movement(_delta: float) -> void:
 	move_and_slide()
 
 func _fire_at_player() -> void:
+	if not _is_locked:
+		return
 	var player = _get_player()
 	if not is_instance_valid(player):
 		return
 	if global_position.distance_to(player.global_position) > fire_range:
 		return
+
+	trigger_attack_flash()
 
 	var bullet_root = game_manager.get("bullet_root")
 	if not bullet_root or not is_instance_valid(bullet_root):

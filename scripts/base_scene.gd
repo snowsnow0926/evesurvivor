@@ -111,11 +111,11 @@ func _instantiate_panel(scene_path: String) -> Control:
 	if scene_res == null:
 		push_error("[BaseScene] Failed to load scene: " + scene_path)
 		return null
-	var instance := scene_res.instantiate()
+	var instance: Node = scene_res.instantiate()
 	if instance == null:
 		push_error("[BaseScene] Failed to instantiate scene: " + scene_path)
 		return null
-	return instance
+	return instance as Control
 
 func _show_repair() -> void:
 	_switch_panel(repair_panel)

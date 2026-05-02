@@ -39,6 +39,8 @@
 			"id": "enemy_melee",
 			"name_en": "Melee Enemy",
 			"name_zh": "近战敌人",
+			"texture_path": "res://assets/32/npcdestroyer_32.png",
+			"tonnage": "destroyer",
 			"path": [
 				["M", 50.0, 20.0],
 				["L", 70.0, 40.0],
@@ -54,6 +56,8 @@
 			"id": "enemy_raven",
 			"name_en": "Raven Enemy",
 			"name_zh": "乌鸦型敌机",
+			"texture_path": "res://assets/32/npcfrigate_32.png",
+			"tonnage": "frigate",
 			"path": [
 				["M", 50.0, 25.0],
 				["L", 68.0, 50.0],
@@ -66,6 +70,8 @@
 			"id": "enemy_sentry",
 			"name_en": "Sentry Turret",
 			"name_zh": "哨兵炮台",
+			"texture_path": "res://assets/32/npccruiser_32.png",
+			"tonnage": "cruiser",
 			"path": [
 				["M", 50.0, 30.0],
 				["L", 65.0, 45.0],

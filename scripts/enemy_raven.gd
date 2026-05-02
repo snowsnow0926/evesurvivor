@@ -6,13 +6,19 @@ var explosion_windup: float = 0.5
 
 var current_state: String = "chase"
 var windup_timer: float = 0.0
-var flash_timer: float = 0.0
-var is_flashing: bool = false
+var windup_flash_timer: float = 0.0
+var windup_flash_visible: bool = true
+
+func _ready() -> void:
+	super()
+	_icon_id = "enemy_raven"
+	tonnage = "frigate"
+	_death_particle_color = Color(1.0, 0.5, 0.0, 1.0)
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
 
-func _process_combat(delta: float) -> void:
+func _process_combat(_delta: float) -> void:
 	pass
 
 func _update_movement(delta: float) -> void:
@@ -32,17 +38,17 @@ func _update_movement(delta: float) -> void:
 				current_state = "windup"
 				velocity = Vector2.ZERO
 				windup_timer = 0.0
+				windup_flash_timer = 0.0
+				windup_flash_visible = true
 		"windup":
 			velocity = Vector2.ZERO
 			move_and_slide()
 			windup_timer += delta
-			flash_timer += delta
-			if flash_timer >= 0.1:
-				flash_timer = 0.0
-				is_flashing = !is_flashing
-				var target: Node = ship_sprite if ship_sprite and ship_sprite.visible else polygon
-				if target:
-					target.modulate = Color(2.0, 0.2, 0.2) if is_flashing else Color(1.0, 1.0, 1.0)
+			windup_flash_timer += delta
+			if windup_flash_timer >= 0.1:
+				windup_flash_timer = 0.0
+				windup_flash_visible = not windup_flash_visible
+				queue_redraw()
 			if windup_timer >= explosion_windup:
 				_do_explosion()
 
@@ -92,3 +98,17 @@ func _die() -> void:
 
 func _get_enemy_type() -> String:
 	return "raven"
+
+func is_windup_blinking() -> bool:
+	return current_state == "windup"
+
+func is_windup_state() -> bool:
+	return current_state == "windup"
+
+func get_windup_blink_visible() -> bool:
+	return windup_flash_visible
+
+func get_locked_bracket_color() -> Color:
+	if current_state == "windup":
+		return Color(1.0, 0.5, 0.0)
+	return Color(1.0, 0.2, 0.2)
