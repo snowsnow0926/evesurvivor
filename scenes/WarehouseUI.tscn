@@ -3,20 +3,13 @@
 [ext_resource type="Script" path="res://scripts/warehouse_ui.gd" id="1_wh"]
 
 [node name="WarehouseUI" type="Control"]
-layout_mode = 3
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_wh")
-
-[node name="BG" type="ColorRect" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-color = Color(0.04, 0.04, 0.08, 1)
 
 [node name="Panel" type="PanelContainer" parent="."]
 layout_mode = 1
@@ -38,7 +31,7 @@ theme_override_constants/separation = 10
 
 [node name="ShipInfoBar" type="Label" parent="Panel/VBox"]
 layout_mode = 2
-text = "护卫舰 | 武器槽: 1 | 防御槽: 1"
+text = "舰船信息"
 horizontal_alignment = 1
 
 [node name="EquippedSection" type="VBoxContainer" parent="Panel/VBox"]

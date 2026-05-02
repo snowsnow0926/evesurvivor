@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://cjfh5rtpggo4x" path="res://scripts/shop_ui.gd" id="1_shop"]
 
 [node name="ShopUI" type="Control" unique_id=488987604]
-layout_mode = 3
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -11,175 +11,176 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_shop")
 
-[node name="BG" type="ColorRect" parent="." unique_id=1664239918]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.04, 0.04, 0.08, 1)
-
-[node name="Panel" type="PanelContainer" parent="." unique_id=1872128455]
+[node name="Panel" type="Panel" parent="." unique_id=919371062]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -400.0
-offset_top = -320.0
-offset_right = 400.0
-offset_bottom = 320.0
+offset_left = -380.0
+offset_top = -310.0
+offset_right = 380.0
+offset_bottom = 310.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="Panel" unique_id=571282287]
-layout_mode = 2
-theme_override_constants/separation = 10
+[node name="VBox" type="VBoxContainer" parent="Panel" unique_id=109891276]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="Panel/VBox" unique_id=1449006676]
+[node name="Title" type="Label" parent="Panel/VBox" unique_id=832774603]
 layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 0
 text = "装备商店"
 horizontal_alignment = 1
-vertical_alignment = 1
 
-[node name="TabHBox" type="HBoxContainer" parent="Panel/VBox" unique_id=1674302400]
+[node name="TopSpacer" type="Control" parent="Panel/VBox" unique_id=1513207504]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TabHBox" type="HBoxContainer" parent="Panel/VBox" unique_id=1336010604]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TabWeapons" type="Button" parent="Panel/VBox/TabHBox" unique_id=324889667]
+[node name="TabWeapons" type="Button" parent="Panel/VBox/TabHBox" unique_id=275799397]
 layout_mode = 2
 size_flags_horizontal = 3
 toggle_mode = true
 button_pressed = true
 text = "武器"
 
-[node name="TabArmor" type="Button" parent="Panel/VBox/TabHBox" unique_id=1074651646]
+[node name="TabArmor" type="Button" parent="Panel/VBox/TabHBox" unique_id=732539392]
 layout_mode = 2
 size_flags_horizontal = 3
 toggle_mode = true
 text = "防御"
 
-[node name="FilterHBox" type="HBoxContainer" parent="Panel/VBox" unique_id=1170010978]
+[node name="FilterHBox" type="HBoxContainer" parent="Panel/VBox" unique_id=346774778]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="FilterLabel" type="Label" parent="Panel/VBox/FilterHBox" unique_id=1808299761]
+[node name="FilterLabel" type="Label" parent="Panel/VBox/FilterHBox" unique_id=1615698675]
 layout_mode = 2
 size_flags_horizontal = 0
 text = "吨位:"
 vertical_alignment = 1
 
-[node name="FilterAll" type="Button" parent="Panel/VBox/FilterHBox" unique_id=694686783]
+[node name="FilterAll" type="Button" parent="Panel/VBox/FilterHBox" unique_id=573902399]
 layout_mode = 2
 size_flags_horizontal = 3
 toggle_mode = true
 button_pressed = true
 text = "全部"
 
-[node name="FilterSmall" type="Button" parent="Panel/VBox/FilterHBox" unique_id=768367816]
+[node name="FilterSmall" type="Button" parent="Panel/VBox/FilterHBox" unique_id=1375599220]
 layout_mode = 2
 size_flags_horizontal = 3
 toggle_mode = true
 text = "小型"
 
-[node name="FilterMedium" type="Button" parent="Panel/VBox/FilterHBox" unique_id=1739579034]
+[node name="FilterMedium" type="Button" parent="Panel/VBox/FilterHBox" unique_id=1775797335]
 layout_mode = 2
 size_flags_horizontal = 3
 toggle_mode = true
 text = "中型"
 
-[node name="FilterLarge" type="Button" parent="Panel/VBox/FilterHBox" unique_id=812793997]
+[node name="FilterLarge" type="Button" parent="Panel/VBox/FilterHBox" unique_id=2053498758]
 layout_mode = 2
 size_flags_horizontal = 3
 toggle_mode = true
 text = "大型"
 
-[node name="FilterFlag" type="Button" parent="Panel/VBox/FilterHBox" unique_id=50777779]
+[node name="FilterFlag" type="Button" parent="Panel/VBox/FilterHBox" unique_id=518489263]
 layout_mode = 2
 size_flags_horizontal = 3
 toggle_mode = true
 text = "旗舰级"
 
-[node name="HBox" type="HBoxContainer" parent="Panel/VBox" unique_id=1011004174]
+[node name="HBox" type="HBoxContainer" parent="Panel/VBox" unique_id=1876753193]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="LeftPanel" type="VBoxContainer" parent="Panel/VBox/HBox" unique_id=956387574]
+[node name="LeftPanel" type="VBoxContainer" parent="Panel/VBox/HBox" unique_id=885231880]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="WeaponListLabel" type="Label" parent="Panel/VBox/HBox/LeftPanel" unique_id=999015350]
+[node name="WeaponListLabel" type="Label" parent="Panel/VBox/HBox/LeftPanel" unique_id=30520401]
 layout_mode = 2
 text = "装备列表 (全部)"
 
-[node name="WeaponList" type="ScrollContainer" parent="Panel/VBox/HBox/LeftPanel" unique_id=1344819278]
+[node name="WeaponList" type="ScrollContainer" parent="Panel/VBox/HBox/LeftPanel" unique_id=386867162]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="VBox" type="VBoxContainer" parent="Panel/VBox/HBox/LeftPanel/WeaponList" unique_id=814752744]
+[node name="VBox" type="VBoxContainer" parent="Panel/VBox/HBox/LeftPanel/WeaponList" unique_id=573512982]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="RightPanel" type="VBoxContainer" parent="Panel/VBox/HBox" unique_id=1810992909]
+[node name="RightPanel" type="VBoxContainer" parent="Panel/VBox/HBox" unique_id=408083804]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="DetailTitle" type="Label" parent="Panel/VBox/HBox/RightPanel" unique_id=1747331842]
+[node name="DetailTitle" type="Label" parent="Panel/VBox/HBox/RightPanel" unique_id=167297017]
 layout_mode = 2
 text = "选择武器查看详情"
 horizontal_alignment = 1
 
-[node name="DetailDesc" type="Label" parent="Panel/VBox/HBox/RightPanel" unique_id=1228521384]
+[node name="DetailDesc" type="Label" parent="Panel/VBox/HBox/RightPanel" unique_id=2074122221]
 layout_mode = 2
 autowrap_mode = 2
 
-[node name="DetailStats" type="Label" parent="Panel/VBox/HBox/RightPanel" unique_id=987737593]
+[node name="DetailStats" type="Label" parent="Panel/VBox/HBox/RightPanel" unique_id=644256319]
 layout_mode = 2
 
-[node name="DetailCost" type="Label" parent="Panel/VBox/HBox/RightPanel" unique_id=1140132156]
+[node name="DetailCost" type="Label" parent="Panel/VBox/HBox/RightPanel" unique_id=1030069588]
 layout_mode = 2
 
-[node name="Spacer" type="Control" parent="Panel/VBox/HBox/RightPanel" unique_id=548504657]
+[node name="Spacer" type="Control" parent="Panel/VBox/HBox/RightPanel" unique_id=1362491349]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="BuyBtn" type="Button" parent="Panel/VBox/HBox/RightPanel" unique_id=1770705269]
+[node name="BuyBtn" type="Button" parent="Panel/VBox/HBox/RightPanel" unique_id=2051692369]
 layout_mode = 2
 disabled = true
 text = "购买"
 
-[node name="SellBtn" type="Button" parent="Panel/VBox/HBox/RightPanel" unique_id=191847838]
+[node name="SellBtn" type="Button" parent="Panel/VBox/HBox/RightPanel" unique_id=1605251619]
 layout_mode = 2
 disabled = true
 text = "出售"
 
-[node name="Footer" type="HBoxContainer" parent="Panel/VBox" unique_id=901854867]
+[node name="Footer" type="HBoxContainer" parent="Panel/VBox" unique_id=1890286252]
 layout_mode = 2
 theme_override_constants/separation = 24
 
-[node name="Spacer" type="Control" parent="Panel/VBox/Footer" unique_id=396314520]
+[node name="VSpacer" type="Control" parent="Panel/VBox/Footer" unique_id=23561999]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="CoinLabel" type="Label" parent="Panel/VBox/Footer" unique_id=1832230526]
+[node name="CoinLabel" type="Label" parent="Panel/VBox/Footer" unique_id=534043110]
 layout_mode = 2
 text = "星币: 0"
 
-[node name="MineralsLabel" type="Label" parent="Panel/VBox/Footer" unique_id=631634455]
+[node name="MineralsLabel" type="Label" parent="Panel/VBox/Footer" unique_id=939841179]
 layout_mode = 2
 text = "矿物: 0低 / 0中 / 0高"
 
-[node name="Spacer2" type="Control" parent="Panel/VBox/Footer" unique_id=1749192831]
+[node name="Spacer" type="Control" parent="Panel/VBox/Footer" unique_id=2135380936]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="BackBtn" type="Button" parent="Panel/VBox/Footer" unique_id=792458299]
+[node name="BackBtn" type="Button" parent="Panel/VBox/Footer" unique_id=129421571]
 layout_mode = 2
 text = "返回"

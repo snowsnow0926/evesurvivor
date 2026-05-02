@@ -87,12 +87,12 @@ func _on_chapter_pressed(chapter_id: int) -> void:
 	SoundManager.play_sfx("button_click")
 	GameState.selected_chapter_id = chapter_id
 	var tree := get_tree()
-	tree.change_scene_to_file("res://scenes/StageSelectUI.tscn")
-	await tree.process_frame
-	var stage_ui: Node = tree.current_scene
-	if stage_ui.has_method("open"):
-		stage_ui.open(chapter_id)
-	stage_ui.stage_selected.connect(_on_stage_selected)
+	var packed_scene := load("res://scenes/StageSelectUI.tscn")
+	var stage_ui: Node = tree.change_scene_to_packed(packed_scene)
+	if stage_ui != null:
+		if stage_ui.has_method("open"):
+			stage_ui.open(chapter_id)
+		stage_ui.stage_selected.connect(_on_stage_selected)
 
 func _on_stage_selected(chapter_id: int, stage_id: int) -> void:
 	chapter_selected.emit(chapter_id, stage_id)

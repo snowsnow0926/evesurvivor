@@ -14,15 +14,23 @@ extends Control
 
 @onready var repair_panel: Control = $RepairPanel
 @onready var crafting_panel: Control = $CraftingPanel
-@onready var research_panel: Control = $ResearchPanel
 @onready var storage_panel: Control = $StoragePanel
-@onready var shop_panel: Control = $ShopPanel
-@onready var warehouse_panel: Control = $WarehousePanel
-@onready var shipyard_panel: Control = $ShipyardPanel
 
 var base_pause_menu: Control
 var current_panel: Control = null
 var warning_timer: float = 0.0
+
+var _shop_panel: Control
+var _warehouse_panel: Control
+var _shipyard_panel: Control
+var _research_panel: Control
+
+const _PANEL_SCENES := {
+	"shop": "res://scenes/ShopUI.tscn",
+	"warehouse": "res://scenes/WarehouseUI.tscn",
+	"shipyard": "res://scenes/ShipyardUI.tscn",
+	"research": "res://scenes/ResearchCenterUI.tscn",
+}
 
 func _ready() -> void:
 	SoundManager.play_music("base")
@@ -70,6 +78,45 @@ func _process(delta: float) -> void:
 			if base_pause_menu:
 				base_pause_menu.open_menu()
 
+func _get_or_create_panel(key: StringName) -> Control:
+	match key:
+		&"shop":
+			if not _shop_panel:
+				_shop_panel = _instantiate_panel(_PANEL_SCENES["shop"])
+				add_child(_shop_panel)
+				_shop_panel.visible = false
+			return _shop_panel
+		&"warehouse":
+			if not _warehouse_panel:
+				_warehouse_panel = _instantiate_panel(_PANEL_SCENES["warehouse"])
+				add_child(_warehouse_panel)
+				_warehouse_panel.visible = false
+			return _warehouse_panel
+		&"shipyard":
+			if not _shipyard_panel:
+				_shipyard_panel = _instantiate_panel(_PANEL_SCENES["shipyard"])
+				add_child(_shipyard_panel)
+				_shipyard_panel.visible = false
+			return _shipyard_panel
+		&"research":
+			if not _research_panel:
+				_research_panel = _instantiate_panel(_PANEL_SCENES["research"])
+				add_child(_research_panel)
+				_research_panel.visible = false
+			return _research_panel
+	return null
+
+func _instantiate_panel(scene_path: String) -> Control:
+	var scene_res := load(scene_path)
+	if scene_res == null:
+		push_error("[BaseScene] Failed to load scene: " + scene_path)
+		return null
+	var instance := scene_res.instantiate()
+	if instance == null:
+		push_error("[BaseScene] Failed to instantiate scene: " + scene_path)
+		return null
+	return instance
+
 func _show_repair() -> void:
 	_switch_panel(repair_panel)
 
@@ -85,20 +132,36 @@ func _show_crafting() -> void:
 func _show_warehouse() -> void:
 	if current_panel and is_instance_valid(current_panel):
 		current_panel.visible = false
-	if warehouse_panel and is_instance_valid(warehouse_panel):
-		warehouse_panel.visible = true
-		current_panel = warehouse_panel
-		if warehouse_panel.has_method("_build_all"):
-			warehouse_panel._build_all()
+	var panel := _get_or_create_panel(&"warehouse") as Control
+	if panel and is_instance_valid(panel):
+		panel.visible = true
+		current_panel = panel
+		if panel.has_method("_build_all"):
+			panel._build_all()
 
 func _show_research() -> void:
-	_switch_panel(research_panel)
+	if current_panel and is_instance_valid(current_panel):
+		current_panel.visible = false
+	var panel := _get_or_create_panel(&"research") as Control
+	if panel and is_instance_valid(panel):
+		panel.visible = true
+		current_panel = panel
 
 func _show_shop() -> void:
-	_switch_panel(shop_panel)
+	if current_panel and is_instance_valid(current_panel):
+		current_panel.visible = false
+	var panel := _get_or_create_panel(&"shop") as Control
+	if panel and is_instance_valid(panel):
+		panel.visible = true
+		current_panel = panel
 
 func _show_shipyard() -> void:
-	_switch_panel(shipyard_panel)
+	if current_panel and is_instance_valid(current_panel):
+		current_panel.visible = false
+	var panel := _get_or_create_panel(&"shipyard") as Control
+	if panel and is_instance_valid(panel):
+		panel.visible = true
+		current_panel = panel
 
 func _show_storage() -> void:
 	_switch_panel(storage_panel)
@@ -114,9 +177,17 @@ func close_all_panels() -> void:
 	if current_panel and is_instance_valid(current_panel):
 		current_panel.visible = false
 		current_panel = null
-	for p in [repair_panel, crafting_panel, research_panel, storage_panel, shop_panel, warehouse_panel, shipyard_panel]:
+	for p in [repair_panel, crafting_panel, storage_panel]:
 		if p:
 			p.visible = false
+	if _shop_panel:
+		_shop_panel.visible = false
+	if _warehouse_panel:
+		_warehouse_panel.visible = false
+	if _shipyard_panel:
+		_shipyard_panel.visible = false
+	if _research_panel:
+		_research_panel.visible = false
 
 func _on_start_battle() -> void:
 	var ship = ShipData.get_ship(GameState.selected_ship_id)
