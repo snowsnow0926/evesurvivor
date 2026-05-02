@@ -21,6 +21,8 @@ var first_run: bool = true
 var last_run_reason: String = ""
 var pre_run_coin: int = 0
 var pre_run_minerals_total: int = 0
+var selected_chapter_id: int = 1
+var selected_stage_id: int = 1
 
 const SAVE_PATH := "user://game_save.cfg"
 const SAVE_SLOTS := 3

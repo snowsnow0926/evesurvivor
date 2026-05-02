@@ -8,6 +8,22 @@
 
 config_version=5
 
+[android]
+
+package/unique_name="com.eve.survivor"
+package/name="EVE Survivor"
+package/app_id="com.eve.survivor"
+package/app_short_name="EVE Survivor"
+version/code=1
+version/name="1.0"
+launcher_icons/adaptive_foreground="res://assets/icon.svg"
+launcher_icons/adaptive_background=Color(0.0118, 0.0235, 0.0431, 1)
+screen/orientation=0
+screen/fullscreen=true
+screen/supports_notch=false
+screen/transient_notification=false
+permissions=["INTERNET"]
+
 [application]
 
 config/name="EVE Survivor"
@@ -20,6 +36,7 @@ config/features=PackedStringArray("4.6")
 GameState="*res://scripts/game_state.gd"
 SoundManager="*res://scripts/sound_manager.gd"
 GameBalance="*res://scripts/game_balance_loader.gd"
+MobileInput="*res://scripts/mobile_input.gd"
 
 [display]
 
@@ -55,6 +72,11 @@ pause={
 ]
 }
 
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+pointing/drag_from_touch=false
+
 [layer_names]
 
 2d_physics/layer_1="player"
@@ -65,6 +87,7 @@ pause={
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
+textures/vram_compression/import_etc2_astc=true
 
 [scene uid:]
 

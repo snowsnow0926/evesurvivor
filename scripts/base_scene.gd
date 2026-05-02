@@ -132,7 +132,7 @@ func _on_start_battle() -> void:
 	if not has_weapon:
 		_show_no_weapon_warning()
 		return
-	get_tree().change_scene_to_file("res://scenes/GameScene.tscn")
+	get_tree().change_scene_to_file("res://scenes/ChapterSelectUI.tscn")
 
 func _show_no_weapon_warning() -> void:
 	no_weapon_warning.visible = true

@@ -71,6 +71,7 @@ var game_scene: Node2D
 var _vbox_warned: bool = false
 
 func _ready() -> void:
+	MobileInput.register_joystick($VirtualJoystick)
 	if not upgrade_list_vbox:
 		_debug("WARNING: upgrade_list_vbox is null! Node path may be wrong.")
 		return

@@ -19,6 +19,9 @@ const ENEMY_RAVEN_PATH = "res://scenes/EnemyRaven.tscn"
 const EXP_ORB_SCENE_PATH = "res://scenes/ExpOrb.tscn"
 const BOSS_SCENE_PATH = "res://scenes/BossVoid.tscn"
 const ShipData = preload("res://resources/ship_data.gd")
+const StageData = preload("res://resources/stage_data.gd")
+const WeaponData = preload("res://resources/weapon_data.gd")
+const EquipmentData = preload("res://resources/equipment_data.gd")
 
 var player: Node2D
 var enemy_root: Node2D
@@ -118,6 +121,64 @@ var lifesteal_timer: float = 0.0
 var upgrade_counts: Dictionary = {}
 var upgrade_pool: Array = []
 
+var current_stage: StageData.StageInfo
+var current_chapter_id: int = 1
+var boss_remaining: int = 0
+var is_boss_phase: bool = false
+
+var session_loot: Array = []
+
+const DROP_WEAPONS: Array[int] = [
+	WeaponData.WeaponID.SMALL_MISSILE,
+	WeaponData.WeaponID.SMALL_CANNON,
+	WeaponData.WeaponID.SMALL_RAILGUN,
+	WeaponData.WeaponID.SMALL_LASER,
+]
+
+const DROP_ARMOR: Array[int] = [0, 1]
+
+func try_drop_equipment(enemy_pos: Vector2) -> void:
+	if randf() > 0.02:
+		return
+	var loot_type := "weapon" if randf() < 0.7 else "armor"
+	var loot: Dictionary = {}
+	if loot_type == "weapon":
+		var wid := DROP_WEAPONS[randi() % DROP_WEAPONS.size()]
+		loot = {"type": "weapon", "weapon_id": wid, "quality": EquipmentData.Quality.COMMON, "pos": enemy_pos}
+	else:
+		var aid := DROP_ARMOR[randi() % DROP_ARMOR.size()]
+		loot = {"type": "armor", "armor_id": aid, "quality": EquipmentData.Quality.COMMON, "pos": enemy_pos}
+	add_loot(loot)
+	_spawn_loot_effect(enemy_pos, loot_type)
+
+func spawn_boss_loot(enemy_pos: Vector2) -> void:
+	var loot_type := "weapon" if randf() < 0.7 else "armor"
+	var loot: Dictionary = {}
+	if loot_type == "weapon":
+		var wid := DROP_WEAPONS[randi() % DROP_WEAPONS.size()]
+		loot = {"type": "weapon", "weapon_id": wid, "quality": EquipmentData.Quality.COMMON, "pos": enemy_pos}
+	else:
+		var aid := DROP_ARMOR[randi() % DROP_ARMOR.size()]
+		loot = {"type": "armor", "armor_id": aid, "quality": EquipmentData.Quality.COMMON, "pos": enemy_pos}
+	add_loot(loot)
+	_spawn_loot_effect(enemy_pos, loot_type)
+
+func _spawn_loot_effect(world_pos: Vector2, loot_type: String) -> void:
+	if not damage_root or not is_instance_valid(damage_root):
+		return
+	var label := Label.new()
+	label.text = "[%s]" % ("武器" if loot_type == "weapon" else "防具")
+	label.add_theme_font_size_override("font_size", 16)
+	label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.3))
+	label.position = world_pos + Vector2(randf_range(-30, 30), -40)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	damage_root.call_deferred("add_child", label)
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(label, "position:y", label.position.y - 60, 1.0)
+	tween.tween_property(label, "modulate:a", 0.0, 1.0)
+	tween.tween_callback(label.queue_free)
+
 func _ready() -> void:
 	_setup_upgrade_pool()
 	_setup_references()
@@ -141,6 +202,36 @@ func _setup_upgrade_pool() -> void:
 		{"id": "laser_width", "name": "高效射击", "desc": "激光宽度 +20%", "max": 3, "weight": "low"},
 		{"id": "laser_shield", "name": "护盾中和", "desc": "激光对护盾伤害 +20%", "max": 3, "weight": "low"},
 	]
+
+func setup_for_stage(chapter_id: int, stage_id: int) -> void:
+	current_chapter_id = chapter_id
+	current_stage = StageData.get_stage(chapter_id, stage_id)
+	if current_stage == null:
+		push_warning("[GameManager] Stage not found, using defaults")
+		current_stage = StageData.get_stage(1, 1)
+
+	boss_remaining = current_stage.boss_count
+	is_boss_phase = current_stage.type == StageData.StageType.BOSS_ONLY
+
+	var stats := StageData.calc_enemy_stats(
+		30.0, 10.0, 100.0, 2.0,
+		current_stage, player_level
+	)
+	enemy_hp = stats["hp"]
+	enemy_damage = stats["damage"]
+	enemy_move_speed = stats["speed"]
+	spawn_interval = stats["spawn_interval"]
+
+	if current_stage.has_timer:
+		has_timer = true
+		time_remaining = FIRST_RUN_DURATION
+	else:
+		has_timer = false
+		time_remaining = 0.0
+
+	session_loot = []
+	_debug("setup_for_stage: chapter=%d stage=%d strength=%s interval=%.2f" % [
+		chapter_id, stage_id, stats["hp"], spawn_interval])
 
 func _setup_references() -> void:
 	var game_scene = get_parent()
@@ -290,7 +381,7 @@ func _spawn_player() -> void:
 		push_error("[GameManager] failed to load Player scene")
 
 func start_run_timer() -> void:
-	if GameState.first_run:
+	if current_stage != null and current_stage.has_timer:
 		has_timer = true
 		time_remaining = FIRST_RUN_DURATION
 		GameState.on_run_started()
@@ -353,7 +444,10 @@ func _spawn_enemy() -> void:
 		if randf() < 0.5:
 			return
 
-	var enemy_path = _choose_enemy_type()
+	if is_boss_phase:
+		return
+
+	var enemy_path := _choose_enemy_type()
 	if enemy_path == "":
 		return
 	if not ResourceLoader.exists(enemy_path):
@@ -364,8 +458,8 @@ func _spawn_enemy() -> void:
 	var enemy = enemy_scene.instantiate()
 	enemy_root.add_child(enemy)
 
-	var spawn_distance = randf_range(600.0, 900.0)
-	var spawn_angle = randf_range(0, TAU)
+	var spawn_distance := randf_range(600.0, 900.0)
+	var spawn_angle := randf_range(0, TAU)
 	enemy.global_position = player.global_position + Vector2.from_angle(spawn_angle) * spawn_distance
 
 	match enemy_path:
@@ -403,6 +497,10 @@ func _choose_enemy_type() -> String:
 
 func _check_boss_warning() -> void:
 	if boss_active:
+		return
+	if is_boss_phase:
+		if boss_remaining > 0:
+			_spawn_boss()
 		return
 	if kill_since_boss >= 45 and kill_since_boss < 50:
 		if boss_warning and boss_warning.has_method("show_warning"):
@@ -461,6 +559,13 @@ func on_boss_killed(boss_node: Node2D) -> void:
 	session_star_coin += reward_coin
 	session_minerals += reward_mineral
 
+	if is_boss_phase:
+		boss_remaining -= 1
+		if boss_remaining <= 0:
+			is_game_over = true
+			get_tree().paused = true
+			game_ended.emit("retreat")
+			_show_settlement("retreat")
 	_notify_hud_update()
 
 func _update_shield_regen(delta: float) -> void:
@@ -675,6 +780,26 @@ func _spawn_damage_number(world_pos: Vector2, amount: float, is_crit: bool, enem
 	damage_root.add_child(node)
 	node.setup(world_pos, amount, is_crit, enemy_dmg)
 
+func add_loot(loot_data: Dictionary) -> void:
+	session_loot.append(loot_data)
+	_debug("add_loot: " + str(loot_data) + " total: " + str(session_loot.size()))
+
+func get_session_loot() -> Array:
+	return session_loot
+
+func grant_loot_to_player() -> void:
+	for loot: Dictionary in session_loot:
+		var item_dict := {
+			"type": loot.get("type", "weapon"),
+			"weapon_id": loot.get("weapon_id", 0),
+			"armor_id": loot.get("armor_id", 0),
+			"quality": loot.get("quality", 0),
+			"is_new": true,
+		}
+		GameState.equipment_inventory.append(item_dict)
+	_debug("grant_loot: granted " + str(session_loot.size()) + " items to player inventory")
+	session_loot.clear()
+
 func _on_player_dead() -> void:
 	SoundManager.play_sfx("player_death")
 	if is_game_over:
@@ -707,6 +832,8 @@ func reset_for_new_run() -> void:
 	total_kills = 0
 	kill_since_boss = 0
 	boss_active = false
+	boss_remaining = current_stage.boss_count if current_stage else 1
+	is_boss_phase = current_stage.type == StageData.StageType.BOSS_ONLY if current_stage else false
 	enemy_hp = 30.0
 	enemy_damage = 10.0
 	enemy_move_speed = 100.0

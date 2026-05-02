@@ -86,7 +86,11 @@ func _fire_at_player() -> void:
 func _die() -> void:
 	if current_state == "windup":
 		return
-	super._die()
+	SoundManager.play_sfx("enemy_death")
+	enemy_dead.emit(self, "sentry")
+	if game_manager and is_instance_valid(game_manager):
+		game_manager.try_drop_equipment(global_position)
+	queue_free()
 
 func _get_enemy_type() -> String:
 	return "sentry"

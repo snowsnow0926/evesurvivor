@@ -1,5 +1,8 @@
 extends Control
 
+const EquipmentData = preload("res://resources/equipment_data.gd")
+const WeaponData = preload("res://resources/weapon_data.gd")
+
 signal pause_toggled
 signal retreat_requested
 signal self_destruct_requested
@@ -8,6 +11,9 @@ signal self_destruct_requested
 @onready var continue_btn: Button = $Panel/VBox/ContinueBtn
 @onready var retreat_btn: Button = $Panel/VBox/RetreatBtn
 @onready var self_destruct_btn: Button = $Panel/VBox/SelfDestructBtn
+@onready var loot_scroll: ScrollContainer = $Panel/VBox/LootScroll
+@onready var loot_container: VBoxContainer = $Panel/VBox/LootScroll/LootContainer
+@onready var loot_section_label: Label = $Panel/VBox/LootSectionLabel
 
 var game_manager: Node2D
 var is_open: bool = false
@@ -35,6 +41,7 @@ func open_menu(gm: Node2D) -> void:
 	if game_manager:
 		game_manager.is_paused = true
 		get_tree().paused = true
+		_build_pause_loot_list()
 
 func _on_continue_pressed() -> void:
 	SoundManager.play_sfx("button_click")
@@ -47,6 +54,45 @@ func close_menu() -> void:
 	if game_manager and is_instance_valid(game_manager):
 		game_manager.is_paused = false
 	get_tree().paused = false
+
+func _build_pause_loot_list() -> void:
+	if loot_section_label:
+		loot_section_label.visible = false
+	if loot_scroll:
+		loot_scroll.visible = false
+	if not loot_container:
+		return
+	for child in loot_container.get_children():
+		child.queue_free()
+	if not game_manager or not is_instance_valid(game_manager):
+		return
+	var loot: Array = game_manager.get_session_loot()
+	if loot.size() == 0:
+		return
+	if loot_section_label:
+		loot_section_label.visible = true
+		loot_section_label.text = "本次获得物品:"
+	if loot_scroll:
+		loot_scroll.visible = true
+	for item: Dictionary in loot:
+		var row := HBoxContainer.new()
+		var type_str := "武器" if item.get("type") == "weapon" else "防具"
+		var name_str := ""
+		var quality_color := Color.WHITE
+		if item.get("type") == "weapon":
+			var wid: int = item.get("weapon_id", 0)
+			var wd := WeaponData.get_weapon(wid)
+			name_str = wd.display_name if wd else "?"
+			quality_color = EquipmentData.get_quality_color(item.get("quality", 0))
+		else:
+			var aid: int = item.get("armor_id", 0)
+			name_str = EquipmentData.get_armor_name(aid)
+			quality_color = EquipmentData.get_quality_color(item.get("quality", 0))
+		var label := Label.new()
+		label.text = "[%s] %s" % [type_str, name_str]
+		label.add_theme_color_override("font_color", quality_color)
+		row.add_child(label)
+		loot_container.add_child(row)
 
 func _on_retreat_pressed() -> void:
 	print("[PauseMenu] retreat pressed, is_game_over=", game_manager.is_game_over if game_manager else "no gm")

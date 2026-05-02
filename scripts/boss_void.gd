@@ -193,6 +193,8 @@ func _die() -> void:
 	SoundManager.play_sfx("boss_death")
 	_spawn_death_effect()
 	_spawn_rewards()
+	if game_manager and is_instance_valid(game_manager):
+		game_manager.spawn_boss_loot(global_position)
 	enemy_dead.emit(self, "boss")
 	queue_free()
 

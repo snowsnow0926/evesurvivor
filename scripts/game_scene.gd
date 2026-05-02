@@ -13,6 +13,7 @@ func _ready() -> void:
 	game_manager = $GameManager
 	_setup_ui()
 	_connect_signals()
+	game_manager.setup_for_stage(GameState.selected_chapter_id, GameState.selected_stage_id)
 	game_manager.start_run_timer()
 	SoundManager.play_music("battle")
 	_maybe_start_guide()
@@ -129,6 +130,7 @@ func _show_settlement_screen(reason) -> void:
 		_:
 			GameState.last_run_reason = reason
 			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, false)
+	game_manager.grant_loot_to_player()
 
 	get_tree().paused = false
 
@@ -173,6 +175,9 @@ func _show_settlement_screen(reason) -> void:
 	var earned_minerals_label = settlement.get_node_or_null("Panel/VBox/StatsGrid/EarnedMineralsValue")
 	if earned_minerals_label:
 		earned_minerals_label.text = "+%d" % minerals_gained
+
+	if settlement.has_method("set_settlement_data"):
+		settlement.set_settlement_data(reason, kills, level, coin_gained, minerals_gained, game_manager.get_session_loot())
 
 	var ship_status_label = settlement.get_node_or_null("Panel/VBox/ShipStatusLabel")
 	if ship_status_label:

@@ -146,6 +146,8 @@ func _die() -> void:
 	SoundManager.play_sfx("enemy_death")
 	enemy_dead.emit(self, _get_enemy_type())
 	_spawn_death_effect()
+	if game_manager and is_instance_valid(game_manager):
+		game_manager.try_drop_equipment(global_position)
 	queue_free()
 
 func _get_enemy_type() -> String:

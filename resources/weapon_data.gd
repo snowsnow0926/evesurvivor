@@ -186,7 +186,7 @@ static func _small_laser_data() -> WeaponData:
 	w.weapon_id = WeaponID.SMALL_LASER
 	w.display_name = "小型激光束"
 	w.scene_path = "res://scenes/LaserBeam.tscn"
-	w.damage = 10.0
+	w.damage = 12.0
 	w.fire_interval = 2.5
 	w.projectile_speed = 0.0
 	w.range = 700.0

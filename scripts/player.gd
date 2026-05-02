@@ -285,7 +285,8 @@ func _update_injured_state(delta: float) -> void:
 			is_injured = false
 
 func _update_movement(delta: float) -> void:
-	var input_dir = Vector2.ZERO
+	var input_dir := Vector2.ZERO
+
 	if Input.is_action_pressed("move_up"):
 		input_dir.y -= 1
 	if Input.is_action_pressed("move_down"):
@@ -294,6 +295,10 @@ func _update_movement(delta: float) -> void:
 		input_dir.x -= 1
 	if Input.is_action_pressed("move_right"):
 		input_dir.x += 1
+
+	var mobile_input := MobileInput.joystick_output
+	if mobile_input.length() > 0.05:
+		input_dir = mobile_input
 
 	if input_dir.length() > 0.05:
 		input_dir = input_dir.normalized()
