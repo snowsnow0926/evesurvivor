@@ -36,6 +36,14 @@
 	],
 	"enemies": [
 		{
+			"id": "npcfrigate",
+			"name_en": "NPC Frigate",
+			"name_zh": "NPC护卫舰",
+			"texture_path": "res://assets/32/npfrigate_32.png",
+			"tonnage": "frigate",
+			"path": []
+		},
+		{
 			"id": "enemy_melee",
 			"name_en": "Melee Enemy",
 			"name_zh": "近战敌人",

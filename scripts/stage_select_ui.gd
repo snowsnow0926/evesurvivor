@@ -45,13 +45,23 @@ func _load_stages() -> void:
 func _create_stage_button(stage: StageData.StageInfo) -> Button:
 	var btn := Button.new()
 	btn.custom_minimum_size.y = 70
-	btn.text = stage.name
 	btn.set_meta("stage_id", stage.id)
+	var is_unlocked = GameState.is_stage_unlocked(stage.id)
 	var color := Color(0.1, 0.15, 0.25, 0.95) if stage.type == StageData.StageType.NORMAL else Color(0.3, 0.1, 0.3, 0.95)
-	btn.add_theme_color_override("normal", color)
-	btn.add_theme_color_override("hover", Color(0.2, 0.3, 0.4, 0.95))
-	btn.add_theme_color_override("pressed", Color(0.05, 0.1, 0.15, 0.95))
-	btn.pressed.connect(_on_stage_pressed.bind(stage.id))
+	var hover_color := Color(0.2, 0.3, 0.4, 0.95)
+	if not is_unlocked:
+		btn.text = stage.name + " [未解锁]"
+		btn.add_theme_color_override("normal", Color(0.1, 0.1, 0.1, 0.8))
+		btn.add_theme_color_override("hover", Color(0.15, 0.15, 0.15, 0.8))
+		btn.add_theme_color_override("pressed", Color(0.05, 0.05, 0.05, 0.8))
+		btn.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
+		btn.disabled = true
+	else:
+		btn.text = stage.name
+		btn.add_theme_color_override("normal", color)
+		btn.add_theme_color_override("hover", hover_color)
+		btn.add_theme_color_override("pressed", Color(0.05, 0.1, 0.15, 0.95))
+		btn.pressed.connect(_on_stage_pressed.bind(stage.id))
 	return btn
 
 func _on_stage_pressed(stage_id: int) -> void:

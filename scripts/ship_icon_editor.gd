@@ -144,7 +144,7 @@ func _build_category_tree() -> void:
 	_show_category(ShipIconGenerator.Category.SHIP)
 
 func _show_category(cat: ShipIconGenerator.Category) -> void:
-	for i: int in ShipIconGenerator.Category.size():
+	for i: int in range(ShipIconGenerator.Category.size()):
 		var header: Button = _category_headers[i] if i < _category_headers.size() else null
 		var items: Control = _category_items[i] if i < _category_items.size() else null
 		if header:
@@ -283,7 +283,7 @@ func _on_add_icon(cat: ShipIconGenerator.Category) -> void:
 	}
 
 	var found: bool = false
-	for i: int in all_entries.size():
+	for i: int in range(all_entries.size()):
 		if all_entries[i] is Dictionary and all_entries[i].has(cat_key):
 			all_entries[i][cat_key].append(new_entry)
 			found = true
@@ -411,10 +411,10 @@ func _on_save() -> void:
 
 	var path_data: Array = _segments_to_path_data()
 	var updated: bool = false
-	for i: int in json_data.size():
+	for i: int in range(json_data.size()):
 		if json_data[i] is Dictionary and json_data[i].has(cat_key):
 			var list: Array = json_data[i][cat_key]
-			for j: int in list.size():
+			for j: int in range(list.size()):
 				if list[j] is Dictionary and list[j].get("id") == _selected_icon_id:
 					list[j]["path"] = path_data
 					updated = true

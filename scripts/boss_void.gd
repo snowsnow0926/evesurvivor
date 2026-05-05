@@ -11,34 +11,30 @@ var fire_timer: float = 0.0
 var bullet_speed: float = 400.0
 var bullet_damage: float = 10.0
 var is_rage: bool = false
+var _boss_shield: float = 0.0
+var _boss_shield_max: float = 0.0
+var _boss_shield_regen: float = 0.0
+var _boss_shield_regen_timer: float = 0.0
 
 var hp_bar_bg: ColorRect
 
 func _ready() -> void:
 	super._ready()
-	polygon = $Polygon2D
-	ship_sprite = $ShipSprite
-	hp_bar = $HPBar
-	hp_bar_bg = $HPBarBg
-	if polygon:
-		polygon.rotation = PI / 2
-	scale = Vector2(3.0, 3.0)
-	setup_icon()
+	_base_tint = Color(0.5, 0.0, 0.8)
+	_visual_scale = 1.5
+	_icon_id = "npcfrigate"
 	_death_particle_color = Color(0.5, 0.0, 0.5, 1.0)
-
-func setup_icon() -> void:
-	var tex: Texture2D = ShipIconGenerator.get_texture(ShipIconGenerator.Category.SHIP, "npcbattleCruiser")
-	if tex != null:
-		ship_sprite.texture = tex
-		ship_sprite.visible = true
-		ship_sprite.offset = Vector2(-16, -16)
-		polygon.visible = false
-	else:
-		ship_sprite.visible = false
-		polygon.visible = true
+	set_enemy_icon()
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
+	_boss_shield_regen_timer += delta
+	if _boss_shield_regen_timer >= 1.0:
+		_boss_shield_regen_timer = 0.0
+		_boss_shield = minf(_boss_shield + _boss_shield_regen, _boss_shield_max)
+		enemy_shield = _boss_shield
+		enemy_shield_max = _boss_shield_max
+		_update_hp_bar()
 
 func _process_combat(delta: float) -> void:
 	var player = _get_player()
@@ -61,12 +57,69 @@ func _process_combat(delta: float) -> void:
 		fire_timer = 0.0
 		_fire_spread()
 
+func take_damage(amount: float, is_crit: bool = false) -> void:
+	if hp <= 0:
+		return
+	if _lock_state != EnemyBase.LockState.LOCKED:
+		return
+	if _boss_shield_max > 0.0:
+		var shield_dmg = minf(_boss_shield, amount)
+		_boss_shield -= shield_dmg
+		amount -= shield_dmg
+		enemy_shield = _boss_shield
+		enemy_shield_max = _boss_shield_max
+		if _boss_shield <= 0.0:
+			_boss_shield = 0.0
+		_update_hp_bar()
+	if amount <= 0:
+		return
+	SoundManager.play_sfx("hit")
+	hp -= amount
+
+	_spawn_damage_number(amount, is_crit)
+	_update_hp_bar()
+	_start_hit_flash()
+
+	if hp <= 0:
+		hp = 0
+		_die()
+
+func take_laser_damage(amount: float, is_crit: bool, shield_penetration_mult: float = 1.0) -> void:
+	if hp <= 0:
+		return
+	if _lock_state != EnemyBase.LockState.LOCKED:
+		return
+	if _boss_shield_max > 0.0 and _boss_shield > 0.0:
+		var effective_amount = amount * shield_penetration_mult
+		var actual_shield_dmg = minf(_boss_shield, effective_amount)
+		_boss_shield -= actual_shield_dmg
+		var hp_dmg = effective_amount - actual_shield_dmg
+		if _boss_shield <= 0.0:
+			_boss_shield = 0.0
+		enemy_shield = _boss_shield
+		enemy_shield_max = _boss_shield_max
+		_update_hp_bar()
+		if hp_dmg <= 0.0:
+			return
+		amount = hp_dmg
+	SoundManager.play_sfx("hit")
+	hp -= amount
+
+	_spawn_damage_number(amount, is_crit)
+	_update_hp_bar()
+	_start_hit_flash()
+
+	if hp <= 0:
+		hp = 0
+		_die()
+
 func _enter_rage_mode() -> void:
 	is_rage = true
 	move_speed = 120.0
-	var target: Node = ship_sprite if ship_sprite and ship_sprite.visible else polygon
-	if target:
-		target.modulate = Color(1.5, 0.3, 0.3)
+	_base_tint = Color(1.0, 0.1, 0.3)
+	var locked_tint := _base_tint * 1.8
+	_locked_tex = _create_tinted_texture(_icon_tex, locked_tint)
+	queue_redraw()
 
 func _fire_spread() -> void:
 	var player = _get_player()
@@ -98,12 +151,17 @@ func _fire_spread() -> void:
 
 func setup_boss(gm: Node2D) -> void:
 	game_manager = gm
-	max_hp = 500.0
-	hp = 500.0
+	max_hp = 500.0 * (gm.enemy_hp / 30.0)
+	hp = max_hp
 	move_speed = base_move_speed
 	is_rage = false
 	fire_timer = 0.0
 	contact_timer = 0.0
+	_boss_shield_max = max_hp * 0.33
+	_boss_shield = _boss_shield_max
+	_boss_shield_regen = _boss_shield_max * 0.10
+	_boss_shield_regen_timer = 0.0
+	damage = gm.enemy_damage
 
 func _spawn_damage_number(amount: float, is_crit: bool) -> void:
 	var parent = get_parent()
@@ -140,6 +198,10 @@ func _update_hp_bar() -> void:
 		hp_bar.scale.x = ratio
 		if hp_bar_bg:
 			hp_bar.position.x = -51.0 * ratio
+	if shield_bar and enemy_shield_max > 0.0:
+		var shield_ratio = clampf(enemy_shield / enemy_shield_max, 0.0, 1.0)
+		shield_bar.scale.x = shield_ratio
+		shield_bar.position.x = -51.0 * shield_ratio
 
 func _start_hit_flash() -> void:
 	var target: Node = ship_sprite if ship_sprite and ship_sprite.visible else polygon

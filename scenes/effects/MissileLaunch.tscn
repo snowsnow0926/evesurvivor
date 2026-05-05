@@ -1,0 +1,42 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/effects/missile_launch.gd" id="1_launch"]
+
+[node name="MissileLaunch" type="Node2D"]
+script = ExtResource("1_launch")
+
+[node name="LaunchFlame" type="CPUParticles2D" parent="."]
+amount = 50
+lifetime = 0.3
+explosiveness = 0.7
+randomness = 0.4
+emission_shape = 1
+emission_sphere_radius = 6.0
+direction = Vector2(-1, 0)
+spread = 20.0
+initial_velocity_min = 150.0
+initial_velocity_max = 300.0
+scale_amount_min = 3.0
+scale_amount_max = 8.0
+color = Color(1.0, 0.5, 0.1, 1.0)
+blend_mode = 1
+
+[node name="SmokeTrail" type="CPUParticles2D" parent="."]
+amount = 20
+lifetime = 0.8
+explosiveness = 0.3
+randomness = 0.7
+emission_shape = 1
+emission_sphere_radius = 4.0
+direction = Vector2(-1, 0)
+spread = 35.0
+initial_velocity_min = 20.0
+initial_velocity_max = 60.0
+scale_amount_min = 4.0
+scale_amount_max = 10.0
+color = Color(0.7, 0.7, 0.7, 0.4)
+blend_mode = 1
+
+[node name="GlowSprite" type="Sprite2D" parent="."]
+modulate = Color(1.0, 0.6, 0.1, 0.0)
+scale = Vector2(0.5, 0.5)

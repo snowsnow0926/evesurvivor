@@ -13,9 +13,12 @@ var current_state: String = "idle"
 
 func _ready() -> void:
 	super()
-	_icon_id = "enemy_sentry"
-	tonnage = "cruiser"
+	_icon_id = "npcfrigate"
+	tonnage = "rookie"
+	_base_tint = Color(0.3, 0.2, 1.0)
+	_visual_scale = 1.2
 	_death_particle_color = Color(0.5, 0.2, 1.0, 1.0)
+	set_enemy_icon()
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)

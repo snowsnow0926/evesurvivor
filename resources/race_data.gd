@@ -44,7 +44,7 @@ static func _human_data() -> RaceData:
 	r.base_weapon_scene = "res://scenes/Missile.tscn"
 	r.talents = [
 		{"name": "导弹专精", "desc": "导弹基础等级 +1", "type": "missile_base_level", "value": 1},
-		{"name": "远程锁定", "desc": "导弹射程 +20%", "type": "missile_range", "value": 1},
+		{"name": "远程锁定", "desc": "导弹射程 +20%", "type": "missile_range", "value": 0.2},
 	]
 	return r
 
@@ -63,7 +63,7 @@ static func _orc_data() -> RaceData:
 	r.base_weapon_scene = "res://scenes/CannonBullet.tscn"
 	r.talents = [
 		{"name": "炮术专精", "desc": "加农炮基础等级 +1", "type": "cannon_base_level", "value": 1},
-		{"name": "狂暴射击", "desc": "加农炮射速 +15%", "type": "cannon_fire_rate", "value": 1},
+		{"name": "狂暴射击", "desc": "加农炮射速 +15%", "type": "cannon_fire_rate", "value": 0.15},
 	]
 	return r
 
@@ -82,7 +82,7 @@ static func _plant_data() -> RaceData:
 	r.base_weapon_scene = "res://scenes/RailgunBullet.tscn"
 	r.talents = [
 		{"name": "磁轨专精", "desc": "磁轨炮基础等级 +1", "type": "railgun_base_level", "value": 1},
-		{"name": "光子爆发", "desc": "磁轨炮暴击率 +20%", "type": "railgun_crit", "value": 1},
+		{"name": "光子爆发", "desc": "磁轨炮暴击率 +20%", "type": "railgun_crit", "value": 0.2},
 	]
 	return r
 
@@ -90,7 +90,7 @@ static func _silicon_data() -> RaceData:
 	var r = RaceData.new()
 	r.race_id = RaceID.SILICON
 	r.display_name = "硅基"
-	r.description = "能量生命体，使用激光炮武器，拥有持续伤害天赋。激光武器升级三项默认 +1，激光宽度 +15%，持续时间 +15%。"
+	r.description = "能量生命体，使用激光炮武器，拥有高能光束天赋。激光武器升级三项默认 +1，激光宽度 +15%，持续时间 +15%。"
 	r.base_hp = 90.0
 	r.shield_max = 70.0
 	r.shield_regen = 3.5
@@ -100,7 +100,8 @@ static func _silicon_data() -> RaceData:
 	r.crit_mult = 1.6
 	r.base_weapon_scene = "res://scenes/LaserBeam.tscn"
 	r.talents = [
-		{"name": "激光专精", "desc": "激光炮基础等级 +1", "type": "laser_base_level", "value": 1},
-		{"name": "能量聚焦", "desc": "激光宽度 +15%，持续时间 +15%", "type": "laser_width_duration", "value": 1},
+		{"name": "激光专精", "desc": "激光基础等级 +1", "type": "laser_base_level", "value": 1},
+		{"name": "高能光束", "desc": "激光宽度 +15%", "type": "laser_pierce", "value": 0.15},
+		{"name": "能量聚焦", "desc": "激光持续时间 +15%", "type": "laser_overload", "value": 0.15},
 	]
 	return r

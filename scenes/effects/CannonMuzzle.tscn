@@ -1,0 +1,42 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/effects/cannon_muzzle.gd" id="1_muzzle"]
+
+[node name="CannonMuzzle" type="Node2D"]
+script = ExtResource("1_muzzle")
+
+[node name="FlashParticles" type="CPUParticles2D" parent="."]
+amount = 30
+lifetime = 0.15
+explosiveness = 0.9
+randomness = 0.3
+emission_shape = 1
+emission_sphere_radius = 5.0
+direction = Vector2(1, 0)
+spread = 25.0
+initial_velocity_min = 200.0
+initial_velocity_max = 400.0
+scale_amount_min = 4.0
+scale_amount_max = 10.0
+color = Color(1.0, 0.7, 0.2, 1.0)
+blend_mode = 1
+
+[node name="FlashSprite" type="Sprite2D" parent="."]
+modulate = Color(1.0, 0.8, 0.3, 0.9)
+
+[node name="SmokeParticles" type="CPUParticles2D" parent="."]
+amount = 15
+lifetime = 0.6
+explosiveness = 0.3
+randomness = 0.8
+emission_shape = 1
+emission_sphere_radius = 8.0
+direction = Vector2(1, 0)
+spread = 40.0
+initial_velocity_min = 30.0
+initial_velocity_max = 80.0
+scale_amount_min = 6.0
+scale_amount_max = 14.0
+color = Color(0.5, 0.5, 0.5, 0.4)
+gravity = Vector2(0, 50)
+blend_mode = 1

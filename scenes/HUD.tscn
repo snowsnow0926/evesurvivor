@@ -71,6 +71,11 @@ vertical_alignment = 1
 [node name="Divider" type="HSeparator" parent="ShipInfoPanel/ShipInfoVBox"]
 layout_mode = 2
 
+[node name="SessionCoinLabel" type="Label" parent="ShipInfoPanel/ShipInfoVBox"]
+layout_mode = 2
+text = "本次获得: 0"
+vertical_alignment = 1
+
 [node name="RaceInfoLabel" type="Label" parent="ShipInfoPanel/ShipInfoVBox"]
 layout_mode = 2
 text = "种族: 人类"

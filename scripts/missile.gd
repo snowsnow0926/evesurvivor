@@ -6,6 +6,7 @@ var speed: float = 600.0
 var crit_rate: float = 0.05
 var crit_mult: float = 1.5
 var game_manager: Node2D
+var owner_player: Node2D = null
 var splash_radius: float = 0.0
 var splash_count: int = 0
 
@@ -53,6 +54,12 @@ func _physics_process(delta: float) -> void:
 
 	queue_redraw()
 
+	# Spawn trail effect periodically
+	if game_manager and game_manager.has_method("spawn_missile_trail"):
+		var trail_interval = 0.05
+		if fmod(lifetime, trail_interval) < delta:
+			game_manager.spawn_missile_trail(global_position, -target_dir, {"lifetime": 0.5})
+
 func _update_target_tracking(delta: float) -> void:
 	tracking_time += delta
 
@@ -93,6 +100,8 @@ func _find_nearest_enemy() -> Node2D:
 	var nearest_dist = max_distance
 	for enemy in enemy_root.get_children():
 		if not is_instance_valid(enemy) or not enemy is Node2D:
+			continue
+		if enemy.has_method("is_vulnerable") and not enemy.is_vulnerable():
 			continue
 		var dist = global_position.distance_to(enemy.global_position)
 		if dist < nearest_dist:
@@ -166,6 +175,12 @@ func _apply_splash_damage(hit_pos: Vector2, base_damage: float) -> void:
 func _spawn_explosion(pos: Vector2) -> void:
 	if not game_manager or not is_instance_valid(game_manager):
 		return
+
+	# Spawn enhanced explosion effect
+	if game_manager.has_method("spawn_missile_explosion"):
+		game_manager.spawn_missile_explosion(pos, {"radius": splash_radius if splash_radius > 0.0 else 60.0})
+
+	# Also keep the old particle explosion for compatibility
 	var bullet_root = game_manager.get("bullet_root")
 	if not bullet_root or not is_instance_valid(bullet_root):
 		return

@@ -1,8 +1,9 @@
-[gd_scene load_steps=10 format=3 uid="uid://cf8gamescene001"]
+[gd_scene load_steps=11 format=3 uid="uid://cf8gamescene001"]
 
 [ext_resource type="Script" path="res://scripts/game_manager.gd" id="1_gm"]
 [ext_resource type="Script" path="res://scripts/game_scene.gd" id="5_gs"]
 [ext_resource type="Script" path="res://scripts/parallax_starfield.gd" id="4_psf"]
+[ext_resource type="Script" path="res://scripts/weapon_effect_manager.gd" id="10_effect_mgr"]
 [ext_resource type="PackedScene" uid="uid://cf8hud001" path="res://scenes/HUD.tscn" id="6_hud_scene"]
 [ext_resource type="PackedScene" uid="uid://cf8upgrade001" path="res://scenes/UpgradeMenu.tscn" id="7_upgrade_scene"]
 [ext_resource type="PackedScene" uid="uid://cf8pause001" path="res://scenes/PauseMenu.tscn" id="8_pause_scene"]
@@ -34,6 +35,11 @@ script = ExtResource("1_gm")
 [node name="ExpOrbRoot" type="Node2D" parent="."]
 
 [node name="DamageRoot" type="Node2D" parent="."]
+
+[node name="EffectRoot" type="Node2D" parent="."]
+
+[node name="WeaponEffectManager" type="Node" parent="EffectRoot"]
+script = ExtResource("10_effect_mgr")
 
 [node name="ParallaxStarfield" type="Node2D" parent="."]
 script = ExtResource("4_psf")

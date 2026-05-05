@@ -19,6 +19,7 @@ enum ShipID { FRIGATE, CRUISER, BATTLECRUISER, BATTLESHIP, DREADNOUGHT, TITAN }
 @export var upgrade_mineral_count: int
 @export var tonnage_tier: int
 @export var base_hp: int
+@export var base_shield: int
 
 static var _cache: Dictionary = {}
 
@@ -59,6 +60,7 @@ static func _frigate() -> ShipData:
 	s.upgrade_mineral_count = 10
 	s.tonnage_tier = EquipmentData.TonnageTier.SMALL
 	s.base_hp = 100
+	s.base_shield = 50
 	return s
 
 static func _cruiser() -> ShipData:
@@ -79,6 +81,7 @@ static func _cruiser() -> ShipData:
 	s.upgrade_mineral_count = 20
 	s.tonnage_tier = EquipmentData.TonnageTier.MEDIUM
 	s.base_hp = 250
+	s.base_shield = 100
 	return s
 
 static func _battlecruiser() -> ShipData:
@@ -99,6 +102,7 @@ static func _battlecruiser() -> ShipData:
 	s.upgrade_mineral_count = 15
 	s.tonnage_tier = EquipmentData.TonnageTier.MEDIUM
 	s.base_hp = 450
+	s.base_shield = 200
 	return s
 
 static func _battleship() -> ShipData:
@@ -119,6 +123,7 @@ static func _battleship() -> ShipData:
 	s.upgrade_mineral_count = 30
 	s.tonnage_tier = EquipmentData.TonnageTier.LARGE
 	s.base_hp = 800
+	s.base_shield = 350
 	return s
 
 static func _dreadnought() -> ShipData:
@@ -139,6 +144,7 @@ static func _dreadnought() -> ShipData:
 	s.upgrade_mineral_count = 20
 	s.tonnage_tier = EquipmentData.TonnageTier.FLAGSHIP
 	s.base_hp = 1500
+	s.base_shield = 600
 	return s
 
 static func _titan() -> ShipData:
@@ -159,4 +165,5 @@ static func _titan() -> ShipData:
 	s.upgrade_mineral_count = 50
 	s.tonnage_tier = EquipmentData.TonnageTier.FLAGSHIP
 	s.base_hp = 3000
+	s.base_shield = 1200
 	return s

@@ -29,6 +29,14 @@ offset_right = 54.0
 offset_bottom = -20.0
 color = Color(0.2, 0.2, 0.2, 0.8)
 
+[node name="ShieldBar" type="ColorRect" parent="."]
+z_index = 1
+offset_left = -51.0
+offset_top = -34.0
+offset_right = 51.0
+offset_bottom = -32.0
+color = Color(0.3, 0.6, 1.0, 1.0)
+
 [node name="HPBar" type="ColorRect" parent="."]
 z_index = 1
 offset_left = -51.0

@@ -22,7 +22,7 @@ func _draw() -> void:
 	var offset_x: float = (get_viewport_rect().size.x - total_w) / 2.0
 	var offset_y: float = (get_viewport_rect().size.y - total_h) / 2.0
 
-	for i: int in entries.size():
+	for i: int in range(entries.size()):
 		var col: int = i % COLS
 		var row: int = i / COLS
 		var cx: float = offset_x + col * GAP_X

@@ -14,7 +14,7 @@ func _build_ship_list() -> void:
 	var ships = ShipData.get_all_ships()
 	var unlocked_count = 0
 	for ship in ships:
-		var is_unlocked = ship.is_unlocked or GameState.unlocked_ships.has(ship.ship_id)
+		var is_unlocked = ship.is_unlocked or GameState.unlocked_ships.has(int(ship.ship_id))
 		if not is_unlocked:
 			continue
 		unlocked_count += 1
@@ -51,7 +51,7 @@ func _build_ship_list() -> void:
 		ship_list_vbox.add_child(auto_lbl)
 
 		for ship in ships:
-			var is_unlocked = ship.is_unlocked or GameState.unlocked_ships.has(ship.ship_id)
+			var is_unlocked = ship.is_unlocked or GameState.unlocked_ships.has(int(ship.ship_id))
 			if is_unlocked:
 				_on_ship_selected(ship)
 				break

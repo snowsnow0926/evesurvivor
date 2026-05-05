@@ -11,9 +11,12 @@ var windup_flash_visible: bool = true
 
 func _ready() -> void:
 	super()
-	_icon_id = "enemy_raven"
-	tonnage = "frigate"
+	_icon_id = "npcfrigate"
+	tonnage = "rookie"
+	_base_tint = Color(1.0, 0.6, 0.0)
+	_visual_scale = 0.85
 	_death_particle_color = Color(1.0, 0.5, 0.0, 1.0)
+	set_enemy_icon()
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)

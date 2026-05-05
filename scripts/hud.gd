@@ -18,9 +18,11 @@ const UPGRADE_NAME_MAP: Dictionary = {
 	"railgun_damage": "一发入魂",
 	"railgun_crit": "命中注定",
 	"railgun_multi": "多重射击",
-	"laser_duration": "高能光束",
-	"laser_width": "高效射击",
-	"laser_shield": "护盾中和",
+	"laser_pierce": "高效光束",
+	"laser_overload": "能量过载",
+		"laser_shield_penetration": "护盾穿透",
+	"missile_range": "远程锁定",
+	"cannon_fire_rate": "狂暴射击",
 }
 
 const DEBUG := false
@@ -45,6 +47,7 @@ func _debug(msg: String) -> void:
 @onready var ship_speed_label: Label = $ShipInfoPanel/ShipInfoVBox/SpeedLabel
 @onready var ship_crit_label: Label = $ShipInfoPanel/ShipInfoVBox/CritLabel
 @onready var ship_dodge_label: Label = $ShipInfoPanel/ShipInfoVBox/DodgeLabel
+@onready var session_coin_label: Label = $ShipInfoPanel/ShipInfoVBox/SessionCoinLabel
 @onready var race_info_label: Label = $ShipInfoPanel/ShipInfoVBox/RaceInfoLabel
 @onready var race_bonus_label: Label = $ShipInfoPanel/ShipInfoVBox/RaceBonusLabel
 @onready var ship_slots_label: Label = $ShipInfoPanel/ShipInfoVBox/ShipSlotsLabel
@@ -170,11 +173,15 @@ func _process(_delta: float) -> void:
 	var ship_id = int(GameState.selected_ship_id)
 	if ship_id == 0:
 		ship_id = ShipData.ShipID.FRIGATE
-	var armor_dict = GameState.equipped_armor.get(ship_id, {})
-	if armor_dict is Dictionary and not armor_dict.is_empty():
-		defense_name = armor_dict.get("name", "防御装")
-		defense_level = armor_dict.get("level", 1)
-		defense_quality = armor_dict.get("quality", 0)
+	var armor_list: Array = GameState.equipped_armor.get(ship_id, [])
+	if not (armor_list is Array):
+		armor_list = []
+	if not armor_list.is_empty():
+		var first_armor = armor_list[0]
+		if first_armor is Dictionary:
+			defense_name = first_armor.get("name", "防御装")
+			defense_level = first_armor.get("level", 1)
+			defense_quality = first_armor.get("quality", 0)
 
 	update_display(
 		gm.player_hp,
@@ -191,6 +198,8 @@ func _process(_delta: float) -> void:
 	)
 	_update_timer_display(gm)
 	_update_top_weapon_display(all_weapon_data, defense_name, defense_level, defense_quality)
+	if session_coin_label:
+		session_coin_label.text = "本次获得: %d" % gm.session_star_coin
 	_update_race_and_ship_display()
 	_update_upgrade_list_display(gm)
 	if ship_hp_label:
@@ -198,7 +207,16 @@ func _process(_delta: float) -> void:
 	if ship_shield_label:
 		ship_shield_label.text = "护盾: %.0f / %.0f" % [gm.player_shield, gm.player_shield_max]
 	if ship_atk_label:
-		ship_atk_label.text = "攻击: %.1f" % gm.player_damage
+		var primary_damage: float = 15.0
+		var primary_range: float = 600.0
+		if player and player.get("active_weapons"):
+			var weapons = player.get("active_weapons") as Array
+			if weapons and not weapons.is_empty():
+				var pw = weapons[0]
+				if pw:
+					primary_damage = pw.damage
+					primary_range = pw.range
+		ship_atk_label.text = "攻击: %.0f  射程: %.0f" % [primary_damage, primary_range]
 	if ship_firerate_label:
 		var primary_fire_interval = 0.8
 		if player and player.get("active_weapons"):
@@ -250,8 +268,8 @@ func _get_upgrade_ids_for_weapon(wid) -> Array:
 		return ["cannon_bloodthirst", "cannon_rush", "cannon_vengeance"]
 	elif wid in railgun_ids:
 		return ["railgun_multi", "railgun_crit", "railgun_damage"]
-	elif wid in laser_ids:
-		return ["laser_duration", "laser_width", "laser_shield"]
+	if wid in laser_ids:
+		return ["laser_pierce", "laser_overload", "laser_shield_penetration"]
 	return []
 
 func _update_top_weapon_display(all_weapon_data: Array, defense: String, defense_lv: int, defense_q: int) -> void:
@@ -299,18 +317,21 @@ func _update_upgrade_list_display(gm) -> void:
 			_vbox_warned = true
 		return
 
-	var current_keys = gm.upgrade_counts.keys()
+	var all_keys: Array = Array(gm.upgrade_counts.keys())
+	for k in GameState.research_progress.keys():
+		if not all_keys.has(k):
+			all_keys.append(k)
+	for k in gm.race_talent_counts.keys():
+		if not all_keys.has(k):
+			all_keys.append(k)
 	var has_any_upgrade = false
-	for k in current_keys:
-		if gm.upgrade_counts[k] > 0:
+	for k in all_keys:
+		if gm.get_upgrade_total_level(k) > 0 or GameState.research_progress.get(k, 0) > 0:
 			has_any_upgrade = true
 			break
 
-	# Ensure panel visibility tracks upgrade state
 	var upgrade_panel = $BottomRightAnchor/UpgradeListPanel
 	if upgrade_panel:
-		if has_any_upgrade and not upgrade_panel.visible:
-			pass  # Panel now visible
 		upgrade_panel.visible = has_any_upgrade
 
 	var existing_labels: Array = []
@@ -320,12 +341,12 @@ func _update_upgrade_list_display(gm) -> void:
 			existing_labels.append(child)
 
 	var label_idx = 0
-	for key in current_keys:
-		var count = gm.upgrade_counts.get(key, 0)
-		if count <= 0:
+	for key in all_keys:
+		var total_level = gm.get_upgrade_total_level(key)
+		if total_level <= 0:
 			continue
 		var display_name = UPGRADE_NAME_MAP.get(key, key)
-		var text = "%s Lv.%d" % [display_name, count]
+		var text = "%s Lv.%d" % [display_name, total_level]
 
 		var lbl: Label
 		if label_idx < existing_labels.size():
@@ -388,7 +409,13 @@ func _update_race_and_ship_display() -> void:
 		if race and race.talents.size() > 0:
 			var lines: Array = []
 			for talent in race.talents:
-				lines.append("%s Lv.%d" % [talent.get("name", "?"), int(talent.get("value", 1))])
+				var t_value = talent.get("value", 1)
+				var display_level: String
+				if t_value < 1.0:
+					display_level = "Lv.1"
+				else:
+					display_level = "Lv.%d" % int(t_value)
+				lines.append("%s %s" % [talent.get("name", "?"), display_level])
 			race_bonus_label.text = "天赋: " + "\n".join(lines)
 		else:
 			race_bonus_label.text = "天赋: -"
@@ -404,10 +431,10 @@ func _update_race_and_ship_display() -> void:
 			if weapon_list is Array:
 				weapon_count = weapon_list.size()
 			var w_max = ship.upgraded_weapon_slots if GameState.upgraded_ships.get(ship_id, false) else ship.weapon_slot_count
-			var armor_count = 0
-			var armor_dict = GameState.equipped_armor.get(ship_id, {})
-			if armor_dict is Dictionary and not armor_dict.is_empty():
-				armor_count = 1
+			var armor_list: Array = GameState.equipped_armor.get(ship_id, [])
+			if not (armor_list is Array):
+				armor_list = []
+			var armor_count = armor_list.size()
 			var a_max = ship.upgraded_armor_slots if GameState.upgraded_ships.get(ship_id, false) else ship.armor_slot_count
 			ship_slots_label.text = "武:%d/%d | 防:%d/%d" % [weapon_count, w_max, armor_count, a_max]
 		else:
@@ -416,12 +443,14 @@ func _update_race_and_ship_display() -> void:
 func _update_timer_display(gm) -> void:
 	if not timer_label:
 		return
-	if gm.has_timer and gm.time_remaining > 0:
+	if gm.has_timer and (gm.time_remaining > 0 or gm.timer_counting_up):
 		var mins = int(gm.time_remaining) / 60
 		var secs = int(gm.time_remaining) % 60
 		timer_label.text = "%02d:%02d" % [mins, secs]
 		timer_label.visible = true
-		if gm.time_remaining <= 30.0:
+		if gm.timer_counting_up:
+			timer_label.add_theme_color_override("font_color", Color(0.5, 1.0, 0.5))
+		elif gm.time_remaining <= 30.0:
 			timer_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
 		elif gm.time_remaining <= 60.0:
 			timer_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.0))

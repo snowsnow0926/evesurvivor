@@ -34,6 +34,80 @@ layout_mode = 2
 text = "舰船信息"
 horizontal_alignment = 1
 
+[node name="ShipStatsPanel" type="PanelContainer" parent="Panel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+
+[node name="ShipStatsHBox" type="HBoxContainer" parent="Panel/VBox/ShipStatsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="WeaponStatsCol" type="VBoxContainer" parent="Panel/VBox/ShipStatsPanel/ShipStatsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="Title" type="Label" parent="Panel/VBox/ShipStatsPanel/ShipStatsHBox/WeaponStatsCol"]
+layout_mode = 2
+text = "◆ 当前武器"
+horizontal_alignment = 1
+
+[node name="WeaponDPS" type="Label" parent="Panel/VBox/ShipStatsPanel/ShipStatsHBox/WeaponStatsCol"]
+layout_mode = 2
+text = "DPS: -- | 伤害: -- | 射速: --/s | 射程: --"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 12
+
+[node name="WeaponBonus" type="Label" parent="Panel/VBox/ShipStatsPanel/ShipStatsHBox/WeaponStatsCol"]
+layout_mode = 2
+text = "暴击率: --% | 暴击倍率: --x"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 12
+
+[node name="ArmorStatsCol" type="VBoxContainer" parent="Panel/VBox/ShipStatsPanel/ShipStatsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="Title" type="Label" parent="Panel/VBox/ShipStatsPanel/ShipStatsHBox/ArmorStatsCol"]
+layout_mode = 2
+text = "◆ 当前防御"
+horizontal_alignment = 1
+
+[node name="ArmorHP" type="Label" parent="Panel/VBox/ShipStatsPanel/ShipStatsHBox/ArmorStatsCol"]
+layout_mode = 2
+text = "HP: --"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 12
+
+[node name="ArmorShield" type="Label" parent="Panel/VBox/ShipStatsPanel/ShipStatsHBox/ArmorStatsCol"]
+layout_mode = 2
+text = "护盾: -- / -- | 护盾回充: --/s"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 12
+
+[node name="ShipBaseCol" type="VBoxContainer" parent="Panel/VBox/ShipStatsPanel/ShipStatsHBox"]
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_constants/separation = 2
+
+[node name="Title" type="Label" parent="Panel/VBox/ShipStatsPanel/ShipStatsHBox/ShipBaseCol"]
+layout_mode = 2
+text = "◆ 舰船基础"
+horizontal_alignment = 1
+
+[node name="ShipHP" type="Label" parent="Panel/VBox/ShipStatsPanel/ShipStatsHBox/ShipBaseCol"]
+layout_mode = 2
+text = "HP: --"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 12
+
+[node name="ShipSlots" type="Label" parent="Panel/VBox/ShipStatsPanel/ShipStatsHBox/ShipBaseCol"]
+layout_mode = 2
+text = "武器槽: -- | 防御槽: --"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 12
+
 [node name="EquippedSection" type="VBoxContainer" parent="Panel/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 6
@@ -107,11 +181,11 @@ custom_minimum_size = Vector2(0, 240)
 
 [node name="DetailPanel" type="PanelContainer" parent="Panel/VBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 64)
+custom_minimum_size = Vector2(0, 84)
 
 [node name="DetailHBox" type="HBoxContainer" parent="Panel/VBox/DetailPanel"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 16
 
 [node name="DetailIcon" type="Label" parent="Panel/VBox/DetailPanel/DetailHBox"]
 layout_mode = 2
@@ -123,7 +197,7 @@ vertical_alignment = 1
 [node name="DetailVBox" type="VBoxContainer" parent="Panel/VBox/DetailPanel/DetailHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 4
+theme_override_constants/separation = 2
 
 [node name="DetailName" type="Label" parent="Panel/VBox/DetailPanel/DetailHBox/DetailVBox"]
 layout_mode = 2
@@ -134,6 +208,12 @@ theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 layout_mode = 2
 text = ""
 theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="DetailCompare" type="Label" parent="Panel/VBox/DetailPanel/DetailHBox/DetailVBox"]
+layout_mode = 2
+text = ""
+theme_override_colors/font_color = Color(0.3, 1.0, 0.3, 1)
 theme_override_font_sizes/font_size = 12
 
 [node name="DetailDesc" type="Label" parent="Panel/VBox/DetailPanel/DetailHBox/DetailVBox"]

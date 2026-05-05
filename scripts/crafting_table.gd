@@ -43,9 +43,12 @@ func _build_inventory() -> void:
 		for w in equipped_weapons:
 			if w is Dictionary:
 				equipped_ids.append(w.get("equip_id", ""))
-	var equipped_armor = GameState.equipped_armor.get(ship_id, {})
-	if equipped_armor is Dictionary and not equipped_armor.is_empty():
-		equipped_ids.append(equipped_armor.get("equip_id", ""))
+	var equipped_armor: Array = GameState.equipped_armor.get(ship_id, [])
+	if not (equipped_armor is Array):
+		equipped_armor = []
+	for armor_item in equipped_armor:
+		if armor_item is Dictionary:
+			equipped_ids.append(armor_item.get("equip_id", ""))
 
 	for item in GameState.equipment_inventory:
 		var equip_id = item.get("equip_id", "")
@@ -85,15 +88,28 @@ func _update_crafting_slots() -> void:
 			slot.get_node("Label").text = "[空]"
 	_update_preview()
 
+func _get_base_name(item: Dictionary) -> String:
+	var raw_name = item.get("name", "")
+	for qq in range(EquipmentData.Quality.MYTHIC, -1, -1):
+		var prefix = EquipmentData.get_quality_name(qq)
+		if raw_name.begins_with(prefix + " "):
+			return raw_name.substr(prefix.length() + 1)
+	return raw_name
+
+func _can_craft_pair(item_a: Dictionary, item_b: Dictionary) -> bool:
+	if item_a.get("quality") != item_b.get("quality"):
+		return false
+	return _get_base_name(item_a) == _get_base_name(item_b)
+
 func _update_preview() -> void:
 	if selected_items[0] == null or selected_items[1] == null:
-		result_preview.text = "放入2件相同品质装备进行合成"
+		result_preview.text = "放入2件同名同品质装备进行合成"
 		if craft_btn:
 			craft_btn.disabled = true
 		return
 
-	if selected_items[0].get("quality") != selected_items[1].get("quality"):
-		result_preview.text = "品质不匹配！"
+	if not _can_craft_pair(selected_items[0], selected_items[1]):
+		result_preview.text = "需同名同品质才能合成！"
 		if craft_btn:
 			craft_btn.disabled = true
 		return
@@ -115,7 +131,7 @@ func _update_preview() -> void:
 func _on_craft_pressed() -> void:
 	if selected_items[0] == null or selected_items[1] == null:
 		return
-	if selected_items[0].get("quality") != selected_items[1].get("quality"):
+	if not _can_craft_pair(selected_items[0], selected_items[1]):
 		return
 
 	var q = selected_items[0].get("quality")
@@ -135,12 +151,7 @@ func _on_craft_pressed() -> void:
 		is_weapon = equip_type_val.to_upper() != "ARMOR"
 
 	# Strip all quality prefixes from base_name to avoid stacking
-	var raw_name = selected_items[0].get("name", "")
-	for qq in range(EquipmentData.Quality.MYTHIC, -1, -1):
-		var prefix = EquipmentData.get_quality_name(qq)
-		if raw_name.begins_with(prefix + " "):
-			raw_name = raw_name.substr(prefix.length() + 1)
-			break
+	var raw_name = _get_base_name(selected_items[0])
 
 	var quality_prefix = EquipmentData.get_quality_name(next_q)
 	var mult = EquipmentData.get_quality_mult(next_q)
@@ -158,20 +169,14 @@ func _on_craft_pressed() -> void:
 
 	if is_weapon:
 		var base_damage = selected_items[0].get("base_damage", 0.0)
-		var base_interval = selected_items[0].get("fire_interval", 1.0)
-		var base_range = selected_items[0].get("range", 0.0)
-		var base_crit_rate = selected_items[0].get("crit_rate", 0.0)
-		var base_crit_mult = selected_items[0].get("crit_mult", 1.5)
 		new_item["base_damage"] = base_damage * mult
-		new_item["fire_interval"] = base_interval
-		new_item["range"] = base_range * mult
-		new_item["crit_rate"] = base_crit_rate
-		new_item["crit_mult"] = base_crit_mult
+		new_item["fire_interval"] = selected_items[0].get("fire_interval", 1.0)
+		new_item["range"] = selected_items[0].get("range", 0.0)
+		new_item["crit_rate"] = selected_items[0].get("crit_rate", 0.0)
+		new_item["crit_mult"] = selected_items[0].get("crit_mult", 1.5)
 	else:
-		var base_shield = selected_items[0].get("shield_bonus", 0.0)
-		var base_regen = selected_items[0].get("shield_regen_bonus", 0.0)
-		new_item["shield_bonus"] = base_shield * mult
-		new_item["shield_regen_bonus"] = base_regen * mult
+		new_item["shield_bonus"] = selected_items[0].get("shield_bonus", 0.0) * mult
+		new_item["shield_regen_bonus"] = selected_items[0].get("shield_regen_bonus", 0.0) * mult
 
 	GameState.equipment_inventory.append(new_item)
 
@@ -201,9 +206,12 @@ func _on_quick_craft_pressed() -> void:
 		for w in equipped_weapons:
 			if w is Dictionary:
 				equipped_ids.append(w.get("equip_id", ""))
-	var equipped_armor = GameState.equipped_armor.get(ship_id, {})
-	if equipped_armor is Dictionary and not equipped_armor.is_empty():
-		equipped_ids.append(equipped_armor.get("equip_id", ""))
+	var equipped_armor: Array = GameState.equipped_armor.get(ship_id, [])
+	if not (equipped_armor is Array):
+		equipped_armor = []
+	for armor_item in equipped_armor:
+		if armor_item is Dictionary:
+			equipped_ids.append(armor_item.get("equip_id", ""))
 
 	var craft_count = 0
 	for q in quality_order:
@@ -213,19 +221,20 @@ func _on_quick_craft_pressed() -> void:
 		if GameState.star_coin < cost:
 			continue
 
-		var by_type: Dictionary = {}
+		var by_name: Dictionary = {}
 		for item in GameState.equipment_inventory:
 			if equipped_ids.has(item.get("equip_id", "")):
 				continue
 			if item.get("quality", 0) != q:
 				continue
-			var etype = item.get("equip_type", "WEAPON")
-			if not by_type.has(etype):
-				by_type[etype] = []
-			by_type[etype].append(item)
+			var base_name = _get_base_name(item)
+			var key = item.get("equip_type", "WEAPON") + "|" + base_name
+			if not by_name.has(key):
+				by_name[key] = []
+			by_name[key].append(item)
 
-		for etype in by_type:
-			var group: Array = by_type[etype]
+		for key in by_name:
+			var group: Array = by_name[key]
 			while group.size() >= 2:
 				var cost_now = CRAFTING_COSTS.get(q, 0)
 				if GameState.star_coin < cost_now:
@@ -242,13 +251,7 @@ func _on_quick_craft_pressed() -> void:
 				if typeof(equip_type_val) == TYPE_STRING:
 					is_weapon = equip_type_val.to_upper() != "ARMOR"
 
-				var raw_name = item_a.get("name", "")
-				for qq in range(EquipmentData.Quality.MYTHIC, -1, -1):
-					var prefix = EquipmentData.get_quality_name(qq)
-					if raw_name.begins_with(prefix + " "):
-						raw_name = raw_name.substr(prefix.length() + 1)
-						break
-
+				var raw_name = _get_base_name(item_a)
 				var next_q = q + 1
 				var mult = EquipmentData.get_quality_mult(next_q)
 				var new_item = {
@@ -264,7 +267,7 @@ func _on_quick_craft_pressed() -> void:
 				if is_weapon:
 					new_item["base_damage"] = item_a.get("base_damage", 0.0) * mult
 					new_item["fire_interval"] = item_a.get("fire_interval", 1.0)
-					new_item["range"] = item_a.get("range", 0.0) * mult
+					new_item["range"] = item_a.get("range", 0.0)
 					new_item["crit_rate"] = item_a.get("crit_rate", 0.0)
 					new_item["crit_mult"] = item_a.get("crit_mult", 1.5)
 				else:

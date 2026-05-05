@@ -18,12 +18,31 @@ signal self_destruct_requested
 var game_manager: Node2D
 var is_open: bool = false
 
+func _shop_item_id_to_weapon_id(sid: int) -> int:
+	match sid:
+		0: return 4
+		1: return 8
+		2: return 12
+		3: return 16
+		4: return 5
+		5: return 9
+		6: return 13
+		7: return 17
+		8: return 6
+		9: return 10
+		10: return 14
+		11: return 18
+		12: return 7
+		13: return 11
+		14: return 15
+		15: return 19
+	return 0
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
 	is_open = false
 	_connect_buttons()
-	print("[PauseMenu] ready, process_mode=", process_mode)
 
 func _connect_buttons() -> void:
 	if continue_btn:
@@ -37,7 +56,6 @@ func open_menu(gm: Node2D) -> void:
 	game_manager = gm
 	visible = true
 	is_open = true
-	print("[PauseMenu] opened, visible=", visible, " process_mode=", process_mode)
 	if game_manager:
 		game_manager.is_paused = true
 		get_tree().paused = true
@@ -45,15 +63,15 @@ func open_menu(gm: Node2D) -> void:
 
 func _on_continue_pressed() -> void:
 	SoundManager.play_sfx("button_click")
-	print("[PauseMenu] continue pressed")
 	close_menu()
 
-func close_menu() -> void:
+func close_menu(p_keep_paused: bool = false) -> void:
 	visible = false
 	is_open = false
-	if game_manager and is_instance_valid(game_manager):
-		game_manager.is_paused = false
-	get_tree().paused = false
+	if not p_keep_paused:
+		if game_manager and is_instance_valid(game_manager):
+			game_manager.is_paused = false
+		get_tree().paused = false
 
 func _build_pause_loot_list() -> void:
 	if loot_section_label:
@@ -81,12 +99,15 @@ func _build_pause_loot_list() -> void:
 		var quality_color := Color.WHITE
 		if item.get("type") == "weapon":
 			var wid: int = item.get("weapon_id", 0)
+			if wid == 0:
+				var sid: int = item.get("shop_item_id", 0)
+				wid = _shop_item_id_to_weapon_id(sid)
 			var wd := WeaponData.get_weapon(wid)
-			name_str = wd.display_name if wd else "?"
+			name_str = wd.display_name if wd else item.get("name", "?")
 			quality_color = EquipmentData.get_quality_color(item.get("quality", 0))
 		else:
 			var aid: int = item.get("armor_id", 0)
-			name_str = EquipmentData.get_armor_name(aid)
+			name_str = EquipmentData.get_armor_name(aid) if aid >= 0 else item.get("name", "?")
 			quality_color = EquipmentData.get_quality_color(item.get("quality", 0))
 		var label := Label.new()
 		label.text = "[%s] %s" % [type_str, name_str]
@@ -94,14 +115,21 @@ func _build_pause_loot_list() -> void:
 		row.add_child(label)
 		loot_container.add_child(row)
 
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("pause") and is_open:
+		SoundManager.play_sfx("button_click")
+		close_menu()
+
 func _on_retreat_pressed() -> void:
-	print("[PauseMenu] retreat pressed, is_game_over=", game_manager.is_game_over if game_manager else "no gm")
+	SoundManager.play_sfx("retreat_success")
 	if game_manager and is_instance_valid(game_manager):
 		game_manager.on_retreat()
-	# don't close menu here — game_ended signal will trigger settlement screen
+	close_menu(true)
+	retreat_requested.emit()
 
 func _on_self_destruct_pressed() -> void:
-	print("[PauseMenu] self_destruct pressed")
+	SoundManager.play_sfx("self_destruct")
 	if game_manager and is_instance_valid(game_manager):
 		game_manager.on_self_destruct()
-	# don't close menu here — game_ended signal will trigger transition
+	close_menu(true)
+	self_destruct_requested.emit()

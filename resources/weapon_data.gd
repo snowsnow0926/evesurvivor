@@ -46,13 +46,22 @@ static func _ensure_base_cache() -> void:
 		_base_cache[WeaponID.FLAGSHIP_RAILGUN] = _flagship_railgun_data()
 		_base_cache[WeaponID.FLAGSHIP_LASER] = _flagship_laser_data()
 
-static func get_weapon(weapon_id: int, weapon_quality: int = 0) -> WeaponData:
+static func get_weapon(weapon_id: int, weapon_quality: int = 0, base_damage_override: float = -1.0, range_override: float = -1.0) -> WeaponData:
 	_ensure_base_cache()
 	var base = _base_cache.get(weapon_id)
 	if base == null:
 		base = _base_cache[WeaponID.MISSILE]
 	var copy = base.duplicate()
 	copy.quality = weapon_quality
+	var mult = 1.0
+	if weapon_quality > 0:
+		mult = EquipmentData.get_quality_mult(weapon_quality)
+	if base_damage_override >= 0.0:
+		copy.damage = base_damage_override
+	elif mult != 1.0:
+		copy.damage = base.damage * mult
+	if range_override >= 0.0:
+		copy.range = range_override
 	return copy
 
 static func _missile_data() -> WeaponData:
@@ -117,13 +126,13 @@ static func _laser_data() -> WeaponData:
 	w.damage = 12.0
 	w.fire_interval = 2.5
 	w.projectile_speed = 0.0
-	w.range = 700.0
+	w.range = 560.0
 	w.crit_rate = 0.08
 	w.crit_mult = 1.6
 	w.exclusive_upgrades = [
-		{"id": "laser_duration", "name": "高能光束", "desc": "激光持续时间 +20%", "max": 3},
-		{"id": "laser_width", "name": "高效射击", "desc": "激光宽度 +20%", "max": 3},
-		{"id": "laser_shield", "name": "护盾中和", "desc": "激光对护盾伤害 +20%", "max": 3},
+		{"id": "laser_pierce", "name": "高效光束", "desc": "激光宽度 +20%", "max": 3},
+		{"id": "laser_overload", "name": "能量过载", "desc": "激光持续时间 +20%", "max": 3},
+		{"id": "laser_shield_penetration", "name": "护盾穿透", "desc": "对护盾伤害每级 +20%", "max": 3},
 	]
 	return w
 
@@ -132,11 +141,11 @@ static func _small_missile_data() -> WeaponData:
 	w.weapon_id = WeaponID.SMALL_MISSILE
 	w.display_name = "小型导弹发射器"
 	w.scene_path = "res://scenes/Missile.tscn"
-	w.damage = 15.0
-	w.fire_interval = 0.8
+	w.damage = 12.0
+	w.fire_interval = 0.9
 	w.projectile_speed = 600.0
-	w.range = 600.0
-	w.crit_rate = 0.05
+	w.range = 500.0
+	w.crit_rate = 0.04
 	w.crit_mult = 1.5
 	w.exclusive_upgrades = [
 		{"id": "fire_coverage", "name": "火力覆盖", "desc": "导弹分叉发射（Lv.1=2枚/Lv.2=3枚/Lv.3=4枚）", "max": 3},
@@ -150,11 +159,11 @@ static func _small_cannon_data() -> WeaponData:
 	w.weapon_id = WeaponID.SMALL_CANNON
 	w.display_name = "小型加农炮"
 	w.scene_path = "res://scenes/CannonBullet.tscn"
-	w.damage = 25.0
-	w.fire_interval = 1.2
+	w.damage = 20.0
+	w.fire_interval = 1.3
 	w.projectile_speed = 800.0
-	w.range = 400.0
-	w.crit_rate = 0.03
+	w.range = 350.0
+	w.crit_rate = 0.02
 	w.crit_mult = 1.2
 	w.exclusive_upgrades = [
 		{"id": "cannon_bloodthirst", "name": "嗜血残暴", "desc": "单次加农炮子弹数量 +1", "max": 3},
@@ -168,11 +177,11 @@ static func _small_railgun_data() -> WeaponData:
 	w.weapon_id = WeaponID.SMALL_RAILGUN
 	w.display_name = "小型磁轨炮"
 	w.scene_path = "res://scenes/RailgunBullet.tscn"
-	w.damage = 30.0
-	w.fire_interval = 0.6
+	w.damage = 25.0
+	w.fire_interval = 0.7
 	w.projectile_speed = 1000.0
-	w.range = 400.0
-	w.crit_rate = 0.35
+	w.range = 350.0
+	w.crit_rate = 0.32
 	w.crit_mult = 1.5
 	w.exclusive_upgrades = [
 		{"id": "railgun_damage", "name": "一发入魂", "desc": "武器伤害 +20%", "max": 3},
@@ -184,18 +193,18 @@ static func _small_railgun_data() -> WeaponData:
 static func _small_laser_data() -> WeaponData:
 	var w = WeaponData.new()
 	w.weapon_id = WeaponID.SMALL_LASER
-	w.display_name = "小型激光束"
+	w.display_name = "小型激光炮"
 	w.scene_path = "res://scenes/LaserBeam.tscn"
-	w.damage = 12.0
-	w.fire_interval = 2.5
+	w.damage = 10.0
+	w.fire_interval = 2.8
 	w.projectile_speed = 0.0
-	w.range = 700.0
-	w.crit_rate = 0.08
+	w.range = 480.0
+	w.crit_rate = 0.07
 	w.crit_mult = 1.6
 	w.exclusive_upgrades = [
-		{"id": "laser_duration", "name": "高能光束", "desc": "激光持续时间 +20%", "max": 3},
-		{"id": "laser_width", "name": "高效射击", "desc": "激光宽度 +20%", "max": 3},
-		{"id": "laser_shield", "name": "护盾中和", "desc": "激光对护盾伤害 +20%", "max": 3},
+		{"id": "laser_pierce", "name": "高效光束", "desc": "激光宽度 +20%", "max": 3},
+		{"id": "laser_overload", "name": "能量过载", "desc": "激光持续时间 +20%", "max": 3},
+		{"id": "laser_shield_penetration", "name": "护盾穿透", "desc": "对护盾伤害每级 +20%", "max": 3},
 	]
 	return w
 
@@ -256,18 +265,18 @@ static func _medium_railgun_data() -> WeaponData:
 static func _medium_laser_data() -> WeaponData:
 	var w = WeaponData.new()
 	w.weapon_id = WeaponID.MEDIUM_LASER
-	w.display_name = "中型激光束"
+	w.display_name = "中型激光炮"
 	w.scene_path = "res://scenes/LaserBeam.tscn"
 	w.damage = 18.0
 	w.fire_interval = 3.0
 	w.projectile_speed = 0.0
-	w.range = 850.0
+	w.range = 680.0
 	w.crit_rate = 0.1
 	w.crit_mult = 1.7
 	w.exclusive_upgrades = [
-		{"id": "laser_duration", "name": "高能光束", "desc": "激光持续时间 +20%", "max": 3},
-		{"id": "laser_width", "name": "高效射击", "desc": "激光宽度 +20%", "max": 3},
-		{"id": "laser_shield", "name": "护盾中和", "desc": "激光对护盾伤害 +20%", "max": 3},
+		{"id": "laser_pierce", "name": "高效光束", "desc": "激光宽度 +20%", "max": 3},
+		{"id": "laser_overload", "name": "能量过载", "desc": "激光持续时间 +20%", "max": 3},
+		{"id": "laser_shield_penetration", "name": "护盾穿透", "desc": "对护盾伤害每级 +20%", "max": 3},
 	]
 	return w
 
@@ -328,18 +337,18 @@ static func _large_railgun_data() -> WeaponData:
 static func _large_laser_data() -> WeaponData:
 	var w = WeaponData.new()
 	w.weapon_id = WeaponID.LARGE_LASER
-	w.display_name = "大型激光束"
+	w.display_name = "大型激光炮"
 	w.scene_path = "res://scenes/LaserBeam.tscn"
 	w.damage = 30.0
 	w.fire_interval = 3.5
 	w.projectile_speed = 0.0
-	w.range = 1000.0
+	w.range = 800.0
 	w.crit_rate = 0.12
 	w.crit_mult = 1.8
 	w.exclusive_upgrades = [
-		{"id": "laser_duration", "name": "高能光束", "desc": "激光持续时间 +20%", "max": 3},
-		{"id": "laser_width", "name": "高效射击", "desc": "激光宽度 +20%", "max": 3},
-		{"id": "laser_shield", "name": "护盾中和", "desc": "激光对护盾伤害 +20%", "max": 3},
+		{"id": "laser_pierce", "name": "高效光束", "desc": "激光宽度 +20%", "max": 3},
+		{"id": "laser_overload", "name": "能量过载", "desc": "激光持续时间 +20%", "max": 3},
+		{"id": "laser_shield_penetration", "name": "护盾穿透", "desc": "对护盾伤害每级 +20%", "max": 3},
 	]
 	return w
 
@@ -400,18 +409,18 @@ static func _flagship_railgun_data() -> WeaponData:
 static func _flagship_laser_data() -> WeaponData:
 	var w = WeaponData.new()
 	w.weapon_id = WeaponID.FLAGSHIP_LASER
-	w.display_name = "旗舰级激光束"
+	w.display_name = "旗舰级激光炮"
 	w.scene_path = "res://scenes/LaserBeam.tscn"
 	w.damage = 45.0
 	w.fire_interval = 4.0
 	w.projectile_speed = 0.0
-	w.range = 1200.0
+	w.range = 960.0
 	w.crit_rate = 0.15
 	w.crit_mult = 2.0
 	w.exclusive_upgrades = [
-		{"id": "laser_duration", "name": "高能光束", "desc": "激光持续时间 +20%", "max": 3},
-		{"id": "laser_width", "name": "高效射击", "desc": "激光宽度 +20%", "max": 3},
-		{"id": "laser_shield", "name": "护盾中和", "desc": "激光对护盾伤害 +20%", "max": 3},
+		{"id": "laser_pierce", "name": "高效光束", "desc": "激光宽度 +20%", "max": 3},
+		{"id": "laser_overload", "name": "能量过载", "desc": "激光持续时间 +20%", "max": 3},
+		{"id": "laser_shield_penetration", "name": "护盾穿透", "desc": "对护盾伤害每级 +20%", "max": 3},
 	]
 	return w
 

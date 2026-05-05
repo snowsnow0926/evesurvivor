@@ -1,0 +1,59 @@
+[gd_scene format=3 uid="uid://csaveslot001"]
+
+[ext_resource type="Script" path="res://scripts/save_slot_dialog.gd" id="1_saveslot"]
+
+[node name="SaveSlotDialog" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_saveslot")
+
+[node name="BG" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.7)
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 2
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -360.0
+offset_top = -280.0
+offset_right = 360.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "保存游戏"
+horizontal_alignment = 1
+
+[node name="SlotsContainer" type="VBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HSep" type="HSeparator" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="ActionBtn" type="Button" parent="Panel/VBox"]
+layout_mode = 2
+text = "确定"
+align = 1
+
+[node name="CancelBtn" type="Button" parent="Panel/VBox"]
+layout_mode = 2
+text = "取消"
+align = 1

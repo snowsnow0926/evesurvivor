@@ -8,6 +8,8 @@ var shake_duration: float = 0.0
 var shake_time: float = 0.0
 var original_offset: Vector2 = Vector2.ZERO
 
+const SETTLEMENT_SCENE_PATH := "res://scenes/SettlementScene.tscn"
+
 func _ready() -> void:
 	is_settlement_open = false
 	game_manager = $GameManager
@@ -80,6 +82,7 @@ func _on_upgrade_selected(upgrade_id: String) -> void:
 
 func _on_retreat_requested() -> void:
 	SoundManager.play_sfx("retreat_success")
+	game_manager.on_stage_complete()
 	_show_settlement_screen("retreat")
 
 func _on_player_dead() -> void:
@@ -89,6 +92,8 @@ func _on_self_destruct_requested() -> void:
 	_game_over_to_base()
 
 func _on_pause_toggled(is_paused: bool) -> void:
+	if game_manager.is_game_over:
+		return
 	if is_paused:
 		var pause_menu = $UIRoot/PauseMenu
 		if not pause_menu.is_open:
@@ -99,7 +104,6 @@ func _on_pause_toggled(is_paused: bool) -> void:
 			pause_menu.close_menu()
 
 func _on_game_ended(reason: String) -> void:
-	get_tree().paused = false
 	_show_settlement_screen(reason)
 
 func _show_settlement_screen(reason) -> void:
@@ -107,87 +111,186 @@ func _show_settlement_screen(reason) -> void:
 		return
 	is_settlement_open = true
 
-	SoundManager.play_music("settlement")
+	# 立即暂停游戏，防止任何节点继续运行
+	get_tree().paused = true
+
+	# 隐藏升级菜单，防止遮挡
+	var upgrade_menu = $UIRoot/UpgradeMenu
+	if upgrade_menu:
+		upgrade_menu.visible = false
+		upgrade_menu.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	# 关闭暂停菜单，防止遮挡
+	var pause_menu = $UIRoot/PauseMenu
+	if pause_menu:
+		pause_menu.visible = false
+		pause_menu.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	# 必须在 on_run_ended() 修改 GameState 之前读取，进入前的星币/矿物数值才正确
+	var pre_loot_coin = GameState.star_coin
+	var pre_loot_min_low = GameState.minerals_low
+	var pre_loot_min_mid = GameState.minerals_mid
+	var pre_loot_min_high = GameState.minerals_high
+	var pre_loot_loot = game_manager.get_session_loot().duplicate(true)
 
 	var coin_gained = game_manager.session_star_coin
-	var minerals_gained = game_manager.session_minerals
+	var min_low = game_manager.session_minerals_low
+	var min_mid = game_manager.session_minerals_mid
+	var min_high = game_manager.session_minerals_high
 	var kills = game_manager.total_kills
 	var level = game_manager.player_level
+	var elapsed_time = game_manager.timer_elapsed if game_manager.timer_counting_up else (game_manager.FIRST_RUN_DURATION - game_manager.time_remaining)
 
 	match reason:
 		"dead":
 			GameState.last_run_reason = "dead"
-			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, true)
+			GameState.on_run_ended(kills, level, coin_gained, min_low, min_mid, min_high, true, reason)
 		"timeout":
 			GameState.last_run_reason = "timeout"
-			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, false)
+			GameState.on_run_ended(kills, level, coin_gained, min_low, min_mid, min_high, false, reason)
+			if not GameState.is_stage_first_complete(GameState.selected_stage_id):
+				GameState.stage_first_complete.append(GameState.selected_stage_id)
 		"retreat":
 			GameState.last_run_reason = "retreat"
-			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, false)
+			GameState.on_run_ended(kills, level, coin_gained, min_low, min_mid, min_high, false, reason)
 		"self_destruct":
 			GameState.last_run_reason = "self_destruct"
-			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, false)
+			GameState.on_run_ended(kills, level, coin_gained, min_low, min_mid, min_high, false, reason)
 		_:
 			GameState.last_run_reason = reason
-			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, false)
+			GameState.on_run_ended(kills, level, coin_gained, min_low, min_mid, min_high, false, reason)
 	game_manager.grant_loot_to_player()
 
-	get_tree().paused = false
+	# 切换结算音乐
+	SoundManager.play_music("settlement")
 
-	var settlement_scene_res = load("res://scenes/SettlementScene.tscn")
-	if not settlement_scene_res:
-		push_error("[GameScene] failed to load SettlementScene.tscn")
+	# 动态加载结算界面（绕过脚本依赖）
+	var settlement_packed = load(SETTLEMENT_SCENE_PATH)
+	if not settlement_packed:
+		push_error("[GameScene] Failed to load SettlementScene: " + SETTLEMENT_SCENE_PATH)
 		return
-
-	var settlement = settlement_scene_res.instantiate()
+	var settlement = settlement_packed.instantiate()
+	if not settlement:
+		push_error("[GameScene] Failed to instantiate SettlementScene")
+		return
 	settlement.process_mode = Node.PROCESS_MODE_ALWAYS
 
-	var result_labels = {
-		"dead": ["任务失败", "舰船损毁，损失50%%收益"],
-		"timeout": ["时间到！", "时间到！100%%收益"],
-		"retreat": ["任务完成", "撤离成功，100%%收益"],
-		"self_destruct": ["任务中止", "自毁退出，无收益"],
-	}
-	var rl = result_labels.get(reason, ["任务完成", ""])
+	# 直接操作节点设置结算数据（绕过 settlement_scene.gd 脚本依赖）
+	_settlement_set_data(settlement, reason, kills, level,
+		coin_gained, min_low, min_mid, min_high,
+		pre_loot_coin, pre_loot_min_low, pre_loot_min_mid, pre_loot_min_high,
+		pre_loot_loot)
 
-	var result_label = settlement.get_node_or_null("Panel/VBox/ResultLabel")
-	if result_label:
-		result_label.text = rl[0]
-	var result_desc = settlement.get_node_or_null("Panel/VBox/ResultDesc")
-	if result_desc:
-		result_desc.text = rl[1]
+	$UIRoot.add_child(settlement)
+	settlement.visible = true
 
-	var kills_label = settlement.get_node_or_null("Panel/VBox/StatsGrid/KillsValue")
-	if kills_label:
-		kills_label.text = "%d" % kills
-	var level_label = settlement.get_node_or_null("Panel/VBox/StatsGrid/LevelValue")
-	if level_label:
-		level_label.text = "%d" % level
-	var coin_label = settlement.get_node_or_null("Panel/VBox/StatsGrid/CoinValue")
-	if coin_label:
-		coin_label.text = "%d" % GameState.star_coin
-	var minerals_label = settlement.get_node_or_null("Panel/VBox/StatsGrid/MineralsValue")
-	if minerals_label:
-		minerals_label.text = "%d" % (GameState.minerals_low + GameState.minerals_mid + GameState.minerals_high)
-	var earned_coin_label = settlement.get_node_or_null("Panel/VBox/StatsGrid/EarnedCoinValue")
-	if earned_coin_label:
-		earned_coin_label.text = "+%d" % coin_gained
-	var earned_minerals_label = settlement.get_node_or_null("Panel/VBox/StatsGrid/EarnedMineralsValue")
-	if earned_minerals_label:
-		earned_minerals_label.text = "+%d" % minerals_gained
+	# 手动连接按钮信号
+	_connect_settlement_buttons(settlement, reason)
 
-	if settlement.has_method("set_settlement_data"):
-		settlement.set_settlement_data(reason, kills, level, coin_gained, minerals_gained, game_manager.get_session_loot())
+func _settlement_set_data(s: Control, reason: String, kills: int, level: int,
+		p_coin: int, p_low: int, p_mid: int, p_high: int,
+		p_pre_coin: int, p_pre_low: int, p_pre_mid: int, p_pre_high: int,
+		loot: Array) -> void:
+	# 设置标题
+	var title = s.get_node_or_null("Panel/VBox/TitleLabel")
+	if title:
+		match reason:
+			"dead": title.text = "任务失败"
+			"timeout": title.text = "时间到！"
+			"self_destruct": title.text = "任务中止"
+			_: title.text = "撤退结算"
 
-	var ship_status_label = settlement.get_node_or_null("Panel/VBox/ShipStatusLabel")
-	if ship_status_label:
-		if GameState.ship_damaged:
-			ship_status_label.text = "舰船损坏 - 维修费: %d 星币" % GameState.get_repair_cost()
-			ship_status_label.add_theme_color_override("font_color", Color(1, 0.3, 0.3, 1))
-		else:
-			ship_status_label.text = "舰船状态: 良好"
-			ship_status_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.3, 1))
+	# 格式化数字
+	var fmt := func(n: int) -> String:
+		if n >= 1_000_000:
+			var mil := n / 1_000_000
+			var rem := n % 1_000_000
+			if rem == 0: return "%dM" % mil
+			return "%d,%03d,%03d" % [mil, rem / 1000, rem % 1000]
+		elif n >= 1000:
+			var k := n / 1000
+			var rem := n % 1000
+			if rem == 0: return "%dk" % k
+			return "%d,%03d" % [k, rem]
+		return "%d" % n
 
+	# 星币
+	if (s.get_node_or_null("Panel/VBox/IncomeVBox/CoinRow/CoinPreValue")) as Label:
+		(s.get_node("Panel/VBox/IncomeVBox/CoinRow/CoinPreValue") as Label).text = fmt.call(p_pre_coin)
+	if (s.get_node_or_null("Panel/VBox/IncomeVBox/CoinRow/CoinEarnedValue")) as Label:
+		(s.get_node("Panel/VBox/IncomeVBox/CoinRow/CoinEarnedValue") as Label).text = fmt.call(p_coin)
+	if (s.get_node_or_null("Panel/VBox/IncomeVBox/CoinRow/CoinTotalValue")) as Label:
+		(s.get_node("Panel/VBox/IncomeVBox/CoinRow/CoinTotalValue") as Label).text = fmt.call(p_pre_coin + p_coin)
+
+	# 矿物低
+	if (s.get_node_or_null("Panel/VBox/IncomeVBox/MinLowRow/MinLowPreValue")) as Label:
+		(s.get_node("Panel/VBox/IncomeVBox/MinLowRow/MinLowPreValue") as Label).text = fmt.call(p_pre_low)
+	if (s.get_node_or_null("Panel/VBox/IncomeVBox/MinLowRow/MinLowEarnedValue")) as Label:
+		(s.get_node("Panel/VBox/IncomeVBox/MinLowRow/MinLowEarnedValue") as Label).text = fmt.call(p_low)
+	if (s.get_node_or_null("Panel/VBox/IncomeVBox/MinLowRow/MinLowTotalValue")) as Label:
+		(s.get_node("Panel/VBox/IncomeVBox/MinLowRow/MinLowTotalValue") as Label).text = fmt.call(p_pre_low + p_low)
+
+	# 矿物中
+	if (s.get_node_or_null("Panel/VBox/IncomeVBox/MinMidRow/MinMidPreValue")) as Label:
+		(s.get_node("Panel/VBox/IncomeVBox/MinMidRow/MinMidPreValue") as Label).text = fmt.call(p_pre_mid)
+	if (s.get_node_or_null("Panel/VBox/IncomeVBox/MinMidRow/MinMidEarnedValue")) as Label:
+		(s.get_node("Panel/VBox/IncomeVBox/MinMidRow/MinMidEarnedValue") as Label).text = fmt.call(p_mid)
+	if (s.get_node_or_null("Panel/VBox/IncomeVBox/MinMidRow/MinMidTotalValue")) as Label:
+		(s.get_node("Panel/VBox/IncomeVBox/MinMidRow/MinMidTotalValue") as Label).text = fmt.call(p_pre_mid + p_mid)
+
+	# 矿物高
+	if (s.get_node_or_null("Panel/VBox/IncomeVBox/MinHighRow/MinHighPreValue")) as Label:
+		(s.get_node("Panel/VBox/IncomeVBox/MinHighRow/MinHighPreValue") as Label).text = fmt.call(p_pre_high)
+	if (s.get_node_or_null("Panel/VBox/IncomeVBox/MinHighRow/MinHighEarnedValue")) as Label:
+		(s.get_node("Panel/VBox/IncomeVBox/MinHighRow/MinHighEarnedValue") as Label).text = fmt.call(p_high)
+	if (s.get_node_or_null("Panel/VBox/IncomeVBox/MinHighRow/MinHighTotalValue")) as Label:
+		(s.get_node("Panel/VBox/IncomeVBox/MinHighRow/MinHighTotalValue") as Label).text = fmt.call(p_pre_high + p_high)
+
+	# 掉落物品
+	var loot_scroll = s.get_node_or_null("Panel/VBox/LootScroll")
+	var loot_container = s.get_node_or_null("Panel/VBox/LootScroll/LootContainer")
+	var empty_label = s.get_node_or_null("Panel/VBox/LootScroll/LootContainer/EmptyLootLabel")
+	if empty_label:
+		empty_label.visible = loot.size() == 0
+	if loot.size() > 0 and loot_container:
+		for child in loot_container.get_children():
+			if child.name != "EmptyLootLabel":
+				child.queue_free()
+		const EqData = preload("res://resources/equipment_data.gd")
+		const WpnData = preload("res://resources/weapon_data.gd")
+		var shop_map := {
+			0: 4, 1: 8, 2: 12, 3: 16, 4: 5, 5: 9, 6: 13, 7: 17,
+			8: 6, 9: 10, 10: 14, 11: 18, 12: 7, 13: 11, 14: 15, 15: 19
+		}
+		for item: Dictionary in loot:
+			var row := HBoxContainer.new()
+			var t := "武器" if item.get("type") == "weapon" else "防具"
+			var name_str := "?"
+			var q_color := Color.WHITE
+			if item.get("type") == "weapon":
+				var wid: int = item.get("weapon_id", 0)
+				if wid == 0:
+					wid = shop_map.get(item.get("shop_item_id", 0), 0)
+				var wd = WpnData.get_weapon(wid)
+				name_str = wd.display_name if wd else "?"
+				q_color = EqData.get_quality_color(item.get("quality", 0))
+			else:
+				var aid: int = item.get("armor_id", 0)
+				name_str = EqData.get_armor_name(aid) if aid >= 0 else "?"
+				q_color = EqData.get_quality_color(item.get("quality", 0))
+			var lbl := Label.new()
+			lbl.text = "- %s [%s]" % [t, name_str]
+			lbl.add_theme_color_override("font_color", q_color)
+			row.add_child(lbl)
+			loot_container.add_child(row)
+
+func _connect_settlement_buttons(settlement: Control, reason: String) -> void:
+	# 返回基地按钮
+	var base_btn = settlement.get_node_or_null("Panel/VBox/ButtonsHBox/BaseBtn")
+	if base_btn:
+		base_btn.pressed.connect(_on_settlement_base)
+
+	# 重新开始按钮
 	var retry_btn = settlement.get_node_or_null("Panel/VBox/ButtonsHBox/RetryBtn")
 	if retry_btn:
 		if reason == "self_destruct":
@@ -199,44 +302,29 @@ func _show_settlement_screen(reason) -> void:
 		else:
 			retry_btn.text = "重新开始"
 			retry_btn.disabled = GameState.ship_damaged
-
-	var ui_root = $UIRoot
-	if ui_root:
-		ui_root.add_child(settlement)
-	else:
-		add_child(settlement)
-
-	_connect_settlement_buttons(settlement)
-
-	print("[GameScene] SettlementScene added with kills=", kills, " level=", level, " coin=", coin_gained)
-
-func _connect_settlement_buttons(settlement: Node) -> void:
-	var retry_btn = settlement.get_node_or_null("Panel/VBox/ButtonsHBox/RetryBtn")
-	if retry_btn:
 		retry_btn.pressed.connect(_on_settlement_retry)
-	var base_btn = settlement.get_node_or_null("Panel/VBox/ButtonsHBox/BaseBtn")
-	if base_btn:
-		base_btn.pressed.connect(_on_settlement_base)
+
+	# 主菜单按钮
 	var menu_btn = settlement.get_node_or_null("Panel/VBox/ButtonsHBox/MenuBtn")
 	if menu_btn:
 		menu_btn.pressed.connect(_on_settlement_menu)
 
 func _on_settlement_retry() -> void:
 	SoundManager.play_sfx("button_click")
-	print("[GameScene] settlement retry")
 	if GameState.ship_damaged:
 		if GameState.star_coin >= GameState.get_repair_cost():
 			GameState.repair_ship()
+	get_tree().paused = false
 	get_tree().change_scene_to_file("res://scenes/GameScene.tscn")
 
 func _on_settlement_base() -> void:
 	SoundManager.play_sfx("button_click")
-	print("[GameScene] settlement base")
+	get_tree().paused = false
 	get_tree().change_scene_to_file("res://scenes/BaseScene.tscn")
 
 func _on_settlement_menu() -> void:
 	SoundManager.play_sfx("button_click")
-	print("[GameScene] settlement menu")
+	get_tree().paused = false
 	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
 
 func _game_over_to_base() -> void:

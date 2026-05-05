@@ -47,6 +47,8 @@ var cannon_damage: float = 25.0
 var cannon_pierce_count: int = 1
 var cannon_explode_chance: float = 0.0
 var cannon_bloodthirst: int = 0
+var cannon_rush_level: int = 0
+var cannon_vengeance_level: int = 0
 
 var railgun_damage: float = 30.0
 var railgun_speed: float = 1000.0
@@ -58,11 +60,9 @@ var railgun_burst_count: int = 0
 var railgun_burst_timer: float = 0.0
 const RAILGUN_BURST_INTERVAL: float = 0.1
 
-var laser_damage: float = 12.0
-var laser_duration: float = 2.0
 var laser_width: float = 16.0
-var laser_fire_interval: float = 2.5
-var laser_shield_mult: float = 1.0
+var laser_duration: float = 2.0
+var laser_shield_penetration_mult: float = 1.0
 
 var damage: float = 15.0
 
@@ -230,7 +230,9 @@ func init_weapons() -> void:
 				var scene_path = equipped_dict.get("scene_path", default_weapon_scene)
 				var weapon_type = _get_weapon_type_from_equipped(equipped_dict, scene_path)
 				var quality = equipped_dict.get("quality", 0)
-				var weapon_data = WeaponData.get_weapon(weapon_type, quality)
+				var bd = equipped_dict.get("base_damage", 0.0)
+				var rng = equipped_dict.get("range", 0.0)
+				var weapon_data = WeaponData.get_weapon(weapon_type, quality, bd, rng)
 				active_weapons.append(weapon_data)
 				weapon_fire_timers[weapon_data.weapon_id] = 0.0
 				added_any = true
@@ -254,17 +256,16 @@ func init_weapons() -> void:
 	railgun_fire_interval = 0.6
 	railgun_crit_bonus = 0.0
 	railgun_multi_count = 1
-	laser_damage = 12.0
-	laser_duration = 2.0
 	laser_width = 16.0
-	laser_fire_interval = 2.5
-	laser_shield_mult = 1.0
+	laser_duration = 2.0
+	laser_shield_penetration_mult = 1.0
 
 func _physics_process(delta: float) -> void:
 	_physics_tick_counter += 1
 	if DEBUG and _physics_tick_counter % 120 == 0:
 		_debug("alive tick=" + str(_physics_tick_counter) + _debug_player_state())
 	if game_manager and game_manager.is_game_over:
+		print("[PLAYER] is_game_over=true, skipping update")
 		velocity = Vector2.ZERO
 		move_and_slide()
 		return
@@ -351,15 +352,34 @@ func _update_firing(delta: float) -> void:
 			WeaponData.WeaponID.RAILGUN, WeaponData.WeaponID.SMALL_RAILGUN,
 			WeaponData.WeaponID.MEDIUM_RAILGUN, WeaponData.WeaponID.LARGE_RAILGUN, WeaponData.WeaponID.FLAGSHIP_RAILGUN
 		]
+		var laser_ids = [
+			WeaponData.WeaponID.LASER, WeaponData.WeaponID.SMALL_LASER,
+			WeaponData.WeaponID.MEDIUM_LASER, WeaponData.WeaponID.LARGE_LASER, WeaponData.WeaponID.FLAGSHIP_LASER
+		]
 		if wt in railgun_ids:
 			_update_railgun_firing(delta, weapon)
 		elif wt in missile_ids:
 			_update_missile_firing(delta, weapon)
+		elif wt in laser_ids:
+			_update_laser_firing(delta, weapon)
 		else:
 			var interval = _get_fire_interval(weapon)
 			if weapon_fire_timers[wt] >= interval:
 				weapon_fire_timers[wt] = 0.0
 				_fire_weapon(weapon)
+
+func _update_laser_firing(delta: float, weapon: WeaponData) -> void:
+	print("[PLAYER] _update_laser_firing called")
+	# 激光持续射击逻辑：只要有目标就持续发射激光
+	var wt = weapon.weapon_id
+	var interval = _get_fire_interval(weapon)
+
+	if weapon_fire_timers[wt] >= interval:
+		weapon_fire_timers[wt] = 0.0
+		var target_pos = _find_closest_enemy(weapon.range)
+		print("[PLAYER] _update_laser_firing: target_pos=", target_pos)
+		if target_pos != Vector2.ZERO:
+			_fire_laser_at(target_pos, weapon)
 
 func _get_fire_interval(weapon: WeaponData) -> float:
 	var base = weapon.fire_interval
@@ -375,10 +395,6 @@ func _get_fire_interval(weapon: WeaponData) -> float:
 	var railgun_ids = [
 		WeaponData.WeaponID.RAILGUN, WeaponData.WeaponID.SMALL_RAILGUN,
 		WeaponData.WeaponID.MEDIUM_RAILGUN, WeaponData.WeaponID.LARGE_RAILGUN, WeaponData.WeaponID.FLAGSHIP_RAILGUN
-	]
-	var laser_ids = [
-		WeaponData.WeaponID.LASER, WeaponData.WeaponID.SMALL_LASER,
-		WeaponData.WeaponID.MEDIUM_LASER, WeaponData.WeaponID.LARGE_LASER, WeaponData.WeaponID.FLAGSHIP_LASER
 	]
 	if wt in missile_ids:
 		var mult = 1.0
@@ -397,7 +413,11 @@ func _get_fire_interval(weapon: WeaponData) -> float:
 		return interval
 	elif wt in railgun_ids:
 		return weapon.fire_interval
-	elif wt in laser_ids:
+	var laser_ids = [
+		WeaponData.WeaponID.LASER, WeaponData.WeaponID.SMALL_LASER,
+		WeaponData.WeaponID.MEDIUM_LASER, WeaponData.WeaponID.LARGE_LASER, WeaponData.WeaponID.FLAGSHIP_LASER
+	]
+	if wt in laser_ids:
 		return weapon.fire_interval
 	return base
 
@@ -411,7 +431,7 @@ func _update_railgun_firing(delta: float, weapon: WeaponData) -> void:
 			var target_pos = _find_closest_enemy(weapon.range)
 			if target_pos != Vector2.ZERO:
 				SoundManager.play_sfx("shoot_railgun")
-				_fire_single_railgun(target_pos)
+				_fire_single_railgun(target_pos, weapon)
 	else:
 		var interval = _get_fire_interval(weapon)
 		if weapon_fire_timers[wt] >= interval:
@@ -421,7 +441,7 @@ func _update_railgun_firing(delta: float, weapon: WeaponData) -> void:
 				railgun_burst_count = railgun_multi_count - 1
 				railgun_burst_timer = 0.0
 				SoundManager.play_sfx("shoot_railgun")
-				_fire_single_railgun(target_pos)
+				_fire_single_railgun(target_pos, weapon)
 
 func get_talent_bonus(talent_type: String) -> float:
 	for talent in race_talents:
@@ -444,31 +464,55 @@ func _fire_weapon(weapon: WeaponData) -> void:
 		return
 
 	match weapon.weapon_id:
-		WeaponData.WeaponID.MISSILE or WeaponData.WeaponID.SMALL_MISSILE or WeaponData.WeaponID.MEDIUM_MISSILE or WeaponData.WeaponID.LARGE_MISSILE or WeaponData.WeaponID.FLAGSHIP_MISSILE:
+		WeaponData.WeaponID.MISSILE, WeaponData.WeaponID.SMALL_MISSILE, WeaponData.WeaponID.MEDIUM_MISSILE, WeaponData.WeaponID.LARGE_MISSILE, WeaponData.WeaponID.FLAGSHIP_MISSILE:
 			_fire_missiles_at(target_pos, weapon)
-		WeaponData.WeaponID.CANNON or WeaponData.WeaponID.SMALL_CANNON or WeaponData.WeaponID.MEDIUM_CANNON or WeaponData.WeaponID.LARGE_CANNON or WeaponData.WeaponID.FLAGSHIP_CANNON:
+		WeaponData.WeaponID.CANNON, WeaponData.WeaponID.SMALL_CANNON, WeaponData.WeaponID.MEDIUM_CANNON, WeaponData.WeaponID.LARGE_CANNON, WeaponData.WeaponID.FLAGSHIP_CANNON:
 			_fire_cannon_at(target_pos, weapon)
-		WeaponData.WeaponID.RAILGUN or WeaponData.WeaponID.SMALL_RAILGUN or WeaponData.WeaponID.MEDIUM_RAILGUN or WeaponData.WeaponID.LARGE_RAILGUN or WeaponData.WeaponID.FLAGSHIP_RAILGUN:
-			_fire_railgun_at(target_pos)
-		WeaponData.WeaponID.LASER or WeaponData.WeaponID.SMALL_LASER or WeaponData.WeaponID.MEDIUM_LASER or WeaponData.WeaponID.LARGE_LASER or WeaponData.WeaponID.FLAGSHIP_LASER:
+		WeaponData.WeaponID.RAILGUN, WeaponData.WeaponID.SMALL_RAILGUN, WeaponData.WeaponID.MEDIUM_RAILGUN, WeaponData.WeaponID.LARGE_RAILGUN, WeaponData.WeaponID.FLAGSHIP_RAILGUN:
+			_fire_railgun_at(target_pos, weapon)
+		WeaponData.WeaponID.LASER, WeaponData.WeaponID.SMALL_LASER, WeaponData.WeaponID.MEDIUM_LASER, WeaponData.WeaponID.LARGE_LASER, WeaponData.WeaponID.FLAGSHIP_LASER:
 			_fire_laser_at(target_pos, weapon)
 
 func _find_closest_enemy(max_range: float) -> Vector2:
+	var enemy = _find_closest_enemy_node(max_range)
+	if enemy:
+		return enemy.global_position
+	return Vector2.ZERO
+
+func _find_closest_enemy_node(max_range: float) -> Node2D:
 	var enemy_root = game_manager.get("enemy_root")
 	if not enemy_root:
-		return Vector2.ZERO
+		return null
 	var closest: Node2D = null
 	var closest_dist = max_range
 	for enemy in enemy_root.get_children():
 		if not is_instance_valid(enemy) or not enemy is Node2D:
 			continue
+		if enemy.has_method("is_vulnerable") and not enemy.is_vulnerable():
+			continue
 		var dist = global_position.distance_to(enemy.global_position)
 		if dist < closest_dist:
 			closest_dist = dist
 			closest = enemy
-	if closest:
-		return closest.global_position
-	return Vector2.ZERO
+	return closest
+
+func _find_enemy_at_position(pos: Vector2, max_range: float) -> Node2D:
+	# 根据位置查找对应的敌人节点
+	var enemy_root = game_manager.get("enemy_root")
+	if not enemy_root:
+		return null
+	var closest: Node2D = null
+	var closest_dist = 50.0  # 允许一定的位置误差
+	for enemy in enemy_root.get_children():
+		if not is_instance_valid(enemy) or not enemy is Node2D:
+			continue
+		if enemy.has_method("is_vulnerable") and not enemy.is_vulnerable():
+			continue
+		var dist = pos.distance_to(enemy.global_position)
+		if dist < closest_dist:
+			closest_dist = dist
+			closest = enemy
+	return closest
 
 func _fire_missiles_at(target_pos: Vector2, weapon) -> void:
 	_debug("firing missiles at " + str(target_pos))
@@ -481,8 +525,7 @@ func _fire_missiles_at(target_pos: Vector2, weapon) -> void:
 	var missile_scene_path = "res://scenes/Missile.tscn"
 	if not ResourceLoader.exists(missile_scene_path):
 		return
-
-	_spawn_single_missile(target_pos, missile_scene_path, bullet_root)
+	_spawn_single_missile(target_pos, missile_scene_path, bullet_root, weapon)
 
 	var total = spread_count
 	var burst_key = WeaponData.WeaponID.MISSILE
@@ -516,15 +559,20 @@ func _fire_single_missile_for_burst(weapon) -> void:
 	if not bullet_root or not is_instance_valid(bullet_root):
 		return
 	var missile_scene_path = "res://scenes/Missile.tscn"
-	_spawn_single_missile(target_pos, missile_scene_path, bullet_root)
+	_spawn_single_missile(target_pos, missile_scene_path, bullet_root, weapon)
 
-func _spawn_single_missile(target_pos: Vector2, missile_scene_path: String, bullet_root: Node) -> void:
+func _spawn_single_missile(target_pos: Vector2, missile_scene_path: String, bullet_root: Node, weapon) -> void:
 	var base_angle = global_position.angle_to_point(target_pos)
 	var missile_scene = load(missile_scene_path)
 	var missile = missile_scene.instantiate()
 	bullet_root.add_child(missile)
 	missile.global_position = global_position
-	missile.setup_target_direction(Vector2.from_angle(base_angle), damage, missile_speed, crit_rate, crit_mult, game_manager, splash_radius, splash_count, missile_range)
+	var missile_damage = weapon.damage if weapon else damage
+	missile.setup_target_direction(Vector2.from_angle(base_angle), missile_damage, missile_speed, crit_rate, crit_mult, game_manager, splash_radius, splash_count, missile_range)
+
+	# Spawn missile launch effect
+	if game_manager and game_manager.has_method("spawn_missile_launch"):
+		game_manager.spawn_missile_launch(global_position, Vector2.from_angle(base_angle))
 
 func _fire_cannon_at(target_pos: Vector2, weapon: WeaponData) -> void:
 	SoundManager.play_sfx("shoot_cannon")
@@ -567,7 +615,13 @@ func _fire_cannon_at(target_pos: Vector2, weapon: WeaponData) -> void:
 			80.0
 		)
 
-func _fire_railgun_at(target_pos: Vector2) -> void:
+	# Spawn cannon muzzle flash effect (once per fire event)
+	if game_manager and game_manager.has_method("spawn_cannon_muzzle"):
+		game_manager.spawn_cannon_muzzle(global_position, Vector2.from_angle(dir))
+	if game_manager and game_manager.has_method("spawn_cannon_smoke"):
+		game_manager.spawn_cannon_smoke(global_position, Vector2.from_angle(dir))
+
+func _fire_railgun_at(target_pos: Vector2, weapon: WeaponData) -> void:
 	SoundManager.play_sfx("shoot_railgun")
 	if not game_manager:
 		return
@@ -578,9 +632,9 @@ func _fire_railgun_at(target_pos: Vector2) -> void:
 	if not ResourceLoader.exists(railgun_scene_path):
 		return
 
-	_fire_single_railgun(target_pos)
+	_fire_single_railgun(target_pos, weapon)
 
-func _fire_single_railgun(target_pos: Vector2) -> void:
+func _fire_single_railgun(target_pos: Vector2, weapon: WeaponData) -> void:
 	if not game_manager:
 		return
 	var bullet_root = game_manager.get("bullet_root")
@@ -593,6 +647,7 @@ func _fire_single_railgun(target_pos: Vector2) -> void:
 	var base_angle = global_position.angle_to_point(target_pos)
 	var count = railgun_multi_count
 	var spacing = 10.0
+	var rail_damage = weapon.damage if weapon else railgun_damage
 
 	for i in range(count):
 		var offset_idx = i - (count - 1) * 0.5
@@ -610,7 +665,7 @@ func _fire_single_railgun(target_pos: Vector2) -> void:
 		var final_crit_rate = crit_rate + railgun_crit_bonus
 		bullet.setup(
 			Vector2.from_angle(final_angle),
-			railgun_damage,
+			rail_damage,
 			railgun_speed,
 			railgun_range,
 			final_crit_rate,
@@ -618,34 +673,43 @@ func _fire_single_railgun(target_pos: Vector2) -> void:
 			game_manager
 		)
 
+	# Spawn railgun projectile VFX (once per fire event)
+	if game_manager and game_manager.has_method("spawn_railgun_projectile_vfx"):
+		game_manager.spawn_railgun_projectile_vfx(global_position, Vector2.from_angle(base_angle), {
+			"speed": railgun_speed,
+			"range": railgun_range
+		})
+
 func _fire_laser_at(target_pos: Vector2, weapon: WeaponData) -> void:
+	print("[PLAYER] _fire_laser_at called: target_pos=", target_pos, " weapon=", weapon.display_name)
 	SoundManager.play_sfx("shoot_laser")
 	if not game_manager:
+		print("[PLAYER] FAIL: no game_manager")
 		return
 	var bullet_root = game_manager.get("bullet_root")
 	if not bullet_root or not is_instance_valid(bullet_root):
+		print("[PLAYER] FAIL: no bullet_root")
 		return
 	var laser_scene_path = "res://scenes/LaserBeam.tscn"
 	if not ResourceLoader.exists(laser_scene_path):
+		print("[PLAYER] FAIL: LaserBeam.tscn not found")
 		return
 
 	var laser_scene = load(laser_scene_path)
 	var laser = laser_scene.instantiate()
 	bullet_root.add_child(laser)
 	laser.global_position = global_position
+	laser.owner_player = self
 
 	var dir = (target_pos - global_position).normalized()
-	laser.owner_player = self
-	laser.setup(
-		dir,
-		weapon.damage,
-		laser_duration,
-		crit_rate,
-		crit_mult,
-		game_manager,
-		laser_width,
-		laser_shield_mult
-	)
+	# 获取发射时的目标敌人，用于激光追踪
+	var target_enemy = _find_enemy_at_position(target_pos, weapon.range)
+	print("[PLAYER] laser target_enemy=", target_enemy, " dir=", dir)
+	laser.setup(dir, game_manager, weapon, target_enemy)
+
+	# Spawn laser charge effect
+	if game_manager and game_manager.has_method("spawn_laser_charge"):
+		game_manager.spawn_laser_charge(global_position, dir)
 
 func apply_race_data(race: RaceData) -> void:
 	hp = int(race.base_hp)
@@ -659,8 +723,6 @@ func apply_race_data(race: RaceData) -> void:
 	default_weapon_scene = race.base_weapon_scene
 	race_talents = race.talents
 	init_weapons()
-	_apply_race_talents()
-	_apply_armor_bonuses()
 	_debug("Applied race data: " + race.display_name)
 	set_ship_icon()
 
@@ -673,9 +735,17 @@ func _apply_race_talents() -> void:
 				missile_range *= (1.0 + talent.get("value", 0.0))
 			"railgun_crit":
 				railgun_crit_bonus += talent.get("value", 0.0)
-			"laser_width_duration":
+			"laser_base_level":
+				for i in range(int(talent.get("value", 1))):
+					laser_width *= 1.2
+					laser_duration *= 1.2
+					laser_shield_penetration_mult *= 1.2
+			"laser_pierce":
 				laser_width *= (1.0 + talent.get("value", 0.0))
+			"laser_overload":
 				laser_duration *= (1.0 + talent.get("value", 0.0))
+			"laser_shield_penetration":
+				laser_shield_penetration_mult *= (1.0 + talent.get("value", 0.0))
 			_:
 				pass
 
@@ -683,11 +753,14 @@ func _apply_armor_bonuses() -> void:
 	var ship_id = int(GameState.selected_ship_id)
 	if ship_id == 0:
 		ship_id = ShipData.ShipID.FRIGATE
-	var armor = GameState.equipped_armor.get(ship_id, {})
-	if armor is Dictionary and not armor.is_empty():
-		shield_max += armor.get("shield_bonus", 0.0)
-		shield_regen += armor.get("shield_regen_bonus", 0.0)
-		shield = shield_max
+	var armor_list: Array = GameState.equipped_armor.get(ship_id, [])
+	if not (armor_list is Array):
+		armor_list = []
+	for armor_item in armor_list:
+		if armor_item is Dictionary and not armor_item.is_empty():
+			shield_max += armor_item.get("shield_bonus", 0.0)
+			shield_regen += armor_item.get("shield_regen_bonus", 0.0)
+	shield = shield_max
 
 func set_game_manager(gm: Node2D) -> void:
 	game_manager = gm
@@ -725,6 +798,8 @@ func sync_from_game_manager(gm: Node2D) -> void:
 	cannon_pierce_count = gm.cannon_pierce_count
 	cannon_explode_chance = gm.cannon_explode_chance
 	cannon_bloodthirst = gm.cannon_bloodthirst
+	cannon_rush_level = gm.cannon_rush_level
+	cannon_vengeance_level = gm.cannon_vengeance_level
 	silent_hunter_level = gm.silent_hunter_level
 	railgun_damage = gm.railgun_damage
 	railgun_speed = gm.railgun_speed
@@ -732,11 +807,9 @@ func sync_from_game_manager(gm: Node2D) -> void:
 	railgun_fire_interval = gm.railgun_fire_interval
 	railgun_crit_bonus = gm.railgun_crit_bonus
 	railgun_multi_count = gm.railgun_multi_count
-	laser_damage = gm.laser_damage
-	laser_duration = gm.laser_duration
 	laser_width = gm.laser_width
-	laser_fire_interval = gm.laser_fire_interval
-	laser_shield_mult = gm.laser_shield_mult
+	laser_duration = gm.laser_duration
+	laser_shield_penetration_mult = gm.laser_shield_penetration_mult
 
 func get_primary_weapon() -> WeaponData:
 	if not active_weapons.is_empty():

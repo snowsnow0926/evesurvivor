@@ -84,9 +84,9 @@ func _filter_by_equipped_weapon(pool: Array, gm: Node2D) -> Array:
 			if not weapon_upgrade_ids.has("railgun_crit"): weapon_upgrade_ids.append("railgun_crit")
 			if not weapon_upgrade_ids.has("railgun_multi"): weapon_upgrade_ids.append("railgun_multi")
 		elif wtype in laser_ids:
-			if not weapon_upgrade_ids.has("laser_duration"): weapon_upgrade_ids.append("laser_duration")
-			if not weapon_upgrade_ids.has("laser_width"): weapon_upgrade_ids.append("laser_width")
-			if not weapon_upgrade_ids.has("laser_shield"): weapon_upgrade_ids.append("laser_shield")
+			if not weapon_upgrade_ids.has("laser_pierce"): weapon_upgrade_ids.append("laser_pierce")
+			if not weapon_upgrade_ids.has("laser_overload"): weapon_upgrade_ids.append("laser_overload")
+			if not weapon_upgrade_ids.has("laser_shield_penetration"): weapon_upgrade_ids.append("laser_shield_penetration")
 
 	var general_ids = ["damage", "shield_max", "shield_regen"]
 	var result: Array = []
@@ -99,12 +99,10 @@ func _get_all_equipped_weapon_types(gm: Node2D) -> Array:
 	var types: Array = []
 	if not gm.player or not is_instance_valid(gm.player):
 		return types
-	var pw = gm.player.get_primary_weapon()
-	if pw:
-		types.append(pw.weapon_id)
-	var sw = gm.player.get_secondary_weapon()
-	if sw:
-		types.append(sw.weapon_id)
+	var weapons: Array = gm.player.active_weapons if gm.player.get("active_weapons") else []
+	for weapon in weapons:
+		if weapon:
+			types.append(weapon.weapon_id)
 	return types
 
 func _pick_random_upgrades(pool: Array, count: int) -> Array:
@@ -153,9 +151,9 @@ func _get_upgrade_weight(upgrade_id: String) -> float:
 		"railgun_multi":   return 8.0
 		"railgun_crit":    return 4.0
 		"railgun_damage":  return 4.0
-		"laser_duration":  return 8.0
-		"laser_width":     return 4.0
-		"laser_shield":    return 4.0
+		"laser_pierce":   return 4.0
+		"laser_overload":  return 4.0
+		"laser_shield_penetration": return 4.0
 	return 3.0
 
 func _populate() -> void:

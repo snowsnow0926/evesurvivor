@@ -1,10 +1,10 @@
 extends Node
 
 const SFX_RESOURCES: Dictionary = {
-	"shoot_missile":   "",
-	"shoot_cannon":    "",
-	"shoot_railgun":   "",
-	"shoot_laser":     "",
+	"shoot_missile":   "res://assets/sfx/weapons/missile_launch.ogg",
+	"shoot_cannon":    "res://assets/sfx/weapons/cannon_fire.ogg",
+	"shoot_railgun":   "res://assets/sfx/weapons/railgun_fire.ogg",
+	"shoot_laser":     "res://assets/sfx/weapons/laser_fire.ogg",
 	"hit":             "",
 	"crit":            "",
 	"shield_hit":      "",

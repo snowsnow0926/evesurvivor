@@ -6,9 +6,13 @@ var can_attack: bool = true
 
 func _ready() -> void:
 	super()
-	_icon_id = "enemy_melee"
-	tonnage = "destroyer"
+	_icon_id = "npcfrigate"
+	tonnage = "rookie"
+	_base_tint = Color(1.0, 0.2, 0.2)
+	_tint_mult = 1.0
+	_visual_scale = 1.0
 	_death_particle_color = Color(1.0, 0.2, 0.2, 1.0)
+	set_enemy_icon()
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)

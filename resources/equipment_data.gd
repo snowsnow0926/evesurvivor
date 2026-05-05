@@ -28,11 +28,11 @@ static func get_quality_color(q: Quality) -> Color:
 static func get_quality_mult(q: Quality) -> float:
 	match q:
 		Quality.COMMON: return 1.0
-		Quality.UNCOMMON: return 1.3
-		Quality.RARE: return 1.6
-		Quality.LEGENDARY: return 2.0
-		Quality.EPIC: return 2.8
-		Quality.MYTHIC: return 4.0
+		Quality.UNCOMMON: return 1.25
+		Quality.RARE: return 1.56
+		Quality.LEGENDARY: return 1.95
+		Quality.EPIC: return 2.44
+		Quality.MYTHIC: return 3.05
 	return 1.0
 
 static func get_tonnage_name(t: int) -> String:

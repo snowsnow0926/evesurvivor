@@ -74,13 +74,15 @@ func setup(dir: Vector2, dmg: float, spd: float, rng: float, crit_r: float, crit
 func _on_body_entered(body: Node) -> void:
 	if not body.has_method("take_damage"):
 		return
+	if body.has_method("is_vulnerable") and not body.is_vulnerable():
+		return
 	if hit_count >= pierce_count:
 		return
 
 	hit_count += 1
 	var is_crit = randf() < crit_rate
 	var final_damage = damage * pow(1.0 - damage_decay, hit_count - 1) * (crit_mult if is_crit else 1.0)
-	body.take_damage(final_damage)
+	body.take_damage(final_damage, is_crit)
 
 	if reference and reference.has_method("on_bullet_hit"):
 		reference.on_bullet_hit(self, body, is_crit)
