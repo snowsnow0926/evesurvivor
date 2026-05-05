@@ -683,11 +683,14 @@ func _apply_armor_bonuses() -> void:
 	var ship_id = int(GameState.selected_ship_id)
 	if ship_id == 0:
 		ship_id = ShipData.ShipID.FRIGATE
-	var armor = GameState.equipped_armor.get(ship_id, {})
-	if armor is Dictionary and not armor.is_empty():
-		shield_max += armor.get("shield_bonus", 0.0)
-		shield_regen += armor.get("shield_regen_bonus", 0.0)
-		shield = shield_max
+	var armor_list: Array = GameState.equipped_armor.get(ship_id, [])
+	if not (armor_list is Array):
+		armor_list = []
+	for armor in armor_list:
+		if armor is Dictionary:
+			shield_max += armor.get("shield_bonus", 0.0)
+			shield_regen += armor.get("shield_regen_bonus", 0.0)
+	shield = shield_max
 
 func set_game_manager(gm: Node2D) -> void:
 	game_manager = gm

@@ -2,6 +2,8 @@ extends Control
 
 const StageData = preload("res://resources/stage_data.gd")
 
+@onready var GameState: Node = get_node("/root/GameState")
+
 signal chapter_selected(chapter_id: int)
 
 var stage_select_ui: Control
@@ -21,12 +23,15 @@ func _connect_buttons() -> void:
 		back_btn.pressed.connect(_on_back_pressed)
 
 func _load_chapters() -> void:
+	for child in chapter_container.get_children():
+		child.queue_free()
 	var chapters := StageData.get_all_chapters()
 	for chapter: StageData.ChapterInfo in chapters:
-		var card := _create_chapter_card(chapter)
+		var is_unlocked: bool = GameState.is_chapter_unlocked(chapter.id)
+		var card := _create_chapter_card(chapter, is_unlocked)
 		chapter_container.add_child(card)
 
-func _create_chapter_card(chapter: StageData.ChapterInfo) -> Panel:
+func _create_chapter_card(chapter: StageData.ChapterInfo, is_unlocked: bool = true) -> Panel:
 	var panel := Panel.new()
 	panel.custom_minimum_size.y = 90
 	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -41,10 +46,10 @@ func _create_chapter_card(chapter: StageData.ChapterInfo) -> Panel:
 	vbox.add_theme_constant_override("separation", 6)
 
 	var name_label := Label.new()
-	name_label.text = chapter.name
+	name_label.text = chapter.name + (" [锁定]" if not is_unlocked else "")
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	name_label.add_theme_font_size_override("font_size", 24)
-	name_label.add_theme_color_override("font_color", Color(0.9, 0.9, 1.0))
+	name_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6) if not is_unlocked else Color(0.9, 0.9, 1.0))
 	vbox.add_child(name_label)
 
 	var desc_label := Label.new()
@@ -63,16 +68,20 @@ func _create_chapter_card(chapter: StageData.ChapterInfo) -> Panel:
 	btn.set_anchors_preset(Control.PRESET_FULL_RECT)
 	btn.text = ""
 	btn.flat = true
-	btn.pressed.connect(_on_chapter_pressed.bind(chapter.id))
+	if is_unlocked:
+		btn.pressed.connect(_on_chapter_pressed.bind(chapter.id))
+	else:
+		btn.add_theme_color_override("normal", Color(0.05, 0.05, 0.1, 0.5))
+		btn.add_theme_color_override("hover", Color(0.05, 0.05, 0.1, 0.5))
 	panel.add_child(btn)
 
-	panel.add_theme_stylebox_override("panel", _make_chapter_style())
+	panel.add_theme_stylebox_override("panel", _make_chapter_style(is_unlocked))
 	return panel
 
-func _make_chapter_style() -> StyleBoxFlat:
+func _make_chapter_style(is_unlocked: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.12, 0.22, 0.9)
-	style.border_color = Color(0.2, 0.3, 0.5, 0.6)
+	style.bg_color = Color(0.08, 0.12, 0.22, 0.9) if is_unlocked else Color(0.04, 0.04, 0.08, 0.7)
+	style.border_color = Color(0.2, 0.3, 0.5, 0.6) if is_unlocked else Color(0.1, 0.1, 0.2, 0.3)
 	style.border_width_left = 2
 	style.border_width_top = 2
 	style.border_width_right = 2

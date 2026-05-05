@@ -1,5 +1,6 @@
 extends EnemyBase
 
+var _loot_tonnage_chapter: int = 1
 var base_move_speed: float = 80.0
 var collision_damage: float = 15.0
 var contact_cooldown: float = 0.5
@@ -15,6 +16,7 @@ var is_rage: bool = false
 var hp_bar_bg: ColorRect
 
 func _ready() -> void:
+	_base_tint = Color(0.5, 0.0, 0.5)
 	super._ready()
 	polygon = $Polygon2D
 	ship_sprite = $ShipSprite
@@ -23,16 +25,20 @@ func _ready() -> void:
 	if polygon:
 		polygon.rotation = PI / 2
 	scale = Vector2(3.0, 3.0)
+	_update_shader_params()
 	setup_icon()
 	_death_particle_color = Color(0.5, 0.0, 0.5, 1.0)
+	_init_lock()
 
 func setup_icon() -> void:
 	var tex: Texture2D = ShipIconGenerator.get_texture(ShipIconGenerator.Category.SHIP, "npcbattleCruiser")
 	if tex != null:
 		ship_sprite.texture = tex
+		ship_sprite.material = _tint_mat
 		ship_sprite.visible = true
 		ship_sprite.offset = Vector2(-16, -16)
 		polygon.visible = false
+		_update_shader_params()
 	else:
 		ship_sprite.visible = false
 		polygon.visible = true
@@ -64,9 +70,8 @@ func _process_combat(delta: float) -> void:
 func _enter_rage_mode() -> void:
 	is_rage = true
 	move_speed = 120.0
-	var target: Node = ship_sprite if ship_sprite and ship_sprite.visible else polygon
-	if target:
-		target.modulate = Color(1.5, 0.3, 0.3)
+	_base_tint = Color(1.0, 0.2, 0.2)
+	_update_shader_params()
 
 func _fire_spread() -> void:
 	var player = _get_player()
@@ -96,14 +101,43 @@ func _fire_spread() -> void:
 		bullet.global_position = global_position
 		bullet.setup(dir, bullet_damage, bullet_speed, game_manager, player)
 
-func setup_boss(gm: Node2D) -> void:
+func _get_loot_tonnage_chapter() -> int:
+	return _loot_tonnage_chapter
+
+func setup_boss(gm: Node2D, b_hp: float = 500.0, b_damage: float = 15.0, b_speed: float = 80.0, b_shield: float = 167.0, tonnage_chapter: int = 1) -> void:
+	_loot_tonnage_chapter = tonnage_chapter
 	game_manager = gm
-	max_hp = 500.0
-	hp = 500.0
-	move_speed = base_move_speed
+	max_hp = b_hp
+	hp = b_hp
+	enemy_shield_max = b_shield
+	enemy_shield = b_shield
+	collision_damage = b_damage
+	base_move_speed = b_speed
+	move_speed = b_speed
 	is_rage = false
 	fire_timer = 0.0
 	contact_timer = 0.0
+	_setup_tonnage_icon(tonnage_chapter)
+
+func _setup_tonnage_icon(cid: int) -> void:
+	var icon_name := "npcbattleCruiser"
+	match cid:
+		1: icon_name = "npcdestroyer"
+		2: icon_name = "npccruiser"
+		3: icon_name = "npcbattleCruiser"
+		4: icon_name = "npcbattleship"
+		5: icon_name = "npcdreadnought"
+	var tex: Texture2D = ShipIconGenerator.get_texture(ShipIconGenerator.Category.SHIP, icon_name)
+	if tex != null:
+		ship_sprite.texture = tex
+		ship_sprite.material = _tint_mat
+		ship_sprite.visible = true
+		ship_sprite.offset = Vector2(-16, -16)
+		polygon.visible = false
+		_update_shader_params()
+	else:
+		ship_sprite.visible = false
+		polygon.visible = true
 
 func _spawn_damage_number(amount: float, is_crit: bool) -> void:
 	var parent = get_parent()
@@ -194,7 +228,7 @@ func _die() -> void:
 	_spawn_death_effect()
 	_spawn_rewards()
 	if game_manager and is_instance_valid(game_manager):
-		game_manager.spawn_boss_loot(global_position)
+		game_manager.spawn_boss_loot(self)
 	enemy_dead.emit(self, "boss")
 	queue_free()
 

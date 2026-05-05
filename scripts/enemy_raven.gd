@@ -10,10 +10,60 @@ var windup_flash_timer: float = 0.0
 var windup_flash_visible: bool = true
 
 func _ready() -> void:
+	_base_tint = Color(1.0, 0.5, 0.0)
 	super()
 	_icon_id = "enemy_raven"
 	tonnage = "frigate"
 	_death_particle_color = Color(1.0, 0.5, 0.0, 1.0)
+
+func _apply_chapter_icon() -> void:
+	var cid := _chapter_id_override if _chapter_id_override > 0 else (game_manager.current_chapter_id if game_manager else 0)
+	var raven_stats := StageData.get_chapter_stats(cid, "raven")
+	var level_bonus := 1.0 + 0.3 * (game_manager.player_level - 1) if game_manager else 1.0
+	var final_strength := (game_manager.current_stage.strength_mult * level_bonus) if game_manager and game_manager.current_stage else 1.0
+	explosion_damage = raven_stats.explosion_damage * final_strength
+	move_speed = raven_stats.speed * (1.0 + (final_strength - 1.0) * 0.2)
+	match cid:
+		2:
+			var entry: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.ENEMY, "enemy_raven_cruiser")
+			if entry != null:
+				_icon_tex = entry.get_texture()
+				if ship_sprite:
+					ship_sprite.texture = _icon_tex
+					ship_sprite.material = _tint_mat
+					ship_sprite.visible = true
+				if polygon:
+					polygon.visible = false
+		3:
+			var entry2: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.ENEMY, "enemy_raven_battlecruiser")
+			if entry2 != null:
+				_icon_tex = entry2.get_texture()
+				if ship_sprite:
+					ship_sprite.texture = _icon_tex
+					ship_sprite.material = _tint_mat
+					ship_sprite.visible = true
+				if polygon:
+					polygon.visible = false
+		4:
+			var entry3: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.ENEMY, "enemy_raven_battleship")
+			if entry3 != null:
+				_icon_tex = entry3.get_texture()
+				if ship_sprite:
+					ship_sprite.texture = _icon_tex
+					ship_sprite.material = _tint_mat
+					ship_sprite.visible = true
+				if polygon:
+					polygon.visible = false
+		5:
+			var entry4: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.ENEMY, "enemy_raven_dreadnought")
+			if entry4 != null:
+				_icon_tex = entry4.get_texture()
+				if ship_sprite:
+					ship_sprite.texture = _icon_tex
+					ship_sprite.material = _tint_mat
+					ship_sprite.visible = true
+				if polygon:
+					polygon.visible = false
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
@@ -93,7 +143,7 @@ func _die() -> void:
 	SoundManager.play_sfx("enemy_death")
 	enemy_dead.emit(self, "raven")
 	if game_manager and is_instance_valid(game_manager):
-		game_manager.try_drop_equipment(global_position)
+		game_manager.try_drop_equipment(self)
 	queue_free()
 
 func _get_enemy_type() -> String:

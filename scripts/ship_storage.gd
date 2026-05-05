@@ -24,18 +24,13 @@ func _build_ship_list() -> void:
 
 		var status_lbl = Label.new()
 		var is_current = _is_current_ship(ship)
-		var is_unlocked = ship.is_unlocked or GameState.unlocked_ships.has(ship.ship_id)
-		status_lbl.text = "(当前)" if is_current else ("(未解锁)" if not is_unlocked else "(未使用)")
+		status_lbl.text = "(当前)" if is_current else "(未使用)"
 		status_lbl.add_theme_color_override("font_color",
-			Color(1, 1, 0.3) if is_current else
-			(Color(0.5, 0.5, 0.5) if not is_unlocked else Color(0.3, 1, 0.3)))
+			Color(1, 1, 0.3) if is_current else Color(0.3, 1, 0.3))
 		row.add_child(status_lbl)
 
 		var btn = Button.new()
-		if not is_unlocked:
-			btn.text = "解锁(%d星币)" % ship.unlock_cost
-			btn.pressed.connect(_try_unlock_ship.bind(ship))
-		elif is_current:
+		if is_current:
 			btn.text = "装备配置"
 			btn.pressed.connect(_select_ship.bind(ship))
 		else:
@@ -46,14 +41,6 @@ func _build_ship_list() -> void:
 
 func _is_current_ship(ship: ShipData) -> bool:
 	return GameState.selected_ship_id == ship.ship_id
-
-func _try_unlock_ship(ship: ShipData) -> void:
-	if GameState.star_coin >= ship.unlock_cost:
-		GameState.star_coin -= ship.unlock_cost
-		if not GameState.unlocked_ships.has(ship.ship_id):
-			GameState.unlocked_ships.append(ship.ship_id)
-		equip_detail.text = "%s 已解锁！" % ship.display_name
-		_build_ship_list()
 
 func _select_ship(ship: ShipData) -> void:
 	current_ship = ship
@@ -66,8 +53,20 @@ func _select_ship(ship: ShipData) -> void:
 			weapon_name = first_weapon.get("name", "?")
 	elif equipped_list is Dictionary and not equipped_list.is_empty():
 		weapon_name = equipped_list.get("name", "?")
-	var armor = GameState.equipped_armor.get(int(current_ship.ship_id))
-	var armor_name = armor.get("name", "空") if armor else "空"
+	var armor_list: Array = GameState.equipped_armor.get(int(current_ship.ship_id), [])
+	if not (armor_list is Array):
+		armor_list = []
+	var armor_name: String
+	if not armor_list.is_empty():
+		var first = armor_list[0]
+		if first is Dictionary:
+			armor_name = first.get("name", "防御装")
+			if armor_list.size() > 1:
+				armor_name = "%s 等+%d" % [armor_name, armor_list.size() - 1]
+		else:
+			armor_name = "空"
+	else:
+		armor_name = "空"
 	equip_detail.text = "%s\n武器槽: %s\n护甲槽: %s\n(装备配置下版本实现)" % [
 		ship.display_name, weapon_name, armor_name]
 	_build_ship_list()

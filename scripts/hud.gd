@@ -170,11 +170,17 @@ func _process(_delta: float) -> void:
 	var ship_id = int(GameState.selected_ship_id)
 	if ship_id == 0:
 		ship_id = ShipData.ShipID.FRIGATE
-	var armor_dict = GameState.equipped_armor.get(ship_id, {})
-	if armor_dict is Dictionary and not armor_dict.is_empty():
-		defense_name = armor_dict.get("name", "防御装")
-		defense_level = armor_dict.get("level", 1)
-		defense_quality = armor_dict.get("quality", 0)
+	var armor_list: Array = GameState.equipped_armor.get(ship_id, [])
+	if not (armor_list is Array):
+		armor_list = []
+	if not armor_list.is_empty():
+		var first_armor = armor_list[0]
+		if first_armor is Dictionary:
+			defense_name = first_armor.get("name", "防御装")
+			defense_level = first_armor.get("level", 1)
+			defense_quality = first_armor.get("quality", 0)
+			if armor_list.size() > 1:
+				defense_name = "%s 等+%d" % [defense_name, armor_list.size() - 1]
 
 	update_display(
 		gm.player_hp,
@@ -405,9 +411,9 @@ func _update_race_and_ship_display() -> void:
 				weapon_count = weapon_list.size()
 			var w_max = ship.upgraded_weapon_slots if GameState.upgraded_ships.get(ship_id, false) else ship.weapon_slot_count
 			var armor_count = 0
-			var armor_dict = GameState.equipped_armor.get(ship_id, {})
-			if armor_dict is Dictionary and not armor_dict.is_empty():
-				armor_count = 1
+			var armor_list: Array = GameState.equipped_armor.get(ship_id, [])
+			if armor_list is Array:
+				armor_count = armor_list.size()
 			var a_max = ship.upgraded_armor_slots if GameState.upgraded_ships.get(ship_id, false) else ship.armor_slot_count
 			ship_slots_label.text = "武:%d/%d | 防:%d/%d" % [weapon_count, w_max, armor_count, a_max]
 		else:
@@ -416,9 +422,22 @@ func _update_race_and_ship_display() -> void:
 func _update_timer_display(gm) -> void:
 	if not timer_label:
 		return
-	if gm.has_timer and gm.time_remaining > 0:
-		var mins = int(gm.time_remaining) / 60
-		var secs = int(gm.time_remaining) % 60
+	if not gm.has_timer:
+		timer_label.visible = false
+		return
+
+	if gm.is_unlimited_mode:
+		# 无限时模式：正数向上计时
+		var elapsed: float = gm.run_time_elapsed
+		var mins := int(elapsed) / 60
+		var secs := int(elapsed) % 60
+		timer_label.text = "+%02d:%02d" % [mins, secs]
+		timer_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.5))
+		timer_label.visible = true
+	elif gm.time_remaining > 0:
+		# 首通倒计时模式
+		var mins := int(gm.time_remaining) / 60
+		var secs := int(gm.time_remaining) % 60
 		timer_label.text = "%02d:%02d" % [mins, secs]
 		timer_label.visible = true
 		if gm.time_remaining <= 30.0:

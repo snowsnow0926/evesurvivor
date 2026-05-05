@@ -12,13 +12,25 @@ var damage: float = 10.0
 var move_speed: float = 100.0
 var tonnage: String = "frigate"
 
+# === Chapter Tonnage Override ===
+var _chapter_tonnage: String = ""
+var _chapter_icon_override: String = ""
+var _chapter_id_override: int = 0
+
 # === Icon ===
 const ShipIconGenerator = preload("res://scripts/ship_icon_generator.gd")
+const TintShader = preload("res://shaders/ship_tint.gdshader")
 var _icon_id: String = "enemy_melee"
 var _current_angle: float = 0.0
 var _turn_speed: float = 4.0
 var _icon_tex: Texture2D
-var _locked_tex: Texture2D
+var _tint_mat: ShaderMaterial
+
+# === Visual Identity (subclasses override) ===
+var _visual_scale: float = 1.0
+var _tint_mult: float = 1.0
+var _base_tint: Color = Color(1.0, 0.3, 0.3)
+var _stage_visual_level: int = 0
 
 # === Lock State ===
 enum LockState { LOCKING, FLASHING, LOCKED }
@@ -40,6 +52,13 @@ var polygon: Node2D
 var ship_sprite: Sprite2D
 var hp_bar: ColorRect
 
+# === Shield ===
+var enemy_shield: float = 0.0
+var enemy_shield_max: float = 0.0
+var enemy_shield_regen: float = 0.0
+var enemy_shield_regen_timer: float = 0.0
+var shield_bar: ColorRect
+
 # === Death Effect Config (override in subclasses) ===
 var _death_particle_color: Color = Color(1.0, 0.3, 0.1, 1.0)
 var _death_particle_count: int = 12
@@ -49,6 +68,9 @@ var _death_particle_velocity_max: float = 150.0
 var _death_particle_scale_min: float = 2.0
 var _death_particle_scale_max: float = 5.0
 
+var is_elite: bool = false
+var elite_glow_color: Color = Color(1.0, 0.8, 0.0, 1.0)
+
 # === Signal ===
 signal enemy_dead(enemy: Node2D, enemy_type: String)
 
@@ -56,13 +78,35 @@ func _ready() -> void:
 	polygon = $Polygon2D
 	ship_sprite = $ShipSprite
 	hp_bar = $HPBar
+	shield_bar = $ShieldBar
 	if polygon:
 		polygon.rotation = PI / 2
 		polygon.visible = false
+	_tint_mat = ShaderMaterial.new()
+	_tint_mat.shader = TintShader
+	_tint_mat.set_shader_parameter("tint_color", _base_tint)
+	_tint_mat.set_shader_parameter("saturation_mult", _tint_mult)
 	set_enemy_icon()
 	_init_lock()
 
+func set_elite(val: bool) -> void:
+	if is_elite == val:
+		return
+	is_elite = val
+	if is_elite:
+		_apply_elite_appearance()
+
+func _apply_elite_appearance() -> void:
+	_tint_color = elite_glow_color
+	_scale_mult = 1.4
+	_max_hp = int(float(_max_hp) * 1.5)
+	_current_hp = _max_hp
+	enemy_damage *= 1.5
+	enemy_move_speed *= 0.8
+
 func _physics_process(delta: float) -> void:
+	_update_enemy_shield_regen(delta)
+	_update_sprite_visibility()
 	if not is_instance_valid(game_manager) or game_manager.is_game_over or game_manager.is_paused:
 		velocity = Vector2.ZERO
 		move_and_slide()
@@ -73,6 +117,23 @@ func _physics_process(delta: float) -> void:
 		_update_movement(delta)
 		_process_combat(delta)
 	_update_rotation(delta)
+
+func _update_sprite_visibility() -> void:
+	if ship_sprite == null:
+		return
+	var show := not is_windup_blinking() or get_windup_blink_visible()
+	if ship_sprite.visible != show:
+		ship_sprite.visible = show
+		queue_redraw()
+
+func _update_enemy_shield_regen(delta: float) -> void:
+	if enemy_shield_regen <= 0.0 or enemy_shield_max <= 0.0:
+		return
+	enemy_shield_regen_timer += delta
+	if enemy_shield_regen_timer >= 1.0:
+		enemy_shield_regen_timer = 0.0
+		enemy_shield = minf(enemy_shield + enemy_shield_regen, enemy_shield_max)
+		_update_hp_bar()
 
 func _process_combat(_delta: float) -> void:
 	pass
@@ -85,12 +146,49 @@ func _get_player() -> Node:
 		return null
 	return game_manager.get("player")
 
-func setup_enemy(gm: Node2D, e_hp: float, e_damage: float, e_speed: float) -> void:
+func setup_enemy(gm: Node2D, e_hp: float, e_damage: float, e_speed: float, e_shield: float = 0.0, e_shield_regen: float = 0.0, visual_level: int = 0, chapter_tonnage: String = "", chapter_icon: String = "", chapter_id_override: int = 0, p_is_elite: bool = false) -> void:
 	game_manager = gm
 	max_hp = e_hp
 	hp = e_hp
 	damage = e_damage
 	move_speed = e_speed
+	enemy_shield_max = e_shield
+	enemy_shield = e_shield
+	enemy_shield_regen = e_shield_regen
+	enemy_shield_regen_timer = 0.0
+	_chapter_tonnage = chapter_tonnage
+	_chapter_icon_override = chapter_icon
+	_chapter_id_override = chapter_id_override
+	_apply_stage_visual(visual_level)
+	if not _chapter_icon_override.is_empty():
+		_apply_chapter_icon()
+	if p_is_elite:
+		set_elite(true)
+
+func _apply_stage_visual(level: int) -> void:
+	_stage_visual_level = level
+	_visual_scale = 1.0 + (level - 1) * 0.05
+	_tint_mult = 0.6 + (level - 1) * 0.12
+	var extra := (level - 1) * 2
+	_death_particle_count = maxf(_death_particle_count, 12) + extra
+	_death_particle_velocity_min = 80.0 + extra * 10.0
+	_death_particle_velocity_max = 150.0 + extra * 15.0
+	_death_particle_scale_max = 5.0 + extra * 1.0
+	_update_shader_params()
+
+func _apply_chapter_icon() -> void:
+	if _chapter_icon_override.is_empty():
+		return
+	var entry: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.ENEMY, _chapter_icon_override)
+	if entry == null:
+		return
+	_icon_tex = entry.get_texture()
+	if ship_sprite != null:
+		ship_sprite.texture = _icon_tex
+		ship_sprite.material = _tint_mat
+		ship_sprite.visible = true
+	if polygon != null:
+		polygon.visible = false
 
 func _init_lock() -> void:
 	_lock_state = LockState.LOCKING
@@ -161,11 +259,21 @@ func set_enemy_icon() -> void:
 	if entry == null:
 		return
 	_icon_tex = entry.get_texture()
-	_locked_tex = entry.get_texture(Color(1.8, 0.3, 0.3))
 	if ship_sprite != null:
-		ship_sprite.visible = false
+		ship_sprite.texture = _icon_tex
+		ship_sprite.material = _tint_mat
+		ship_sprite.visible = true
 	if polygon != null:
 		polygon.visible = false
+	_update_shader_params()
+
+func _update_shader_params() -> void:
+	if _tint_mat == null:
+		return
+	_tint_mat.set_shader_parameter("tint_color", _base_tint)
+	_tint_mat.set_shader_parameter("saturation_mult", _tint_mult)
+	if ship_sprite != null:
+		ship_sprite.scale = Vector2.ONE * _visual_scale
 
 func _build_polygon_from_path(path: Array) -> PackedVector2Array:
 	var closed_polygons: Array[PackedVector2Array] = []
@@ -226,6 +334,8 @@ func _build_polygon_from_path(path: Array) -> PackedVector2Array:
 
 func set_icon_rotation(angle: float) -> void:
 	_current_angle = angle
+	if ship_sprite != null:
+		ship_sprite.rotation = angle + PI / 2
 	queue_redraw()
 
 func take_damage(amount: float, is_crit: bool = false) -> void:
@@ -315,11 +425,18 @@ func _die() -> void:
 	enemy_dead.emit(self, _get_enemy_type())
 	_spawn_death_effect()
 	if game_manager and is_instance_valid(game_manager):
-		game_manager.try_drop_equipment(global_position)
+		game_manager.try_drop_equipment(self)
 	queue_free()
 
 func _get_enemy_type() -> String:
 	return "melee"
+
+func _get_loot_tonnage_chapter() -> int:
+	if _chapter_id_override > 0:
+		return _chapter_id_override
+	if game_manager != null and is_instance_valid(game_manager):
+		return game_manager.current_chapter_id
+	return 1
 
 func _update_rotation(delta: float) -> void:
 	var player = _get_player()
@@ -335,29 +452,12 @@ func _update_rotation(delta: float) -> void:
 	set_icon_rotation(_current_angle)
 
 func _draw() -> void:
-	# Raven windup blink: hide entire enemy during "off" frames
-	if is_windup_blinking() and not get_windup_blink_visible():
-		return
-
-	var tex: Texture2D
-	if _lock_state == LockState.LOCKED:
-		tex = _locked_tex
-	else:
-		tex = _icon_tex
-
-	if tex == null:
-		return
-
-	var tex_size: Vector2 = tex.get_size()
-	var half_w := tex_size.x * 0.5
-	var half_h := tex_size.y * 0.5
-	var offset := Vector2(-half_w, -half_h)
+	var tex_size: Vector2 = _icon_tex.get_size() if _icon_tex != null else Vector2(32, 32)
+	var half_w := tex_size.x * 0.5 * _visual_scale
+	var half_h := tex_size.y * 0.5 * _visual_scale
 
 	draw_set_transform(Vector2.ZERO, _current_angle + PI / 2, Vector2.ONE)
 
-	draw_texture(tex, offset)
-
-	# Corner bracket
 	var draw_frame: bool = false
 	var bracket_color: Color
 	var bracket_alpha: float = 1.0

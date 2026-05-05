@@ -43,9 +43,13 @@ func _build_inventory() -> void:
 		for w in equipped_weapons:
 			if w is Dictionary:
 				equipped_ids.append(w.get("equip_id", ""))
-	var equipped_armor = GameState.equipped_armor.get(ship_id, {})
-	if equipped_armor is Dictionary and not equipped_armor.is_empty():
-		equipped_ids.append(equipped_armor.get("equip_id", ""))
+	var equipped_armor_list: Array = GameState.equipped_armor.get(ship_id, [])
+	if not (equipped_armor_list is Array):
+		equipped_armor_list = []
+	if equipped_armor_list is Array:
+		for a in equipped_armor_list:
+			if a is Dictionary:
+				equipped_ids.append(a.get("equip_id", ""))
 
 	for item in GameState.equipment_inventory:
 		var equip_id = item.get("equip_id", "")
@@ -201,9 +205,13 @@ func _on_quick_craft_pressed() -> void:
 		for w in equipped_weapons:
 			if w is Dictionary:
 				equipped_ids.append(w.get("equip_id", ""))
-	var equipped_armor = GameState.equipped_armor.get(ship_id, {})
-	if equipped_armor is Dictionary and not equipped_armor.is_empty():
-		equipped_ids.append(equipped_armor.get("equip_id", ""))
+	var equipped_armor_list: Array = GameState.equipped_armor.get(ship_id, [])
+	if not (equipped_armor_list is Array):
+		equipped_armor_list = []
+	if equipped_armor_list is Array:
+		for a in equipped_armor_list:
+			if a is Dictionary:
+				equipped_ids.append(a.get("equip_id", ""))
 
 	var craft_count = 0
 	for q in quality_order:

@@ -5,10 +5,55 @@ var attack_timer: float = 0.0
 var can_attack: bool = true
 
 func _ready() -> void:
-	super()
 	_icon_id = "enemy_melee"
+	_base_tint = Color(1.0, 0.2, 0.2)
 	tonnage = "destroyer"
+	super()
 	_death_particle_color = Color(1.0, 0.2, 0.2, 1.0)
+
+func _apply_chapter_icon() -> void:
+	var cid := _chapter_id_override if _chapter_id_override > 0 else (game_manager.current_chapter_id if game_manager else 0)
+	match cid:
+		2:
+			var entry: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.ENEMY, "enemy_melee_cruiser")
+			if entry != null:
+				_icon_tex = entry.get_texture()
+				if ship_sprite:
+					ship_sprite.texture = _icon_tex
+					ship_sprite.material = _tint_mat
+					ship_sprite.visible = true
+				if polygon:
+					polygon.visible = false
+		3:
+			var entry2: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.ENEMY, "enemy_melee_battlecruiser")
+			if entry2 != null:
+				_icon_tex = entry2.get_texture()
+				if ship_sprite:
+					ship_sprite.texture = _icon_tex
+					ship_sprite.material = _tint_mat
+					ship_sprite.visible = true
+				if polygon:
+					polygon.visible = false
+		4:
+			var entry3: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.ENEMY, "enemy_melee_battleship")
+			if entry3 != null:
+				_icon_tex = entry3.get_texture()
+				if ship_sprite:
+					ship_sprite.texture = _icon_tex
+					ship_sprite.material = _tint_mat
+					ship_sprite.visible = true
+				if polygon:
+					polygon.visible = false
+		5:
+			var entry4: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.ENEMY, "enemy_melee_dreadnought")
+			if entry4 != null:
+				_icon_tex = entry4.get_texture()
+				if ship_sprite:
+					ship_sprite.texture = _icon_tex
+					ship_sprite.material = _tint_mat
+					ship_sprite.visible = true
+				if polygon:
+					polygon.visible = false
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)

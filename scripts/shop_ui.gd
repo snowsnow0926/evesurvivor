@@ -305,8 +305,6 @@ func _buy_armor(item_dict: Dictionary) -> void:
 	if ship_id == 0:
 		ship_id = ShipData.ShipID.FRIGATE
 
-	GameState.selected_ship_id = ship_id
-
 	var ship = ShipData.get_ship(ship_id)
 	if not ship:
 		GameState.equipment_inventory.append(item_dict)
@@ -316,11 +314,18 @@ func _buy_armor(item_dict: Dictionary) -> void:
 	if GameState.upgraded_ships.get(ship_id, false):
 		armor_slot_count = ship.upgraded_armor_slots
 
-	var current_armor = GameState.equipped_armor.get(ship_id, {})
+	if not GameState.equipped_armor.has(ship_id):
+		GameState.equipped_armor[ship_id] = []
 
-	if current_armor.is_empty():
+	var armor_list: Array = GameState.equipped_armor.get(ship_id, [])
+	if not (armor_list is Array):
+		armor_list = []
+		GameState.equipped_armor[ship_id] = armor_list
+
+	if armor_list.size() < armor_slot_count:
+		armor_list.append(item_dict)
+		GameState.equipped_armor[ship_id] = armor_list
 		GameState.equipment_inventory.erase(item_dict)
-		GameState.equipped_armor[ship_id] = item_dict
 	else:
 		GameState.equipment_inventory.append(item_dict)
 

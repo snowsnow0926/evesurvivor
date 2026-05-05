@@ -1,5 +1,7 @@
 extends Node2D
 
+const StageData = preload("res://resources/stage_data.gd")
+
 var game_manager: Node2D
 var is_settlement_open: bool = false
 
@@ -131,6 +133,30 @@ func _show_settlement_screen(reason) -> void:
 			GameState.last_run_reason = reason
 			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, false)
 	game_manager.grant_loot_to_player()
+
+	# 无论首次通关还是再次进入，撤离都视为通关并解锁下一关
+	if reason == "retreat" and game_manager.current_stage != null:
+		var cur_chapter: int = game_manager.current_chapter_id
+		var cur_stage: int = game_manager.current_stage.id
+		var chapter := StageData.get_chapter(cur_chapter)
+		if chapter != null and cur_stage < chapter.stages.size() + 1:
+			GameState.unlock_stage(cur_chapter, cur_stage + 1)
+		if cur_stage == 6:
+			match cur_chapter:
+				1: GameState.unlock_chapter(2)
+				2: GameState.unlock_chapter(3)
+				3: GameState.unlock_chapter(4)
+				4: GameState.unlock_chapter(5)
+				5: GameState.unlock_chapter(6)
+
+	# 首次通关条件：坚持倒计时结束（5分钟）+ 击杀至少1只精英怪物 → 标记为cleared（解锁无限时模式）
+	if reason == "timeout" and game_manager.current_stage != null:
+		if game_manager.elites_killed_this_run > 0:
+			var c_ch: int = game_manager.current_chapter_id
+			var c_st: int = game_manager.current_stage.id
+			var changed := GameState.clear_stage(c_ch, c_st)
+			if changed:
+				print("[GameScene] First clear: stage %d-%d unlimited mode unlocked (killed %d elite)" % [c_ch, c_st, game_manager.elites_killed_this_run])
 
 	get_tree().paused = false
 

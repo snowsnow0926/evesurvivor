@@ -84,9 +84,11 @@ func _update_side_titles() -> void:
 	var a_max = ship.upgraded_armor_slots if GameState.upgraded_ships.get(ship_id, false) else ship.armor_slot_count if ship else 1
 
 	var equipped_weapons = GameState.equipped_weapons.get(ship_id, [])
-	var equipped_armor_list = GameState.equipped_armor.get(ship_id, {})
+	var equipped_armor_list: Array = GameState.equipped_armor.get(ship_id, [])
+	if not (equipped_armor_list is Array):
+		equipped_armor_list = []
 	var w_count = equipped_weapons.size() if equipped_weapons is Array else 0
-	var a_count = 1 if (equipped_armor_list is Dictionary and not equipped_armor_list.is_empty()) else 0
+	var a_count = equipped_armor_list.size()
 
 	var inv_items: Array = []
 	var equipped_ids: Array = []
@@ -94,8 +96,10 @@ func _update_side_titles() -> void:
 		for w in equipped_weapons:
 			if w is Dictionary:
 				equipped_ids.append(w.get("equip_id", ""))
-	if equipped_armor_list is Dictionary and not equipped_armor_list.is_empty():
-		equipped_ids.append(equipped_armor_list.get("equip_id", ""))
+	if equipped_armor_list is Array:
+		for a in equipped_armor_list:
+			if a is Dictionary:
+				equipped_ids.append(a.get("equip_id", ""))
 	for item in GameState.equipment_inventory:
 		if not equipped_ids.has(item.get("equip_id", "")):
 			inv_items.append(item)
@@ -184,18 +188,19 @@ func _build_equipped_armor() -> void:
 	var slots = _get_ship_slot_counts()
 	var a_max = slots["armor"]
 
-	var equipped_armor_list = GameState.equipped_armor.get(ship_id, {})
+	var equipped_armor_list: Array = GameState.equipped_armor.get(ship_id, [])
+	if not (equipped_armor_list is Array):
+		equipped_armor_list = []
 
-	if equipped_armor_list is Dictionary and not equipped_armor_list.is_empty():
-		var btn = _make_item_btn(equipped_armor_list, true, true)
-		equipped_armor_grid.add_child(btn)
-		_apply_item_btn_styles(btn, equipped_armor_list, true)
-	else:
-		var empty_btn = _make_empty_slot_btn(true)
-		equipped_armor_grid.add_child(empty_btn)
+	var equipped_count = 0
+	for a in equipped_armor_list:
+		if a is Dictionary:
+			var btn = _make_item_btn(a, true, true)
+			equipped_armor_grid.add_child(btn)
+			_apply_item_btn_styles(btn, a, true)
+			equipped_count += 1
 
-	var empty_count = 1
-	for i in range(empty_count, a_max):
+	for i in range(equipped_count, a_max):
 		var empty_btn = _make_empty_slot_btn(true)
 		equipped_armor_grid.add_child(empty_btn)
 
@@ -216,9 +221,13 @@ func _build_inventory() -> void:
 		for w in equipped_weapons:
 			if w is Dictionary:
 				equipped_ids.append(w.get("equip_id", ""))
-	var equipped_armor_list = GameState.equipped_armor.get(ship_id, {})
-	if equipped_armor_list is Dictionary and not equipped_armor_list.is_empty():
-		equipped_ids.append(equipped_armor_list.get("equip_id", ""))
+	var equipped_armor_list: Array = GameState.equipped_armor.get(ship_id, [])
+	if not (equipped_armor_list is Array):
+		equipped_armor_list = []
+	if equipped_armor_list is Array:
+		for a in equipped_armor_list:
+			if a is Dictionary:
+				equipped_ids.append(a.get("equip_id", ""))
 
 	var items: Array = []
 	for item in GameState.equipment_inventory:
@@ -357,11 +366,13 @@ func _on_equip() -> void:
 
 	if is_armor:
 		var slots = _get_ship_slot_counts()
-		var current_armor = GameState.equipped_armor.get(ship_id, {})
-		var armor_count = 1 if (current_armor is Dictionary and not current_armor.is_empty()) else 0
-		if armor_count >= slots["armor"]:
+		var armor_list: Array = GameState.equipped_armor.get(ship_id, [])
+		if not (armor_list is Array):
+			armor_list = []
+		if armor_list.size() >= slots["armor"]:
 			return
-		GameState.equipped_armor[ship_id] = inventory_item.duplicate(true)
+		armor_list.append(inventory_item.duplicate(true))
+		GameState.equipped_armor[ship_id] = armor_list
 	else:
 		var slots = _get_ship_slot_counts()
 		var equipped_list: Array = GameState.equipped_weapons.get(ship_id, [])
@@ -405,7 +416,15 @@ func _on_unequip() -> void:
 		is_armor = equip_type_val.to_upper() == "ARMOR"
 
 	if is_armor:
-		GameState.equipped_armor.erase(ship_id)
+		var armor_list: Array = GameState.equipped_armor.get(ship_id, [])
+		if not (armor_list is Array):
+			armor_list = []
+		for i in range(armor_list.size()):
+			var a = armor_list[i]
+			if a is Dictionary and a.get("equip_id", "") == equip_id:
+				armor_list.remove_at(i)
+				break
+		GameState.equipped_armor[ship_id] = armor_list
 		var already_in_inventory = GameState.equipment_inventory.any(
 			func(it): return it.get("equip_id", "") == equip_id)
 		if not already_in_inventory:

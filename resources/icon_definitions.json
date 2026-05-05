@@ -70,8 +70,8 @@
 			"id": "enemy_sentry",
 			"name_en": "Sentry Turret",
 			"name_zh": "哨兵炮台",
-			"texture_path": "res://assets/32/npccruiser_32.png",
-			"tonnage": "cruiser",
+			"texture_path": "res://assets/32/npcbattleCruiser_32.png",
+			"tonnage": "battlecruiser",
 			"path": [
 				["M", 50.0, 30.0],
 				["L", 65.0, 45.0],
@@ -82,6 +82,102 @@
 				["M", 50.0, 65.0],
 				["L", 50.0, 80.0]
 			]
+		},
+		{
+			"id": "enemy_melee_cruiser",
+			"name_en": "Melee Enemy (Cruiser)",
+			"name_zh": "近战敌人-巡洋舰",
+			"texture_path": "res://assets/32/npccruiser_32.png",
+			"tonnage": "cruiser",
+			"path": []
+		},
+		{
+			"id": "enemy_melee_battlecruiser",
+			"name_en": "Melee Enemy (Battlecruiser)",
+			"name_zh": "近战敌人-战列巡洋舰",
+			"texture_path": "res://assets/32/npcbattleCruiser_32.png",
+			"tonnage": "battlecruiser",
+			"path": []
+		},
+		{
+			"id": "enemy_raven_cruiser",
+			"name_en": "Raven Enemy (Cruiser)",
+			"name_zh": "乌鸦型敌机-巡洋舰",
+			"texture_path": "res://assets/32/npccruiser_32.png",
+			"tonnage": "cruiser",
+			"path": []
+		},
+		{
+			"id": "enemy_raven_battlecruiser",
+			"name_en": "Raven Enemy (Battlecruiser)",
+			"name_zh": "乌鸦型敌机-战列巡洋舰",
+			"texture_path": "res://assets/32/npcbattleCruiser_32.png",
+			"tonnage": "battlecruiser",
+			"path": []
+		},
+		{
+			"id": "enemy_sentry_cruiser",
+			"name_en": "Sentry Turret (Cruiser)",
+			"name_zh": "哨兵炮台-巡洋舰",
+			"texture_path": "res://assets/32/npccruiser_32.png",
+			"tonnage": "cruiser",
+			"path": []
+		},
+		{
+			"id": "enemy_sentry_battlecruiser",
+			"name_en": "Sentry Turret (Battlecruiser)",
+			"name_zh": "哨兵炮台-战列巡洋舰",
+			"texture_path": "res://assets/32/npcbattleCruiser_32.png",
+			"tonnage": "battlecruiser",
+			"path": []
+		},
+		{
+			"id": "enemy_melee_battleship",
+			"name_en": "Melee Enemy (Battleship)",
+			"name_zh": "近战敌人-战列舰",
+			"texture_path": "res://assets/32/npcbattleship_32.png",
+			"tonnage": "battleship",
+			"path": []
+		},
+		{
+			"id": "enemy_raven_battleship",
+			"name_en": "Raven Enemy (Battleship)",
+			"name_zh": "乌鸦型敌机-战列舰",
+			"texture_path": "res://assets/32/npcbattleship_32.png",
+			"tonnage": "battleship",
+			"path": []
+		},
+		{
+			"id": "enemy_sentry_battleship",
+			"name_en": "Sentry Turret (Battleship)",
+			"name_zh": "哨兵炮台-战列舰",
+			"texture_path": "res://assets/32/npcbattleship_32.png",
+			"tonnage": "battleship",
+			"path": []
+		},
+		{
+			"id": "enemy_melee_dreadnought",
+			"name_en": "Melee Enemy (Dreadnought)",
+			"name_zh": "近战敌人-无畏舰",
+			"texture_path": "res://assets/32/npcdreadnought_32.png",
+			"tonnage": "dreadnought",
+			"path": []
+		},
+		{
+			"id": "enemy_raven_dreadnought",
+			"name_en": "Raven Enemy (Dreadnought)",
+			"name_zh": "乌鸦型敌机-无畏舰",
+			"texture_path": "res://assets/32/npcdreadnought_32.png",
+			"tonnage": "dreadnought",
+			"path": []
+		},
+		{
+			"id": "enemy_sentry_dreadnought",
+			"name_en": "Sentry Turret (Dreadnought)",
+			"name_zh": "哨兵炮台-无畏舰",
+			"texture_path": "res://assets/32/npcdreadnought_32.png",
+			"tonnage": "dreadnought",
+			"path": []
 		}
 	],
 	"ships": [

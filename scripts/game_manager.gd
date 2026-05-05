@@ -101,19 +101,15 @@ var combo_timer: float = 0.0
 var combo_timeout: float = 3.0
 var combo_multiplier: float = 1.0
 
-var enemy_rewards: Dictionary = {
-	"melee": {"coin": 10, "mineral": 2},
-	"sentry": {"coin": 14, "mineral": 3},
-	"raven": {"coin": 18, "mineral": 4},
-	"boss": {"coin": 250, "mineral": 40},
-}
-
 var is_game_over: bool = false
 var is_paused: bool = false
 var is_upgrading: bool = false
 
 var time_remaining: float = 0.0
 var has_timer: bool = false
+var is_unlimited_mode: bool = false  # true = stage has been first-cleared
+var run_time_elapsed: float = 0.0  # count-up in unlimited mode
+var elites_killed_this_run: int = 0  # special enemies killed this run
 const FIRST_RUN_DURATION: float = 300.0
 
 var shield_regen_timer: float = 0.0
@@ -129,82 +125,139 @@ var is_boss_phase: bool = false
 
 var session_loot: Array = []
 
-const DROP_WEAPONS: Array[int] = [
-	WeaponData.WeaponID.SMALL_MISSILE,
-	WeaponData.WeaponID.SMALL_CANNON,
-	WeaponData.WeaponID.SMALL_RAILGUN,
-	WeaponData.WeaponID.SMALL_LASER,
-]
-
 const DROP_ARMOR: Array[int] = [0, 1]
 
-func try_drop_equipment(enemy_pos: Vector2) -> void:
-	if randf() > 0.02:
+func try_drop_equipment(enemy: Node2D) -> void:
+	var loot_chapter: int = enemy._get_loot_tonnage_chapter() if enemy.has_method("_get_loot_tonnage_chapter") else current_chapter_id
+	var loot := StageData.get_chapter_loot(loot_chapter)
+	if randf() > loot.drop_rate:
 		return
+	var quality := _roll_equipment_quality(loot.quality_weights)
 	var loot_type := "weapon" if randf() < 0.7 else "armor"
-	var loot: Dictionary = {}
+	var loot_data: Dictionary = {}
 	if loot_type == "weapon":
-		var wid := DROP_WEAPONS[randi() % DROP_WEAPONS.size()]
-		var shop_item_id_map: Dictionary = {
-			WeaponData.WeaponID.SMALL_MISSILE: ShopItemData.ShopItemID.SMALL_MISSILE,
-			WeaponData.WeaponID.SMALL_CANNON: ShopItemData.ShopItemID.SMALL_CANNON,
-			WeaponData.WeaponID.SMALL_RAILGUN: ShopItemData.ShopItemID.SMALL_RAILGUN,
-			WeaponData.WeaponID.SMALL_LASER: ShopItemData.ShopItemID.SMALL_LASER,
-		}
-		var sid = shop_item_id_map.get(wid, ShopItemData.ShopItemID.SMALL_MISSILE)
+		var wid := _get_random_weapon_id(loot.equipment_tier)
+		var sid := _weapon_id_to_shop_id(wid)
 		var shop_item = ShopItemData.get_item(sid)
-		loot = {
+		loot_data = {
 			"type": "weapon",
 			"shop_item_id": sid,
 			"scene_path": shop_item.scene_path,
-			"quality": EquipmentData.Quality.COMMON,
+			"quality": quality,
 			"name": shop_item.display_name,
 			"base_damage": shop_item.base_damage,
 			"fire_interval": shop_item.fire_interval,
 			"range": shop_item.range,
 			"crit_rate": shop_item.crit_rate,
 			"crit_mult": shop_item.crit_mult,
-			"tonnage_tier": shop_item.tonnage_tier,
-			"pos": enemy_pos
+			"tonnage_tier": loot.equipment_tier,
+			"pos": enemy.global_position
 		}
 	else:
 		var aid := DROP_ARMOR[randi() % DROP_ARMOR.size()]
-		loot = {"type": "armor", "armor_id": aid, "quality": EquipmentData.Quality.COMMON, "pos": enemy_pos}
-	add_loot(loot)
-	_spawn_loot_effect(enemy_pos, loot_type)
+		loot_data = {"type": "armor", "armor_id": aid, "quality": quality, "pos": enemy.global_position}
+	add_loot(loot_data)
+	_spawn_loot_effect(enemy.global_position, loot_type)
 
-func spawn_boss_loot(enemy_pos: Vector2) -> void:
+func spawn_boss_loot(boss_node: Node2D) -> void:
+	var loot_chapter: int = boss_node._get_loot_tonnage_chapter() if boss_node.has_method("_get_loot_tonnage_chapter") else current_chapter_id
+	var loot := StageData.get_chapter_loot(loot_chapter)
+	var quality := _roll_equipment_quality(loot.quality_weights)
 	var loot_type := "weapon" if randf() < 0.7 else "armor"
-	var loot: Dictionary = {}
+	var loot_data: Dictionary = {}
 	if loot_type == "weapon":
-		var wid := DROP_WEAPONS[randi() % DROP_WEAPONS.size()]
-		var shop_item_id_map: Dictionary = {
-			WeaponData.WeaponID.SMALL_MISSILE: ShopItemData.ShopItemID.SMALL_MISSILE,
-			WeaponData.WeaponID.SMALL_CANNON: ShopItemData.ShopItemID.SMALL_CANNON,
-			WeaponData.WeaponID.SMALL_RAILGUN: ShopItemData.ShopItemID.SMALL_RAILGUN,
-			WeaponData.WeaponID.SMALL_LASER: ShopItemData.ShopItemID.SMALL_LASER,
-		}
-		var sid = shop_item_id_map.get(wid, ShopItemData.ShopItemID.SMALL_MISSILE)
+		var wid := _get_random_weapon_id(loot.equipment_tier)
+		var sid := _weapon_id_to_shop_id(wid)
 		var shop_item = ShopItemData.get_item(sid)
-		loot = {
+		loot_data = {
 			"type": "weapon",
 			"shop_item_id": sid,
 			"scene_path": shop_item.scene_path,
-			"quality": EquipmentData.Quality.COMMON,
+			"quality": quality,
 			"name": shop_item.display_name,
 			"base_damage": shop_item.base_damage,
 			"fire_interval": shop_item.fire_interval,
 			"range": shop_item.range,
 			"crit_rate": shop_item.crit_rate,
 			"crit_mult": shop_item.crit_mult,
-			"tonnage_tier": shop_item.tonnage_tier,
-			"pos": enemy_pos
+			"tonnage_tier": loot.equipment_tier,
+			"pos": boss_node.global_position
 		}
 	else:
 		var aid := DROP_ARMOR[randi() % DROP_ARMOR.size()]
-		loot = {"type": "armor", "armor_id": aid, "quality": EquipmentData.Quality.COMMON, "pos": enemy_pos}
-	add_loot(loot)
-	_spawn_loot_effect(enemy_pos, loot_type)
+		loot_data = {"type": "armor", "armor_id": aid, "quality": quality, "pos": boss_node.global_position}
+	add_loot(loot_data)
+	_spawn_loot_effect(boss_node.global_position, loot_type)
+
+func _roll_equipment_quality(weights: Array) -> int:
+	var roll := randf()
+	var cumulative := 0.0
+	for i in range(weights.size()):
+		cumulative += weights[i]
+		if roll < cumulative:
+			return i
+	return 0
+
+func _get_random_weapon_id(tier: int) -> int:
+	var pool: Array = []
+	match tier:
+		0:
+			pool = [
+				WeaponData.WeaponID.SMALL_MISSILE,
+				WeaponData.WeaponID.SMALL_CANNON,
+				WeaponData.WeaponID.SMALL_RAILGUN,
+				WeaponData.WeaponID.SMALL_LASER,
+			]
+		1:
+			pool = [
+				WeaponData.WeaponID.MEDIUM_MISSILE,
+				WeaponData.WeaponID.MEDIUM_CANNON,
+				WeaponData.WeaponID.MEDIUM_RAILGUN,
+				WeaponData.WeaponID.MEDIUM_LASER,
+			]
+		2:
+			pool = [
+				WeaponData.WeaponID.LARGE_MISSILE,
+				WeaponData.WeaponID.LARGE_CANNON,
+				WeaponData.WeaponID.LARGE_RAILGUN,
+				WeaponData.WeaponID.LARGE_LASER,
+			]
+		3:
+			pool = [
+				WeaponData.WeaponID.FLAGSHIP_MISSILE,
+				WeaponData.WeaponID.FLAGSHIP_CANNON,
+				WeaponData.WeaponID.FLAGSHIP_RAILGUN,
+				WeaponData.WeaponID.FLAGSHIP_LASER,
+			]
+		_:
+			pool = [
+				WeaponData.WeaponID.SMALL_MISSILE,
+				WeaponData.WeaponID.SMALL_CANNON,
+				WeaponData.WeaponID.SMALL_RAILGUN,
+				WeaponData.WeaponID.SMALL_LASER,
+			]
+	return pool[randi() % pool.size()]
+
+func _weapon_id_to_shop_id(wid: int) -> int:
+	var mapping: Dictionary = {
+		WeaponData.WeaponID.SMALL_MISSILE: ShopItemData.ShopItemID.SMALL_MISSILE,
+		WeaponData.WeaponID.SMALL_CANNON: ShopItemData.ShopItemID.SMALL_CANNON,
+		WeaponData.WeaponID.SMALL_RAILGUN: ShopItemData.ShopItemID.SMALL_RAILGUN,
+		WeaponData.WeaponID.SMALL_LASER: ShopItemData.ShopItemID.SMALL_LASER,
+		WeaponData.WeaponID.MEDIUM_MISSILE: ShopItemData.ShopItemID.MEDIUM_MISSILE,
+		WeaponData.WeaponID.MEDIUM_CANNON: ShopItemData.ShopItemID.MEDIUM_CANNON,
+		WeaponData.WeaponID.MEDIUM_RAILGUN: ShopItemData.ShopItemID.MEDIUM_RAILGUN,
+		WeaponData.WeaponID.MEDIUM_LASER: ShopItemData.ShopItemID.MEDIUM_LASER,
+		WeaponData.WeaponID.LARGE_MISSILE: ShopItemData.ShopItemID.LARGE_MISSILE,
+		WeaponData.WeaponID.LARGE_CANNON: ShopItemData.ShopItemID.LARGE_CANNON,
+		WeaponData.WeaponID.LARGE_RAILGUN: ShopItemData.ShopItemID.LARGE_RAILGUN,
+		WeaponData.WeaponID.LARGE_LASER: ShopItemData.ShopItemID.LARGE_LASER,
+		WeaponData.WeaponID.FLAGSHIP_MISSILE: ShopItemData.ShopItemID.FLAGSHIP_MISSILE,
+		WeaponData.WeaponID.FLAGSHIP_CANNON: ShopItemData.ShopItemID.FLAGSHIP_CANNON,
+		WeaponData.WeaponID.FLAGSHIP_RAILGUN: ShopItemData.ShopItemID.FLAGSHIP_RAILGUN,
+		WeaponData.WeaponID.FLAGSHIP_LASER: ShopItemData.ShopItemID.FLAGSHIP_LASER,
+	}
+	return mapping.get(wid, ShopItemData.ShopItemID.SMALL_MISSILE)
 
 func _spawn_loot_effect(world_pos: Vector2, loot_type: String) -> void:
 	if not damage_root or not is_instance_valid(damage_root):
@@ -256,25 +309,32 @@ func setup_for_stage(chapter_id: int, stage_id: int) -> void:
 	boss_remaining = current_stage.boss_count
 	is_boss_phase = current_stage.type == StageData.StageType.BOSS_ONLY
 
-	var stats := StageData.calc_enemy_stats(
-		30.0, 10.0, 100.0, 2.0,
-		current_stage, player_level
-	)
-	enemy_hp = stats["hp"]
-	enemy_damage = stats["damage"]
-	enemy_move_speed = stats["speed"]
-	spawn_interval = stats["spawn_interval"]
+	var stats_chapter := chapter_id if chapter_id != 6 else 1
+	var melee_stats := StageData.get_chapter_stats(stats_chapter, "melee")
+	var level_bonus := 1.0 + 0.3 * (player_level - 1)
+	var final_strength := current_stage.strength_mult * level_bonus
+	var final_density := current_stage.density_mult * level_bonus
+	enemy_hp = melee_stats.hp * final_strength
+	enemy_damage = melee_stats.damage * final_strength
+	enemy_move_speed = melee_stats.speed * (1.0 + (final_strength - 1.0) * 0.2)
+	spawn_interval = 2.0 / final_density
 
 	if current_stage.has_timer:
 		has_timer = true
-		time_remaining = FIRST_RUN_DURATION
+		is_unlimited_mode = GameState.is_stage_cleared(chapter_id, stage_id)
+		if is_unlimited_mode:
+			time_remaining = 0.0
+			run_time_elapsed = 0.0
+		else:
+			time_remaining = FIRST_RUN_DURATION
 	else:
 		has_timer = false
+		is_unlimited_mode = false
 		time_remaining = 0.0
 
 	session_loot = []
-	_debug("setup_for_stage: chapter=%d stage=%d strength=%s interval=%.2f" % [
-		chapter_id, stage_id, stats["hp"], spawn_interval])
+	_debug("setup_for_stage: chapter=%d stage=%d strength=%.2f interval=%.2f" % [
+		chapter_id, stage_id, final_strength, spawn_interval])
 
 func _setup_references() -> void:
 	var game_scene = get_parent()
@@ -365,11 +425,14 @@ func _apply_armor_bonuses_to_gm() -> void:
 	var ship_id = int(GameState.selected_ship_id)
 	if ship_id == 0:
 		ship_id = ShipData.ShipID.FRIGATE
-	var armor = GameState.equipped_armor.get(ship_id, {})
-	if armor is Dictionary and not armor.is_empty():
-		player_shield_max += armor.get("shield_bonus", 0.0)
-		player_shield_regen += armor.get("shield_regen_bonus", 0.0)
-		player_shield = player_shield_max
+	var armor_list: Array = GameState.equipped_armor.get(ship_id, [])
+	if not (armor_list is Array):
+		armor_list = []
+	for armor in armor_list:
+		if armor is Dictionary:
+			player_shield_max += armor.get("shield_bonus", 0.0)
+			player_shield_regen += armor.get("shield_regen_bonus", 0.0)
+	player_shield = player_shield_max
 
 func _apply_upgrade_effect(upgrade_id: String) -> void:
 	match upgrade_id:
@@ -426,10 +489,17 @@ func _spawn_player() -> void:
 func start_run_timer() -> void:
 	if current_stage != null and current_stage.has_timer:
 		has_timer = true
-		time_remaining = FIRST_RUN_DURATION
+		is_unlimited_mode = GameState.is_stage_cleared(current_chapter_id, current_stage.id)
+		if is_unlimited_mode:
+			time_remaining = 0.0
+			run_time_elapsed = 0.0
+		else:
+			time_remaining = FIRST_RUN_DURATION
+		elites_killed_this_run = 0
 		GameState.on_run_started()
 	else:
 		has_timer = false
+		is_unlimited_mode = false
 		time_remaining = 0.0
 
 func _process(delta: float) -> void:
@@ -445,6 +515,10 @@ func _process(delta: float) -> void:
 
 func _update_timer(delta: float) -> void:
 	if not has_timer:
+		return
+	if is_unlimited_mode:
+		run_time_elapsed += delta
+		_notify_hud_update()
 		return
 	if time_remaining <= 0.0:
 		return
@@ -493,6 +567,14 @@ func _spawn_enemy() -> void:
 	var enemy_path := _choose_enemy_type()
 	if enemy_path == "":
 		return
+
+	var is_chapter6 := current_chapter_id == 6
+	var level_bonus := 1.0 + 0.3 * (player_level - 1)
+	var final_strength := current_stage.strength_mult * level_bonus
+
+	var spawn_distance := randf_range(600.0, 900.0)
+	var spawn_angle := randf_range(0, TAU)
+
 	if not ResourceLoader.exists(enemy_path):
 		push_error("[GameManager] Enemy scene not found: " + enemy_path)
 		return
@@ -500,21 +582,37 @@ func _spawn_enemy() -> void:
 	var enemy_scene = load(enemy_path)
 	var enemy = enemy_scene.instantiate()
 	enemy_root.add_child(enemy)
-
-	var spawn_distance := randf_range(600.0, 900.0)
-	var spawn_angle := randf_range(0, TAU)
 	enemy.global_position = player.global_position + Vector2.from_angle(spawn_angle) * spawn_distance
+
+	var is_elite_spawn: bool = randf() < 0.15
 
 	match enemy_path:
 		ENEMY_MELEE_PATH:
-			enemy.setup_enemy(self, enemy_hp, enemy_damage, enemy_move_speed)
+			var tonnage_chapter := StageData.get_random_tonnage_chapter() if is_chapter6 else current_chapter_id
+			var melee_stats := StageData.get_chapter_stats(tonnage_chapter, "melee")
+			var m_hp := melee_stats.hp * final_strength
+			var m_dmg := melee_stats.damage * final_strength
+			var m_spd := melee_stats.speed * (1.0 + (final_strength - 1.0) * 0.2)
+			enemy.setup_enemy(self, m_hp, m_dmg, m_spd, 0.0, 0.0, 0, "", "", tonnage_chapter, is_elite_spawn)
 			enemy.enemy_dead.connect(_on_enemy_dead)
 		ENEMY_SENTRY_PATH:
-			enemy.setup_enemy(self, enemy_hp * 0.7, enemy_damage * 0.8, 60.0)
+			var tonnage_chapter := StageData.get_random_tonnage_chapter() if is_chapter6 else current_chapter_id
+			var sentry_stats := StageData.get_chapter_stats(tonnage_chapter, "sentry")
+			var s_hp := sentry_stats.hp * final_strength
+			var s_dmg := sentry_stats.damage * final_strength
+			var s_spd := sentry_stats.speed * (1.0 + (final_strength - 1.0) * 0.2)
+			enemy.setup_enemy(self, s_hp, s_dmg, s_spd, 0.0, 0.0, 0, "", "", tonnage_chapter, is_elite_spawn)
 			enemy.enemy_dead.connect(_on_enemy_dead)
 		ENEMY_RAVEN_PATH:
-			enemy.setup_enemy(self, enemy_hp * 0.5, enemy_damage * 1.5, 200.0)
+			var tonnage_chapter := StageData.get_random_tonnage_chapter() if is_chapter6 else current_chapter_id
+			var raven_stats := StageData.get_chapter_stats(tonnage_chapter, "raven")
+			var r_hp := raven_stats.hp * final_strength
+			var r_dmg := raven_stats.damage * final_strength
+			var r_spd := raven_stats.speed * (1.0 + (final_strength - 1.0) * 0.2)
+			enemy.setup_enemy(self, r_hp, r_dmg, r_spd, 0.0, 0.0, 0, "", "", tonnage_chapter, is_elite_spawn)
 			enemy.enemy_dead.connect(_on_enemy_dead)
+	if enemy.has_method("_apply_chapter_icon"):
+		enemy._apply_chapter_icon()
 
 func _choose_enemy_type() -> String:
 	var rng = randf()
@@ -585,7 +683,17 @@ func _spawn_boss() -> void:
 	var spawn_angle = randf_range(0, TAU)
 	boss.global_position = player.global_position + Vector2.from_angle(spawn_angle) * spawn_dist
 
-	boss.setup_boss(self)
+	var is_chapter6 := current_chapter_id == 6
+	var boss_tonnage_chapter := StageData.get_random_tonnage_chapter() if is_chapter6 else current_chapter_id
+	var boss_stats := StageData.get_chapter_stats(boss_tonnage_chapter, "boss")
+	var level_bonus := 1.0 + 0.3 * (player_level - 1)
+	var final_strength := current_stage.strength_mult * level_bonus
+	var b_hp := boss_stats.hp * final_strength
+	var b_dmg := boss_stats.damage * final_strength
+	var b_spd := boss_stats.speed * (1.0 + (final_strength - 1.0) * 0.2)
+	var b_shield := boss_stats.shield * final_strength
+
+	boss.setup_boss(self, b_hp, b_dmg, b_spd, b_shield, boss_tonnage_chapter)
 	boss.enemy_dead.connect(_on_enemy_dead)
 
 func on_boss_killed(boss_node: Node2D) -> void:
@@ -596,9 +704,10 @@ func on_boss_killed(boss_node: Node2D) -> void:
 	if boss_warning and boss_warning.has_method("hide_warning"):
 		boss_warning.hide_warning()
 
-	var reward = enemy_rewards.get("boss", {"coin": 250, "mineral": 40})
-	var reward_coin = int(reward["coin"])
-	var reward_mineral = int(reward["mineral"])
+	var loot_chapter: int = boss_node._get_loot_tonnage_chapter() if boss_node.has_method("_get_loot_tonnage_chapter") else current_chapter_id
+	var loot := StageData.get_chapter_loot(loot_chapter)
+	var reward_coin := loot.get_coin("boss")
+	var reward_mineral := int(_scale_mineral(loot.get_mineral("boss"), loot.get_mineral_tier("boss")))
 	session_star_coin += reward_coin
 	session_minerals += reward_mineral
 
@@ -648,6 +757,13 @@ func _get_combo_multiplier() -> float:
 		return 1.5
 	return 1.0
 
+func _scale_mineral(base: int, tier: StageData.LootTier) -> float:
+	match tier:
+		StageData.LootTier.LOW: return base as float
+		StageData.LootTier.MEDIUM: return base as float * 1.5
+		StageData.LootTier.HIGH: return base as float * 2.5
+	return base as float
+
 func _on_enemy_dead(enemy: Node2D, enemy_type: String) -> void:
 	match enemy_type:
 		"boss":
@@ -660,13 +776,17 @@ func on_enemy_killed(enemy: Node2D, enemy_type: String) -> void:
 	total_kills += 1
 	kill_since_boss += 1
 
+	if enemy.get("is_elite"):
+		elites_killed_this_run += 1
+
 	combo_count += 1
 	combo_timer = combo_timeout
 	combo_multiplier = _get_combo_multiplier()
 
-	var reward = enemy_rewards.get(enemy_type, {"coin": 5, "mineral": 2})
-	var reward_coin = int(reward["coin"] * combo_multiplier)
-	var reward_mineral = int(reward["mineral"] * combo_multiplier)
+	var loot_chapter: int = enemy._get_loot_tonnage_chapter() if enemy.has_method("_get_loot_tonnage_chapter") else current_chapter_id
+	var loot := StageData.get_chapter_loot(loot_chapter)
+	var reward_coin := int(loot.get_coin(enemy_type) * combo_multiplier)
+	var reward_mineral := int(_scale_mineral(loot.get_mineral(enemy_type), loot.get_mineral_tier(enemy_type)) * combo_multiplier)
 	session_star_coin += reward_coin
 	session_minerals += reward_mineral
 
