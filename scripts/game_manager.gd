@@ -529,10 +529,23 @@ func _update_timer(delta: float) -> void:
 		_on_timer_expired()
 
 func _on_timer_expired() -> void:
+	print("[GM] _on_timer_expired, is_boss_phase=", is_boss_phase, " _timer_expired_once=", _timer_expired_once)
+
+	if is_boss_phase and not _timer_expired_once:
+		# BOSS关卡：倒计时结束，进入无限BOSS模式（游戏继续，不立即结算）
+		_timer_expired_once = true
+		is_boss_infinite = true
+		is_game_over = false
+		get_tree().paused = false
+		has_timer = false
+		time_remaining = 0.0
+		_notify_hud_update()
+		return
+
+	# 非BOSS关卡或无限模式：倒计时结束，触发结算
 	is_game_over = true
 	get_tree().paused = true
 	game_ended.emit("timeout")
-	_show_settlement("timeout")
 
 func _show_settlement(reason: String) -> void:
 	var game_scene = get_parent()
