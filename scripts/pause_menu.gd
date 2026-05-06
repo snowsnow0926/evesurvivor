@@ -77,17 +77,16 @@ func _build_pause_loot_list() -> void:
 	for item: Dictionary in loot:
 		var row := HBoxContainer.new()
 		var type_str := "武器" if item.get("type") == "weapon" else "防具"
-		var name_str := ""
-		var quality_color := Color.WHITE
-		if item.get("type") == "weapon":
-			var wid: int = item.get("weapon_id", 0)
-			var wd := WeaponData.get_weapon(wid)
-			name_str = wd.display_name if wd else "?"
-			quality_color = EquipmentData.get_quality_color(item.get("quality", 0))
-		else:
-			var aid: int = item.get("armor_id", 0)
-			name_str = EquipmentData.get_armor_name(aid)
-			quality_color = EquipmentData.get_quality_color(item.get("quality", 0))
+		var name_str := item.get("name", "") as String
+		var quality_color := EquipmentData.get_quality_color(item.get("quality", 0))
+		if name_str.is_empty():
+			if item.get("type") == "weapon":
+				var wid: int = item.get("weapon_id", 0)
+				var wd := WeaponData.get_weapon(wid)
+				name_str = wd.display_name if wd else "?"
+			else:
+				var aid: int = item.get("armor_id", 0)
+				name_str = EquipmentData.get_armor_name(aid)
 		var label := Label.new()
 		label.text = "[%s] %s" % [type_str, name_str]
 		label.add_theme_color_override("font_color", quality_color)

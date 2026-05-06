@@ -2,6 +2,7 @@ extends Control
 
 const EquipmentData = preload("res://resources/equipment_data.gd")
 const ShipData = preload("res://resources/ship_data.gd")
+const WeaponData = preload("res://resources/weapon_data.gd")
 
 var equip_btn: Button
 var unequip_btn: Button
@@ -246,16 +247,33 @@ func _build_inventory() -> void:
 			inventory_grid.add_child(btn)
 			_apply_item_btn_styles(btn, item, false)
 
+func _get_item_display_name(item: Dictionary) -> String:
+	var name: String = item.get("name", "")
+	if not name.is_empty() and name != "?":
+		return name
+	var equip_type_val = item.get("equip_type", "")
+	var is_armor = false
+	if typeof(equip_type_val) == TYPE_STRING and not equip_type_val.is_empty():
+		is_armor = equip_type_val.to_upper() == "ARMOR"
+	else:
+		is_armor = item.get("type", "").to_upper() == "ARMOR"
+	if is_armor:
+		var aid: int = item.get("armor_id", 0)
+		return EquipmentData.get_armor_name(aid)
+	else:
+		var wid: int = item.get("weapon_id", 0)
+		var wd = WeaponData.get_weapon(wid)
+		return wd.display_name if wd else "?"
+
 func _make_item_btn(item: Dictionary, is_equipped: bool, is_armor: bool) -> Button:
 	var btn = Button.new()
 	btn.custom_minimum_size = Vector2(80, 80)
 
 	var quality = item.get("quality", 0)
 	var color = EquipmentData.get_quality_color(quality)
-	var name_short: String = item.get("name", "?")
-	if name_short == "?" or name_short.is_empty():
-		name_short = "?"
-	elif name_short.length() > 6:
+	var full_name = _get_item_display_name(item)
+	var name_short: String = full_name
+	if name_short.length() > 6:
 		name_short = name_short.substr(0, 6)
 	var prefix = "[装]" if is_equipped else "[仓]"
 	btn.text = "%s\n%s" % [prefix, name_short]
@@ -473,7 +491,7 @@ func _update_detail_panel() -> void:
 
 	var q = selected_item.get("quality", 0)
 	var color = EquipmentData.get_quality_color(q)
-	var name = selected_item.get("name", "未知装备")
+	var name = _get_item_display_name(selected_item)
 	var equip_type_val = selected_item.get("equip_type", "")
 	var is_armor = false
 	if typeof(equip_type_val) == TYPE_STRING:
