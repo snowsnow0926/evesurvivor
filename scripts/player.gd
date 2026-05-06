@@ -262,6 +262,8 @@ func init_weapons() -> void:
 
 func _physics_process(delta: float) -> void:
 	_physics_tick_counter += 1
+	if _physics_tick_counter % 60 == 0:
+		print("[Player] _physics_process tick=", _physics_tick_counter, " active_weapons=", active_weapons.size(), " game_manager=", game_manager if game_manager else "NULL")
 	if DEBUG and _physics_tick_counter % 120 == 0:
 		_debug("alive tick=" + str(_physics_tick_counter) + _debug_player_state())
 	if game_manager and game_manager.is_game_over:
@@ -277,6 +279,13 @@ func _debug_player_state() -> String:
 	var bullet_root = game_manager.get("bullet_root") if game_manager else null
 	var bullet_count = bullet_root.get_child_count() if bullet_root and is_instance_valid(bullet_root) else -1
 	return " active_weapons=%d bullet_count=%d" % [active_weapons.size(), bullet_count]
+
+func _get_mouse_world_pos() -> Vector2:
+	var mouse_pos = get_viewport().get_mouse_position()
+	var camera = get_viewport().get_camera_2d()
+	if camera:
+		return camera.get_global_mouse_position()
+	return mouse_pos
 
 func _update_injured_state(delta: float) -> void:
 	if is_injured:
@@ -337,6 +346,8 @@ func _update_movement(delta: float) -> void:
 func _update_firing(delta: float) -> void:
 	if active_weapons.is_empty():
 		return
+	if _physics_tick_counter % 60 == 0:
+		print("[Player] _update_firing: active_weapons=", active_weapons.map(func(w): return w.display_name))
 	for weapon in active_weapons:
 		var wt = weapon.weapon_id
 		if not weapon_fire_timers.has(wt):
@@ -357,6 +368,8 @@ func _update_firing(delta: float) -> void:
 			_update_missile_firing(delta, weapon)
 		else:
 			var interval = _get_fire_interval(weapon)
+			if _physics_tick_counter % 120 == 0:
+				print("[Player] _update_firing: weapon=", weapon.display_name, " timer=", weapon_fire_timers[wt], " interval=", interval)
 			if weapon_fire_timers[wt] >= interval:
 				weapon_fire_timers[wt] = 0.0
 				_fire_weapon(weapon)
@@ -409,19 +422,21 @@ func _update_railgun_firing(delta: float, weapon: WeaponData) -> void:
 			railgun_burst_timer = 0.0
 			railgun_burst_count -= 1
 			var target_pos = _find_closest_enemy(weapon.range)
-			if target_pos != Vector2.ZERO:
-				SoundManager.play_sfx("shoot_railgun")
-				_fire_single_railgun(target_pos)
+			if target_pos == Vector2.ZERO:
+				target_pos = _get_mouse_world_pos()
+			SoundManager.play_sfx("shoot_railgun")
+			_fire_single_railgun(target_pos)
 	else:
 		var interval = _get_fire_interval(weapon)
 		if weapon_fire_timers[wt] >= interval:
 			weapon_fire_timers[wt] = 0.0
 			var target_pos = _find_closest_enemy(weapon.range)
-			if target_pos != Vector2.ZERO:
-				railgun_burst_count = railgun_multi_count - 1
-				railgun_burst_timer = 0.0
-				SoundManager.play_sfx("shoot_railgun")
-				_fire_single_railgun(target_pos)
+			if target_pos == Vector2.ZERO:
+				target_pos = _get_mouse_world_pos()
+			railgun_burst_count = railgun_multi_count - 1
+			railgun_burst_timer = 0.0
+			SoundManager.play_sfx("shoot_railgun")
+			_fire_single_railgun(target_pos)
 
 func get_talent_bonus(talent_type: String) -> float:
 	for talent in race_talents:
@@ -431,31 +446,43 @@ func get_talent_bonus(talent_type: String) -> float:
 
 func _fire_weapon(weapon: WeaponData) -> void:
 	if not game_manager or not is_instance_valid(game_manager):
-		_debug("FAIL: no game_manager")
+		print("[Player] _fire_weapon FAIL: no game_manager")
 		return
 	var enemy_root = game_manager.get("enemy_root")
 	if not enemy_root or not is_instance_valid(enemy_root):
-		_debug("FAIL: no enemy_root")
+		print("[Player] _fire_weapon FAIL: no enemy_root")
 		return
 
 	var target_pos = _find_closest_enemy(weapon.range)
+	print("[Player] _fire_weapon: weapon=", weapon.display_name, " target_pos=", target_pos, " player_pos=", global_position)
 	if target_pos == Vector2.ZERO:
-		_debug("FAIL: no target found, range=" + str(weapon.range) + " enemy_count=" + str(enemy_root.get_child_count()))
-		return
-
-	match weapon.weapon_id:
-		WeaponData.WeaponID.MISSILE or WeaponData.WeaponID.SMALL_MISSILE or WeaponData.WeaponID.MEDIUM_MISSILE or WeaponData.WeaponID.LARGE_MISSILE or WeaponData.WeaponID.FLAGSHIP_MISSILE:
-			_fire_missiles_at(target_pos, weapon)
-		WeaponData.WeaponID.CANNON or WeaponData.WeaponID.SMALL_CANNON or WeaponData.WeaponID.MEDIUM_CANNON or WeaponData.WeaponID.LARGE_CANNON or WeaponData.WeaponID.FLAGSHIP_CANNON:
-			_fire_cannon_at(target_pos, weapon)
-		WeaponData.WeaponID.RAILGUN or WeaponData.WeaponID.SMALL_RAILGUN or WeaponData.WeaponID.MEDIUM_RAILGUN or WeaponData.WeaponID.LARGE_RAILGUN or WeaponData.WeaponID.FLAGSHIP_RAILGUN:
-			_fire_railgun_at(target_pos)
-		WeaponData.WeaponID.LASER or WeaponData.WeaponID.SMALL_LASER or WeaponData.WeaponID.MEDIUM_LASER or WeaponData.WeaponID.LARGE_LASER or WeaponData.WeaponID.FLAGSHIP_LASER:
-			_fire_laser_at(target_pos, weapon)
+		target_pos = _get_mouse_world_pos()
+		print("[Player] _fire_weapon: no enemy, using mouse fallback: ", target_pos)
+	print("[Player] _fire_weapon: weapon_id=", weapon.weapon_id, " expected SMALL_LASER=", WeaponData.WeaponID.SMALL_LASER)
+	print("[Player] _fire_weapon: checking weapon type...")
+	if weapon.weapon_id in [WeaponData.WeaponID.MISSILE, WeaponData.WeaponID.SMALL_MISSILE, WeaponData.WeaponID.MEDIUM_MISSILE, WeaponData.WeaponID.LARGE_MISSILE, WeaponData.WeaponID.FLAGSHIP_MISSILE]:
+		print("[Player] match: MISSILE branch")
+		_fire_missiles_at(target_pos, weapon)
+	elif weapon.weapon_id in [WeaponData.WeaponID.CANNON, WeaponData.WeaponID.SMALL_CANNON, WeaponData.WeaponID.MEDIUM_CANNON, WeaponData.WeaponID.LARGE_CANNON, WeaponData.WeaponID.FLAGSHIP_CANNON]:
+		print("[Player] match: CANNON branch")
+		_fire_cannon_at(target_pos, weapon)
+	elif weapon.weapon_id in [WeaponData.WeaponID.RAILGUN, WeaponData.WeaponID.SMALL_RAILGUN, WeaponData.WeaponID.MEDIUM_RAILGUN, WeaponData.WeaponID.LARGE_RAILGUN, WeaponData.WeaponID.FLAGSHIP_RAILGUN]:
+		print("[Player] match: RAILGUN branch")
+		_fire_railgun_at(target_pos)
+	elif weapon.weapon_id in [WeaponData.WeaponID.LASER, WeaponData.WeaponID.SMALL_LASER, WeaponData.WeaponID.MEDIUM_LASER, WeaponData.WeaponID.LARGE_LASER, WeaponData.WeaponID.FLAGSHIP_LASER]:
+		print("[Player] match: LASER branch")
+		_fire_laser_at(target_pos, weapon)
+	else:
+		print("[Player] match: NO BRANCH MATCHED, weapon_id=", weapon.weapon_id)
 
 func _find_closest_enemy(max_range: float) -> Vector2:
 	var enemy_root = game_manager.get("enemy_root")
 	if not enemy_root:
+		print("[Player] _find_closest_enemy: no enemy_root")
+		return Vector2.ZERO
+	var count = enemy_root.get_child_count()
+	if count == 0:
+		print("[Player] _find_closest_enemy: enemy_root has 0 children")
 		return Vector2.ZERO
 	var closest: Node2D = null
 	var closest_dist = max_range
@@ -506,12 +533,15 @@ func _update_missile_firing(delta: float, weapon) -> void:
 	var interval = _get_fire_interval(weapon)
 	if weapon_fire_timers[wt] >= interval:
 		weapon_fire_timers[wt] = 0.0
-		_fire_missiles_at(_find_closest_enemy(weapon.range), weapon)
+		var target_pos = _find_closest_enemy(weapon.range)
+		if target_pos == Vector2.ZERO:
+			target_pos = _get_mouse_world_pos()
+		_fire_missiles_at(target_pos, weapon)
 
 func _fire_single_missile_for_burst(weapon) -> void:
 	var target_pos = _find_closest_enemy(weapon.range)
 	if target_pos == Vector2.ZERO:
-		return
+		target_pos = _get_mouse_world_pos()
 	var bullet_root = game_manager.get("bullet_root")
 	if not bullet_root or not is_instance_valid(bullet_root):
 		return
@@ -619,16 +649,21 @@ func _fire_single_railgun(target_pos: Vector2) -> void:
 		)
 
 func _fire_laser_at(target_pos: Vector2, weapon: WeaponData) -> void:
+	print("[Player] _fire_laser_at ENTRY: target=", target_pos, " weapon=", weapon.display_name, " weapon_id=", weapon.weapon_id)
 	SoundManager.play_sfx("shoot_laser")
 	if not game_manager:
+		print("[Player] _fire_laser_at FAIL: no game_manager")
 		return
 	var bullet_root = game_manager.get("bullet_root")
 	if not bullet_root or not is_instance_valid(bullet_root):
+		print("[Player] _fire_laser_at FAIL: no bullet_root")
 		return
 	var laser_scene_path = "res://scenes/LaserBeam.tscn"
 	if not ResourceLoader.exists(laser_scene_path):
+		print("[Player] _fire_laser_at FAIL: LaserBeam.tscn not found")
 		return
 
+	print("[Player] _fire_laser_at: instantiating laser scene")
 	var laser_scene = load(laser_scene_path)
 	var laser = laser_scene.instantiate()
 	bullet_root.add_child(laser)
@@ -646,6 +681,7 @@ func _fire_laser_at(target_pos: Vector2, weapon: WeaponData) -> void:
 		laser_width,
 		laser_shield_mult
 	)
+	print("[Player] _fire_laser_at: DONE, laser instance=", laser)
 
 func apply_race_data(race: RaceData) -> void:
 	hp = int(race.base_hp)

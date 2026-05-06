@@ -64,8 +64,12 @@ func _physics_process(delta: float) -> void:
 		line2d.width = beam_width
 		line2d.modulate = Color(0.0, 0.6, 1.0, 0.8)
 		line2d.z_index = -1
+	if elapsed < 0.2 and int(elapsed * 30) % 2 == 0:
+		print("[LaserBeam] tick: elapsed=", elapsed, " duration=", duration, " hit_bodies.size()=", hit_bodies.size(), " current_target=", current_target)
 
 func _deal_damage_to_hits() -> void:
+	if not hit_bodies.is_empty():
+		print("[LaserBeam] _deal_damage_to_hits: hit_bodies.size()=", hit_bodies.size())
 	var to_remove: Array = []
 	var enemies_to_damage: Array = []
 	for body in hit_bodies:
@@ -77,11 +81,15 @@ func _deal_damage_to_hits() -> void:
 		if body.has_method("take_laser_damage"):
 			var is_crit = randf() < crit_rate
 			var dmg = damage_per_tick * (crit_mult if is_crit else 1.0)
+			print("[LaserBeam] dealing ", dmg, " to ", body)
 			body.take_laser_damage(dmg, is_crit, damage_to_shield_mult)
 		elif body.has_method("take_damage"):
 			var is_crit = randf() < crit_rate
 			var dmg = damage_per_tick * (crit_mult if is_crit else 1.0)
+			print("[LaserBeam] dealing (take_damage) ", dmg, " to ", body)
 			body.take_damage(dmg, is_crit)
+		else:
+			print("[LaserBeam] enemy has neither take_laser_damage nor take_damage!")
 	for b in to_remove:
 		hit_bodies.erase(b)
 
@@ -145,6 +153,7 @@ func _on_body_entered(body: Node) -> void:
 		return
 	if not hit_bodies.has(body):
 		hit_bodies.append(body)
+		print("[LaserBeam] _on_body_entered: body=", body, " total hit_bodies=", hit_bodies.size())
 
 func _on_body_exited(body: Node) -> void:
 	hit_bodies.erase(body)
