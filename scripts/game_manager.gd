@@ -361,7 +361,7 @@ func on_exp_orb_collected(amount: float) -> void:
 func _trigger_upgrade() -> void:
 	is_upgrading = true
 	get_tree().paused = true
-	upgrade_system.trigger_upgrade_request(is_paused, get_tree())
+	upgrade_system.trigger_upgrade_request()
 
 func _on_upgrade_requested() -> void:
 	upgrade_requested.emit()

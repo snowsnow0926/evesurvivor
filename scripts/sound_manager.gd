@@ -127,19 +127,3 @@ func get_sfx_volume() -> float:
 
 func get_music_volume() -> float:
 	return music_volume
-
-func _get_property_list() -> Array:
-	return [
-		{
-			"name": "sfx_volume",
-			"type": TYPE_FLOAT,
-			"hint": PROPERTY_HINT_RANGE,
-			"hint_string": "-40,10,0.1"
-		},
-		{
-			"name": "music_volume",
-			"type": TYPE_FLOAT,
-			"hint": PROPERTY_HINT_RANGE,
-			"hint_string": "-40,10,0.1"
-		}
-	]

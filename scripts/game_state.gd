@@ -1,7 +1,6 @@
 extends Node
 
 const SAVE_VERSION := 2
-const SAVE_PATH := "user://game_save.cfg"
 const SAVE_SLOTS := 3
 const DEBUG := false
 
@@ -35,10 +34,6 @@ var pre_run_minerals_total: int = 0
 var selected_chapter_id: int = 1
 var selected_stage_id: int = 1
 
-var _pending_save := false
-var _pending_slot: int = -1
-var _save_timer: Timer
-
 func _debug(msg: String) -> void:
 	if DEBUG:
 		print("[GameState] ", msg)
@@ -67,22 +62,10 @@ static func _compute_progress_from_dict(stages_dict: Dictionary) -> String:
 	return "第%d章·第%d关" % [max_chapter, max_stage]
 
 func _ready() -> void:
-	_save_timer = Timer.new()
-	_save_timer.wait_time = 1.0
-	_save_timer.one_shot = true
-	_save_timer.timeout.connect(_do_pending_save)
-	add_child(_save_timer)
 	load_game()
 
-func _do_pending_save() -> void:
-	if _pending_save:
-		save(_pending_slot)
-		_pending_save = false
-
 func _resolve_path(slot: int) -> String:
-	if slot >= 0:
-		return "user://save_slot_%d.cfg" % slot
-	return SAVE_PATH
+	return "user://save_slot_%d.cfg" % slot
 
 func _collect_save_data() -> Dictionary:
 	return {
@@ -317,8 +300,6 @@ func reset_all_data() -> void:
 	equipped_armor = {}
 	upgraded_ships = {}
 	research_progress = {}
-	pre_run_coin = star_coin
-	pre_run_minerals_total = minerals_low + minerals_mid + minerals_high
 
 func get_repair_cost() -> int:
 	var ship = ShipData.get_ship(selected_ship_id)

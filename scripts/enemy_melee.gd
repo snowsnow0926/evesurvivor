@@ -12,12 +12,9 @@ func _ready() -> void:
 	super()
 	_death_particle_color = Color(1.0, 0.2, 0.2, 1.0)
 
-func _physics_process(delta: float) -> void:
-	super._physics_process(delta)
-
-func _process_combat(_delta: float) -> void:
+func _process_combat(delta: float) -> void:
 	if not can_attack:
-		attack_timer += _delta
+		attack_timer += delta
 		if attack_timer >= attack_cooldown:
 			attack_timer = 0.0
 			can_attack = true

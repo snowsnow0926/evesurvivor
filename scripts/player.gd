@@ -361,12 +361,6 @@ func _update_railgun_firing(delta: float, weapon: WeaponData) -> void:
 			SoundManager.play_sfx("shoot_railgun")
 			_fire_single_railgun(target_pos)
 
-func get_talent_bonus(talent_type: String) -> float:
-	for talent in race_talents:
-		if talent.get("type") == talent_type:
-			return talent.get("value", 0.0)
-	return 0.0
-
 func _fire_weapon(weapon: WeaponData) -> void:
 	if not game_manager or not is_instance_valid(game_manager):
 		return

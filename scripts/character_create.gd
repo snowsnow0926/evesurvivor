@@ -7,6 +7,13 @@ const ShipData = preload("res://resources/ship_data.gd")
 @onready var confirm_btn: Button = $Panel/VBox/BtnRow/ConfirmBtn
 @onready var back_btn: Button = $Panel/VBox/BtnRow/BackBtn
 
+const RACE_PORTRAIT_PATHS: Dictionary = {
+	RaceData.RaceID.HUMAN: "res://assets/races/human_portrait.png",
+	RaceData.RaceID.ORC: "res://assets/races/orc_portrait.png",
+	RaceData.RaceID.PLANT: "res://assets/races/plant_portrait.png",
+	RaceData.RaceID.SILICON: "res://assets/races/silicon_portrait.png",
+}
+
 var selected_race_id: RaceData.RaceID = RaceData.RaceID.HUMAN
 var race_buttons: Array = []
 var _selected_slot: int = 0  # 0-based save slot, default to slot 0 for new games
@@ -47,9 +54,9 @@ func _create_race_card(race_id: RaceData.RaceID) -> Control:
 	var race = RaceData.get_race(race_id)
 
 	var card = PanelContainer.new()
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	card.custom_minimum_size = Vector2(200, 260)
+	card.size_flags_horizontal = Control.SIZE_EXPAND
+	card.size_flags_vertical = Control.SIZE_EXPAND
+	card.custom_minimum_size = Vector2(420, 0)
 
 	var style_normal = StyleBoxFlat.new()
 	style_normal.bg_color = Color(0.08, 0.08, 0.16, 0.95)
@@ -70,37 +77,70 @@ func _create_race_card(race_id: RaceData.RaceID) -> Control:
 	style_selected.border_color = Color(0.4, 0.7, 1.0)
 	style_selected.set_corner_radius_all(8)
 
-	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
-	card.add_child(vbox)
+	var outer_vbox = VBoxContainer.new()
+	outer_vbox.add_theme_constant_override("separation", 8)
+	card.add_child(outer_vbox)
 
+	# 顶部标题
 	var title = Label.new()
 	title.text = race.display_name
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_font_size_override("font_size", 24)
 	title.add_theme_color_override("font_color", Color(0.9, 0.9, 1.0))
-	vbox.add_child(title)
+	outer_vbox.add_child(title)
 
-	var desc_label = Label.new()
-	desc_label.text = race.description
-	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc_label.custom_minimum_size = Vector2(180, 60)
-	vbox.add_child(desc_label)
+	# 横向布局：左侧立绘 + 右侧详情
+	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 12)
+	outer_vbox.add_child(hbox)
 
-	var attrs_label = Label.new()
-	attrs_label.text = "HP: %.0f  护盾: %.0f\n移速: %.0f  闪避: %.0f%%\n暴击: %.0f%%  倍率: %.1fx" % [
-		race.base_hp,
-		race.shield_max,
-		race.move_speed,
+	# 左侧：种族立绘
+	var portrait_placeholder = ColorRect.new()
+	portrait_placeholder.custom_minimum_size = Vector2(200, 0)
+	portrait_placeholder.color = Color(0.05, 0.05, 0.1, 1.0)
+	hbox.add_child(portrait_placeholder)
+
+	var portrait = TextureRect.new()
+	portrait.custom_minimum_size = Vector2(200, 0)
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	var portrait_path = RACE_PORTRAIT_PATHS.get(race_id, "")
+	if ResourceLoader.exists(portrait_path):
+		portrait.texture = load(portrait_path)
+		portrait_placeholder.queue_free()
+		hbox.add_child(portrait)
+	else:
+		portrait.queue_free()
+		hbox.add_child(portrait_placeholder)
+
+	# 右侧：详情区
+	var detail_vbox = VBoxContainer.new()
+	detail_vbox.add_theme_constant_override("separation", 6)
+	hbox.add_child(detail_vbox)
+
+	# 属性：两行，第一行 HP/护盾/移速，第二行 闪避/暴击/倍率
+	var attrs_line1 = Label.new()
+	attrs_line1.text = "HP: %.0f  护盾: %.0f  移速: %.0f" % [race.base_hp, race.shield_max, race.move_speed]
+	attrs_line1.add_theme_color_override("font_color", Color(0.7, 0.7, 0.85))
+	attrs_line1.add_theme_font_size_override("font_size", 14)
+	detail_vbox.add_child(attrs_line1)
+
+	var attrs_line2 = Label.new()
+	attrs_line2.text = "闪避: %.0f%%  暴击: %.0f%%  倍率: %.1fx" % [
 		race.dodge_rate * 100,
 		race.crit_rate * 100,
 		race.crit_mult,
 	]
-	attrs_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	attrs_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.85))
-	vbox.add_child(attrs_label)
+	attrs_line2.add_theme_color_override("font_color", Color(0.7, 0.7, 0.85))
+	attrs_line2.add_theme_font_size_override("font_size", 14)
+	detail_vbox.add_child(attrs_line2)
 
+	# 分隔
+	var sep1 = HSeparator.new()
+	sep1.set("theme_override_constants/separation", 4)
+	detail_vbox.add_child(sep1)
+
+	# 默认武器
 	var weapon_name = "导弹"
 	if "Cannon" in race.base_weapon_scene:
 		weapon_name = "加农炮"
@@ -110,26 +150,38 @@ func _create_race_card(race_id: RaceData.RaceID) -> Control:
 		weapon_name = "激光炮"
 	var weapon_label = Label.new()
 	weapon_label.text = "默认武器: %s" % weapon_name
-	weapon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	weapon_label.add_theme_color_override("font_color", Color(0.8, 0.6, 1.0))
-	vbox.add_child(weapon_label)
+	weapon_label.add_theme_font_size_override("font_size", 14)
+	detail_vbox.add_child(weapon_label)
 
+	# 分隔
+	var sep2 = HSeparator.new()
+	sep2.set("theme_override_constants/separation", 4)
+	detail_vbox.add_child(sep2)
+
+	# 天赋
 	if race.talents.size() > 0:
 		var talent_label = Label.new()
 		var talent_lines: Array = []
 		for t in race.talents:
 			talent_lines.append("[%s]" % t["name"])
 		talent_label.text = "\n".join(talent_lines)
-		talent_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		talent_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))
-		vbox.add_child(talent_label)
+		talent_label.add_theme_font_size_override("font_size", 13)
+		detail_vbox.add_child(talent_label)
 
+	# 天赋下方加弹性 spacer，推选择按钮到底部
+	var spacer = Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND
+	detail_vbox.add_child(spacer)
+
+	# 选择按钮
 	var btn = Button.new()
 	btn.flat = true
 	btn.custom_minimum_size = Vector2(0, 36)
 	btn.text = "选择"
 	btn.pressed.connect(_on_race_card_selected.bind(race_id, card))
-	vbox.add_child(btn)
+	detail_vbox.add_child(btn)
 
 	card.set_meta("race_id", race_id)
 	card.set_meta("style_normal", style_normal)

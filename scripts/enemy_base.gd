@@ -13,7 +13,6 @@ var move_speed: float = 100.0
 var tonnage: String = "frigate"
 
 # === Chapter Tonnage Override ===
-var _chapter_tonnage: String = ""
 var _chapter_icon_override: String = ""
 var _chapter_id_override: int = 0
 
@@ -71,7 +70,6 @@ var _attack_flash_cooldown: float = 0.0
 var _is_locked: bool = false
 
 # === Shared Nodes ===
-var polygon: Node2D
 var ship_sprite: Sprite2D
 var hp_bar: ColorRect
 
@@ -115,13 +113,9 @@ var elite_glow_color: Color = Color(1.0, 0.8, 0.0, 1.0)
 signal enemy_dead(enemy: Node2D, enemy_type: String)
 
 func _ready() -> void:
-	polygon = $Polygon2D
 	ship_sprite = $ShipSprite
 	hp_bar = $HPBar
 	shield_bar = $ShieldBar
-	if polygon:
-		polygon.rotation = PI / 2
-		polygon.visible = false
 	_tint_mat = ShaderMaterial.new()
 	_tint_mat.shader = TintShader
 	_tint_mat.set_shader_parameter("tint_color", _base_tint)
@@ -196,7 +190,6 @@ func setup_enemy(gm: Node2D, e_hp: float, e_damage: float, e_speed: float, e_shi
 	enemy_shield = e_shield
 	enemy_shield_regen = e_shield_regen
 	enemy_shield_regen_timer = 0.0
-	_chapter_tonnage = chapter_tonnage
 	_chapter_icon_override = chapter_icon
 	_chapter_id_override = chapter_id_override
 	_apply_chapter_stats()
@@ -232,8 +225,6 @@ func _apply_chapter_icon() -> void:
 			ship_sprite.texture = _icon_tex
 			ship_sprite.material = null
 			ship_sprite.visible = true
-		if polygon != null:
-			polygon.visible = false
 		return
 
 	# map path — look up icon by chapter and enemy type
@@ -250,8 +241,6 @@ func _apply_chapter_icon() -> void:
 		ship_sprite.texture = _icon_tex
 		ship_sprite.material = null
 		ship_sprite.visible = true
-	if polygon != null:
-		polygon.visible = false
 
 func _init_lock() -> void:
 	_lock_state = LockState.LOCKING
@@ -326,8 +315,6 @@ func set_enemy_icon() -> void:
 		ship_sprite.texture = _icon_tex
 		ship_sprite.material = null
 		ship_sprite.visible = true
-	if polygon != null:
-		polygon.visible = false
 	_update_shader_params()
 
 func _update_shader_params() -> void:
@@ -424,13 +411,12 @@ func _spawn_death_effect() -> void:
 		particles.finished.connect(particles.queue_free)
 
 func _start_hit_flash() -> void:
-	var target: Node = ship_sprite if ship_sprite and ship_sprite.visible else polygon
-	if not target:
+	if not ship_sprite:
 		return
-	var original_color = target.modulate if target.modulate is Color else Color.WHITE
-	target.modulate = Color(_hit_flash_intensity, _hit_flash_intensity, _hit_flash_intensity)
+	var original_color = ship_sprite.modulate if ship_sprite.modulate is Color else Color.WHITE
+	ship_sprite.modulate = Color(_hit_flash_intensity, _hit_flash_intensity, _hit_flash_intensity)
 	var tween = create_tween()
-	tween.tween_property(target, "modulate", original_color, 0.15)
+	tween.tween_property(ship_sprite, "modulate", original_color, 0.15)
 
 func _die() -> void:
 	SoundManager.play_sfx("enemy_death")

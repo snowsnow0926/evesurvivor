@@ -11,9 +11,6 @@ var damage_amount: float = 0.0
 var is_crit: bool = false
 var is_enemy_damage: bool = false
 
-func _ready() -> void:
-	pass
-
 func setup(world_pos: Vector2, amount: float, is_crit_hit: bool = false, enemy_dmg: bool = false) -> void:
 	global_position = world_pos
 	damage_amount = amount

@@ -17,7 +17,6 @@ func _ready() -> void:
 	_icon_id = "enemy_raven"
 	_chapter_stats_key = "raven"
 	tonnage = "frigate"
-	_death_particle_color = Color(1.0, 0.5, 0.0, 1.0)
 
 func _apply_chapter_stats() -> void:
 	var cid: int = _chapter_id_override if _chapter_id_override > 0 else (game_manager.current_chapter_id if game_manager else 0)
@@ -26,12 +25,6 @@ func _apply_chapter_stats() -> void:
 	var final_strength: float = (game_manager.current_stage.strength_mult * level_bonus) if game_manager and game_manager.current_stage else 1.0
 	explosion_damage = raven_stats.explosion_damage * final_strength
 	move_speed = raven_stats.speed * (1.0 + (final_strength - 1.0) * 0.2)
-
-func _physics_process(delta: float) -> void:
-	super._physics_process(delta)
-
-func _process_combat(_delta: float) -> void:
-	pass
 
 func _update_movement(delta: float) -> void:
 	var player = _get_player()
@@ -72,13 +65,6 @@ func _do_explosion() -> void:
 		if dist <= explosion_range:
 			if player.has_method("on_player_take_damage"):
 				player.on_player_take_damage(explosion_damage)
-
-	_death_particle_color = Color(1.0, 0.4, 0.1, 1.0)
-	_death_particle_count = 15
-	_death_particle_velocity_min = 100.0
-	_death_particle_velocity_max = 200.0
-	_death_particle_scale_min = 3.0
-	_death_particle_scale_max = 7.0
 
 	var parent = get_parent()
 	if parent:

@@ -15,8 +15,6 @@ var bullet_speed: float = 400.0
 var bullet_damage: float = 10.0
 var is_rage: bool = false
 
-var hp_bar_bg: ColorRect
-
 func _ready() -> void:
 	# Boss visual — must be set before super so set_enemy_icon/_init_lock use correct values
 	_base_tint = Color(0.5, 0.0, 0.5)
@@ -51,8 +49,6 @@ func _ready() -> void:
 	_hp_bar_max_width = 102.0
 
 	super._ready()
-
-	hp_bar_bg = $HPBarBg
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)

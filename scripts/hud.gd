@@ -316,8 +316,6 @@ func _update_upgrade_list_display(gm) -> void:
 	# Ensure panel visibility tracks upgrade state
 	var upgrade_panel = $BottomRightAnchor/UpgradeListPanel
 	if upgrade_panel:
-		if has_any_upgrade and not upgrade_panel.visible:
-			pass  # Panel now visible
 		upgrade_panel.visible = has_any_upgrade
 
 	var existing_labels: Array = []

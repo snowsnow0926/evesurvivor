@@ -11,7 +11,6 @@ var session_level: int = 1
 var earned_coin: int = 0
 var earned_minerals: int = 0
 var session_loot: Array = []
-var _data_ready: bool = false
 
 @onready var result_label: Label = $Panel/VBox/ResultLabel
 @onready var result_desc: Label = $Panel/VBox/ResultDesc
@@ -44,21 +43,9 @@ func _ready() -> void:
 				slot.visible = false
 
 	# Build loot display once slots are ready
-	if _data_ready and session_loot.size() > 0:
+	if session_loot.size() > 0:
 		_update_display()
 		_build_loot_list()
-
-func _init_loot_slots() -> void:
-	loot_slots.clear()
-	for i: int in range(5):
-		var slot_path := "Panel/VBox/LootScroll/LootContainer/LootSlot%d" % i
-		var slot: HBoxContainer = get_node_or_null(slot_path)
-		if slot != null:
-			loot_slots.append(slot)
-			slot.visible = false
-		else:
-			print("[SettlementScene] WARNING: loot slot ", i, " not found at ", slot_path)
-	print("[SettlementScene] loot_slots initialized: size=", loot_slots.size())
 
 func _connect_buttons() -> void:
 	if retry_btn:
@@ -91,7 +78,6 @@ func set_settlement_data(reason: String, kills: int, level: int, coin: int, mine
 	GameState.last_run_reason = reason
 
 	_update_display()
-	_data_ready = true
 
 	# Only build loot list if slots are already initialized, otherwise _ready() will call it
 	if loot_slots.size() > 0:

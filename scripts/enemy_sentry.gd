@@ -30,9 +30,6 @@ func _apply_chapter_stats() -> void:
 	var final_strength: float = (game_manager.current_stage.strength_mult * level_bonus) if game_manager and game_manager.current_stage else 1.0
 	bullet_damage = sentry_stats.damage * final_strength
 
-func _physics_process(delta: float) -> void:
-	super._physics_process(delta)
-
 func _process_combat(delta: float) -> void:
 	var player = _get_player()
 	if not is_instance_valid(player):
@@ -102,8 +99,6 @@ func _fire_at_player() -> void:
 	bullet.setup(dir, bullet_damage, bullet_speed, game_manager, player)
 
 func _die() -> void:
-	if current_state == "windup":
-		return
 	SoundManager.play_sfx("enemy_death")
 	enemy_dead.emit(self, "sentry")
 	if game_manager and is_instance_valid(game_manager):

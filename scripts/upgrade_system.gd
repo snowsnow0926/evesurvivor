@@ -53,7 +53,7 @@ func apply_upgrade(upgrade_id: String) -> bool:
 	upgrade_applied.emit()
 	return true
 
-func trigger_upgrade_request(is_paused: bool, tree: SceneTree) -> void:
+func trigger_upgrade_request() -> void:
 	upgrade_requested.emit()
 
 func get_available_upgrades() -> Array:
