@@ -283,21 +283,21 @@ func _on_settlement_retry() -> void:
 	if GameState.ship_damaged:
 		if GameState.star_coin >= GameState.get_repair_cost():
 			GameState.repair_ship()
-	get_tree().root.change_scene_to_file("res://scenes/GameScene.tscn")
+	(Engine.get_main_loop() as SceneTree).change_scene_to_file("res://scenes/GameScene.tscn")
 
 func _on_settlement_base() -> void:
 	SoundManager.play_sfx("button_click")
 	print("[GameScene] settlement base")
-	get_tree().root.change_scene_to_file("res://scenes/BaseScene.tscn")
+	(Engine.get_main_loop() as SceneTree).change_scene_to_file("res://scenes/BaseScene.tscn")
 
 func _on_settlement_menu() -> void:
 	SoundManager.play_sfx("button_click")
 	print("[GameScene] settlement menu")
-	get_tree().root.change_scene_to_file("res://scenes/MainMenu.tscn")
+	(Engine.get_main_loop() as SceneTree).change_scene_to_file("res://scenes/MainMenu.tscn")
 
 func _game_over_to_base() -> void:
 	await get_tree().create_timer(0.1).timeout
-	get_tree().root.change_scene_to_file("res://scenes/BaseScene.tscn")
+	(Engine.get_main_loop() as SceneTree).change_scene_to_file("res://scenes/BaseScene.tscn")
 
 func trigger_screen_shake(intensity: float = 8.0, duration: float = 0.2) -> void:
 	shake_intensity = intensity
