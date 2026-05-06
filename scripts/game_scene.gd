@@ -132,7 +132,28 @@ func _show_settlement_screen(reason) -> void:
 		_:
 			GameState.last_run_reason = reason
 			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, false)
-	var earned_loot: Array = game_manager.grant_loot_to_player()
+	var earned_loot: Array = []
+	for loot_item: Dictionary in game_manager.get_session_loot():
+		var item_dict := {
+			"equip_id": loot_item.get("equip_id", ""),
+			"type": loot_item.get("type", "weapon"),
+			"weapon_id": loot_item.get("weapon_id", 0),
+			"armor_id": loot_item.get("armor_id", 0),
+			"quality": loot_item.get("quality", 0),
+			"name": loot_item.get("name", "?"),
+			"base_damage": loot_item.get("base_damage", 0.0),
+			"fire_interval": loot_item.get("fire_interval", 1.0),
+			"range": loot_item.get("range", 0.0),
+			"crit_rate": loot_item.get("crit_rate", 0.0),
+			"crit_mult": loot_item.get("crit_mult", 1.5),
+			"tonnage_tier": loot_item.get("tonnage_tier", 0),
+			"equip_type": loot_item.get("type", "weapon"),
+			"scene_path": loot_item.get("scene_path", ""),
+			"is_new": true,
+		}
+		earned_loot.append(item_dict)
+		GameState.equipment_inventory.append(item_dict)
+	game_manager.get_session_loot().clear()
 
 	# 撤离时：不解锁下一关（只有倒计时结束才算通关）
 	if reason == "retreat" and game_manager.current_stage != null:
@@ -198,7 +219,7 @@ func _show_settlement_screen(reason) -> void:
 	var minerals_label = settlement.get_node_or_null("Panel/VBox/StatsGrid/MineralsValue")
 	if minerals_label:
 		minerals_label.text = "%d" % (GameState.minerals_low + GameState.minerals_mid + GameState.minerals_high)
-	var earned_coin_label = settlement.get_node_or_null("Panel/VBox/StatsGrid/EarnedCoinValue")
+	var earned_coin_label = settlement.get_node_or_null("Panel/VBox/StatsGrid/EarnedHBox/EarnedCoinValue")
 	if earned_coin_label:
 		earned_coin_label.text = "+%d" % coin_gained
 	var earned_minerals_label = settlement.get_node_or_null("Panel/VBox/StatsGrid/EarnedMineralsValue")

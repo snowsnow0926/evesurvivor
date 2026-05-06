@@ -37,7 +37,7 @@ func setup_icon() -> void:
 		ship_sprite.texture = tex
 		ship_sprite.material = _tint_mat
 		ship_sprite.visible = true
-		ship_sprite.offset = Vector2(-ShipIconGenerator.ICON_SIZE * 0.5, -ShipIconGenerator.ICON_SIZE * 0.5)
+		ship_sprite.offset = Vector2.ZERO
 		polygon.visible = false
 		_update_shader_params()
 	else:
@@ -134,7 +134,7 @@ func _setup_tonnage_icon(cid: int) -> void:
 		ship_sprite.texture = tex
 		ship_sprite.material = _tint_mat
 		ship_sprite.visible = true
-		ship_sprite.offset = Vector2(-ShipIconGenerator.ICON_SIZE * 0.5, -ShipIconGenerator.ICON_SIZE * 0.5)
+		ship_sprite.offset = Vector2.ZERO
 		polygon.visible = false
 		_update_shader_params()
 	else:
