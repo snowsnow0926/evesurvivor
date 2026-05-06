@@ -30,6 +30,7 @@ script = ExtResource("1_gm")
 [node name="EnemyRoot" type="Node2D" parent="."]
 
 [node name="BulletRoot" type="Node2D" parent="."]
+y_sort_enabled = true
 
 [node name="ExpOrbRoot" type="Node2D" parent="."]
 
