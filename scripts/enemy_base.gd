@@ -91,6 +91,23 @@ var _death_particle_velocity_max: float = 150.0
 var _death_particle_scale_min: float = 2.0
 var _death_particle_scale_max: float = 5.0
 
+# === Damage Number Config (override in subclasses) ===
+var _dmg_number_font_size_normal: int = 14
+var _dmg_number_font_size_crit: int = 20
+var _dmg_number_offset_x_range: float = 20.0
+var _dmg_number_offset_y: float = -30.0
+var _dmg_number_anim_offset: float = 50.0
+var _dmg_number_anim_duration: float = 0.6
+var _dmg_number_color_normal: Color = Color(1.0, 1.0, 1.0)
+var _dmg_number_color_crit: Color = Color(1.0, 0.8, 0.0)
+
+# === Hit Flash Config (override in subclasses) ===
+var _hit_flash_intensity: float = 2.0
+
+# === HP Bar Config (override in subclasses) ===
+var _hp_bar_max_width: float = 34.0
+var _death_burst_count: int = 1
+
 var is_elite: bool = false
 var elite_glow_color: Color = Color(1.0, 0.8, 0.0, 1.0)
 
@@ -347,7 +364,7 @@ func _update_hp_bar() -> void:
 	if hp_bar:
 		var ratio = clampf(hp / maxf(max_hp, 1.0), 0.0, 1.0)
 		hp_bar.scale.x = ratio
-		hp_bar.position.x = -17.0 * ratio
+		hp_bar.position.x = -_hp_bar_max_width * 0.5 * ratio
 
 func _spawn_damage_number(amount: float, is_crit: bool) -> void:
 	var parent = get_parent()
@@ -356,24 +373,24 @@ func _spawn_damage_number(amount: float, is_crit: bool) -> void:
 
 	var label = Label.new()
 	label.text = str(int(amount)) + ("!" if is_crit else "")
-	label.add_theme_font_size_override("font_size", 20 if is_crit else 14)
+	label.add_theme_font_size_override("font_size", _dmg_number_font_size_crit if is_crit else _dmg_number_font_size_normal)
 	if is_crit:
-		label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.0))
+		label.add_theme_color_override("font_color", _dmg_number_color_crit)
 	else:
-		label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
+		label.add_theme_color_override("font_color", _dmg_number_color_normal)
 
-	label.position = global_position + Vector2(randf_range(-20, 20), -30)
+	label.position = global_position + Vector2(randf_range(-_dmg_number_offset_x_range, _dmg_number_offset_x_range), _dmg_number_offset_y)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	parent.call_deferred("add_child", label)
 
 	var tween = create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(label, "position:y", label.position.y - 50, 0.6)
-	tween.tween_property(label, "modulate:a", 0.0, 0.6)
+	tween.tween_property(label, "position:y", label.position.y - _dmg_number_anim_offset, _dmg_number_anim_duration)
+	tween.tween_property(label, "modulate:a", 0.0, _dmg_number_anim_duration)
 
 	var timer = Timer.new()
 	timer.one_shot = true
-	timer.wait_time = 0.7
+	timer.wait_time = _dmg_number_anim_duration + 0.1
 	timer.timeout.connect(label.queue_free)
 	parent.call_deferred("add_child", timer)
 	timer.call_deferred("start")
@@ -382,30 +399,36 @@ func _spawn_death_effect() -> void:
 	var parent = get_parent()
 	if not parent:
 		return
-	var particles = CPUParticles2D.new()
-	particles.amount = _death_particle_count
-	particles.lifetime = _death_particle_lifetime
-	particles.one_shot = true
-	particles.emission_shape = 0
-	particles.direction = Vector2(0, -1)
-	particles.spread = 180.0
-	particles.initial_velocity_min = _death_particle_velocity_min
-	particles.initial_velocity_max = _death_particle_velocity_max
-	particles.scale_amount_min = _death_particle_scale_min
-	particles.scale_amount_max = _death_particle_scale_max
-	particles.color = _death_particle_color
-	particles.position = global_position
 
-	parent.call_deferred("add_child", particles)
-	particles.emitting = true
-	particles.finished.connect(particles.queue_free)
+	var burst_count := maxf(_death_burst_count, 1)
+	for _i in range(burst_count):
+		var offset := Vector2.ZERO
+		if burst_count > 1:
+			offset = Vector2(randf_range(-100, 100), randf_range(-100, 100))
+		var particles = CPUParticles2D.new()
+		particles.amount = _death_particle_count
+		particles.lifetime = _death_particle_lifetime
+		particles.one_shot = true
+		particles.emission_shape = 0
+		particles.direction = Vector2(0, -1)
+		particles.spread = 180.0
+		particles.initial_velocity_min = _death_particle_velocity_min
+		particles.initial_velocity_max = _death_particle_velocity_max
+		particles.scale_amount_min = _death_particle_scale_min
+		particles.scale_amount_max = _death_particle_scale_max
+		particles.color = _death_particle_color
+		particles.position = global_position + offset
+
+		parent.call_deferred("add_child", particles)
+		particles.emitting = true
+		particles.finished.connect(particles.queue_free)
 
 func _start_hit_flash() -> void:
 	var target: Node = ship_sprite if ship_sprite and ship_sprite.visible else polygon
 	if not target:
 		return
 	var original_color = target.modulate if target.modulate is Color else Color.WHITE
-	target.modulate = Color(2.0, 2.0, 2.0)
+	target.modulate = Color(_hit_flash_intensity, _hit_flash_intensity, _hit_flash_intensity)
 	var tween = create_tween()
 	tween.tween_property(target, "modulate", original_color, 0.15)
 
@@ -413,9 +436,13 @@ func _die() -> void:
 	SoundManager.play_sfx("enemy_death")
 	enemy_dead.emit(self, _get_enemy_type())
 	_spawn_death_effect()
+	_on_death_rewards()
 	if game_manager and is_instance_valid(game_manager):
 		game_manager.try_drop_equipment(self)
 	queue_free()
+
+func _on_death_rewards() -> void:
+	pass
 
 func _get_enemy_type() -> String:
 	return "melee"

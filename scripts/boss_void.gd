@@ -4,7 +4,6 @@ const _SCENE_BOSS_BULLET: PackedScene = preload("res://scenes/BossBullet.tscn")
 const _SCENE_EXP_ORB: PackedScene = preload("res://scenes/ExpOrb.tscn")
 
 var _loot_tonnage_chapter: int = 1
-var base_move_speed: float = 80.0
 var collision_damage: float = 15.0
 var contact_cooldown: float = 0.5
 var contact_timer: float = 0.0
@@ -19,27 +18,41 @@ var is_rage: bool = false
 var hp_bar_bg: ColorRect
 
 func _ready() -> void:
+	# Boss visual — must be set before super so set_enemy_icon/_init_lock use correct values
 	_base_tint = Color(0.5, 0.0, 0.5)
-	super._ready()
-	hp_bar_bg = $HPBarBg
 	_visual_scale = 1.2
-	_update_shader_params()
-	_death_particle_color = Color(0.5, 0.0, 0.5, 1.0)
-	setup_icon()
+	_icon_id = "boss_void"
+	_tonnage = "battlecruiser"
 
-func setup_icon() -> void:
-	var tex: Texture2D = ShipIconGenerator.get_texture(ShipIconGenerator.Category.ENEMY, "boss_void")
-	if tex != null:
-		_icon_tex = tex
-		ship_sprite.texture = tex
-		ship_sprite.material = null
-		ship_sprite.visible = true
-		ship_sprite.offset = Vector2.ZERO
-		polygon.visible = false
-		_update_shader_params()
-	else:
-		ship_sprite.visible = false
-		polygon.visible = true
+	# Boss damage number config (larger, more dramatic)
+	_dmg_number_font_size_normal = 20
+	_dmg_number_font_size_crit = 28
+	_dmg_number_offset_x_range = 40.0
+	_dmg_number_offset_y = -60.0
+	_dmg_number_anim_offset = 80.0
+	_dmg_number_anim_duration = 0.8
+	_dmg_number_color_normal = Color(1.0, 0.3, 0.3)
+	_dmg_number_color_crit = Color(1.0, 0.8, 0.0)
+
+	# Boss death effect — 5 bursts scattered around death position
+	_death_particle_color = Color(0.5, 0.0, 0.5, 1.0)
+	_death_particle_count = 40
+	_death_particle_lifetime = 1.0
+	_death_particle_velocity_min = 100.0
+	_death_particle_velocity_max = 300.0
+	_death_particle_scale_min = 5.0
+	_death_particle_scale_max = 15.0
+	_death_burst_count = 5
+
+	# Boss hit flash — brighter
+	_hit_flash_intensity = 3.0
+
+	# Boss HP bar — wider
+	_hp_bar_max_width = 102.0
+
+	super._ready()
+
+	hp_bar_bg = $HPBarBg
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
@@ -105,100 +118,16 @@ func setup_boss(gm: Node2D, b_hp: float = 500.0, b_damage: float = 15.0, b_speed
 	enemy_shield_max = b_shield
 	enemy_shield = b_shield
 	collision_damage = b_damage
-	base_move_speed = b_speed
 	move_speed = b_speed
 	is_rage = false
 	fire_timer = 0.0
 	contact_timer = 0.0
-	_setup_tonnage_icon(tonnage_chapter)
+	# Icon is set via _chapter_icon_override in setup_enemy pattern
+	_chapter_icon_override = "boss_void"
+	_apply_chapter_icon()
 
-func _setup_tonnage_icon(cid: int) -> void:
-	var tex: Texture2D = ShipIconGenerator.get_texture(ShipIconGenerator.Category.ENEMY, "boss_void")
-	if tex != null:
-		_icon_tex = tex
-		ship_sprite.texture = tex
-		ship_sprite.material = null
-		ship_sprite.visible = true
-		ship_sprite.offset = Vector2.ZERO
-		polygon.visible = false
-		_update_shader_params()
-	else:
-		ship_sprite.visible = false
-		polygon.visible = true
-
-func _spawn_damage_number(amount: float, is_crit: bool) -> void:
-	var parent = get_parent()
-	if not parent:
-		return
-
-	var label = Label.new()
-	label.text = str(int(amount)) + ("!" if is_crit else "")
-	label.add_theme_font_size_override("font_size", 28 if is_crit else 20)
-	if is_crit:
-		label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.0))
-	else:
-		label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
-
-	label.position = global_position + Vector2(randf_range(-40, 40), -60)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	parent.call_deferred("add_child", label)
-
-	var tween = create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(label, "position:y", label.position.y - 80, 0.8)
-	tween.tween_property(label, "modulate:a", 0.0, 0.8)
-
-	var timer = Timer.new()
-	timer.one_shot = true
-	timer.wait_time = 0.9
-	timer.timeout.connect(label.queue_free)
-	parent.call_deferred("add_child", timer)
-	timer.call_deferred("start")
-
-func _update_hp_bar() -> void:
-	if hp_bar:
-		var ratio = clampf(hp / maxf(max_hp, 1.0), 0.0, 1.0)
-		hp_bar.scale.x = ratio
-		if hp_bar_bg:
-			hp_bar.position.x = -51.0 * ratio
-
-func _start_hit_flash() -> void:
-	var target: Node = ship_sprite if ship_sprite and ship_sprite.visible else polygon
-	if not target:
-		return
-	var original_color = target.modulate if target.modulate is Color else Color.WHITE
-	target.modulate = Color(3.0, 3.0, 3.0)
-	var tween = create_tween()
-	tween.tween_property(target, "modulate", original_color, 0.15)
-
-func _spawn_death_effect() -> void:
-	var parent = get_parent()
-	if not parent:
-		return
-
-	for _i in range(5):
-		var offset = Vector2(randf_range(-100, 100), randf_range(-100, 100))
-		var particles = CPUParticles2D.new()
-		particles.amount = 40
-		particles.lifetime = 1.0
-		particles.one_shot = true
-		particles.emission_shape = 0
-		particles.direction = Vector2(0, -1)
-		particles.spread = 180.0
-		particles.initial_velocity_min = 100.0
-		particles.initial_velocity_max = 300.0
-		particles.scale_amount_min = 5.0
-		particles.scale_amount_max = 15.0
-		particles.color = _death_particle_color
-		particles.position = global_position + offset
-		parent.call_deferred("add_child", particles)
-		particles.emitting = true
-		particles.finished.connect(particles.queue_free)
-
-func _spawn_rewards() -> void:
-	if not is_instance_valid(game_manager):
-		return
-
+func _on_death_rewards() -> void:
+	SoundManager.play_sfx("boss_death")
 	var parent = game_manager.get("exp_orb_root")
 	if parent:
 		for i in range(10):
@@ -209,9 +138,8 @@ func _spawn_rewards() -> void:
 			parent.call_deferred("add_child", orb)
 
 func _die() -> void:
-	SoundManager.play_sfx("boss_death")
 	_spawn_death_effect()
-	_spawn_rewards()
+	_on_death_rewards()
 	if game_manager and is_instance_valid(game_manager):
 		game_manager.spawn_boss_loot(self)
 	enemy_dead.emit(self, "boss")
