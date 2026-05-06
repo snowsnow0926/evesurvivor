@@ -166,6 +166,8 @@ func _check_boss_warning(current_chapter_id: int, player_level: int) -> void:
 		_spawn_boss(current_chapter_id, player_level)
 
 func _spawn_boss(current_chapter_id: int, player_level: int) -> void:
+	if boss_active:
+		return
 	SoundManager.play_sfx("boss_appear")
 	SoundManager.play_music("battle_boss")
 	if not game_manager.player or not is_instance_valid(game_manager.player):

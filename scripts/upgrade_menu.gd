@@ -196,8 +196,6 @@ func _on_btn_pressed(upgrade_id: String) -> void:
 		return
 	visible = false
 	upgrade_selected.emit(upgrade_id)
-	if game_manager and is_instance_valid(game_manager):
-		game_manager.apply_upgrade(upgrade_id)
 
 func _make_btn_style(color: Color) -> StyleBoxFlat:
 	var style = StyleBoxFlat.new()
@@ -224,8 +222,6 @@ func _on_upgrade_selected(upgrade_id: String) -> void:
 	SoundManager.play_sfx("upgrade_select")
 	visible = false
 	upgrade_selected.emit(upgrade_id)
-	if game_manager and is_instance_valid(game_manager):
-		game_manager.apply_upgrade(upgrade_id)
 
 func skip_upgrade() -> void:
 	visible = false

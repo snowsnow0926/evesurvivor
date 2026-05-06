@@ -142,6 +142,7 @@ func _die() -> void:
 	_on_death_rewards()
 	if game_manager and is_instance_valid(game_manager):
 		game_manager.spawn_boss_loot(self)
+		game_manager.try_drop_equipment(self)
 	enemy_dead.emit(self, "boss")
 	queue_free()
 

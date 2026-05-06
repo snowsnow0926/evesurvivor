@@ -282,7 +282,7 @@ func _update_timer(delta: float) -> void:
 		_on_timer_expired()
 
 func _on_timer_expired() -> void:
-	if is_boss_phase and not _timer_expired_once:
+	if spawn_manager.is_boss_phase and not _timer_expired_once:
 		_timer_expired_once = true
 		is_boss_infinite = true
 		is_game_over = false
@@ -295,7 +295,6 @@ func _on_timer_expired() -> void:
 	get_tree().paused = true
 	game_ended.emit("timeout")
 
-var is_boss_phase: bool = false
 
 func _on_enemy_dead(enemy: Node2D, enemy_type: String) -> void:
 	match enemy_type:
@@ -324,7 +323,7 @@ func _on_boss_killed(boss_node: Node2D) -> void:
 	loot_system.spawn_boss_loot(boss_node)
 	loot_system.on_boss_killed(boss_node)
 
-	if is_boss_phase:
+	if spawn_manager.is_boss_phase:
 		if spawn_manager.boss_remaining <= 0:
 			is_game_over = true
 			get_tree().paused = true
