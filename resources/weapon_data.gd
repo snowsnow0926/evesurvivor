@@ -20,6 +20,8 @@ enum WeaponID {
 @export var crit_mult: float
 @export var quality: int = 0
 @export var exclusive_upgrades: Array
+@export var beam_width: float = 0.0
+@export var duration: float = 0.0
 
 static var _base_cache: Dictionary = {}
 
@@ -114,12 +116,14 @@ static func _laser_data() -> WeaponData:
 	w.weapon_id = WeaponID.LASER
 	w.display_name = "激光炮"
 	w.scene_path = "res://scenes/LaserBeam.tscn"
-	w.damage = 12.0
-	w.fire_interval = 2.5
+	w.damage = 28.0
+	w.fire_interval = 2.4
 	w.projectile_speed = 0.0
-	w.range = 700.0
-	w.crit_rate = 0.08
-	w.crit_mult = 1.6
+	w.range = 600.0
+	w.crit_rate = 0.10
+	w.crit_mult = 1.7
+	w.beam_width = 24.0
+	w.duration = 2.4
 	w.exclusive_upgrades = [
 		{"id": "laser_duration", "name": "高能光束", "desc": "激光持续时间 +20%", "max": 3},
 		{"id": "laser_width", "name": "高效射击", "desc": "激光宽度 +20%", "max": 3},
@@ -184,14 +188,16 @@ static func _small_railgun_data() -> WeaponData:
 static func _small_laser_data() -> WeaponData:
 	var w = WeaponData.new()
 	w.weapon_id = WeaponID.SMALL_LASER
-	w.display_name = "小型激光束"
+	w.display_name = "小型激光炮"
 	w.scene_path = "res://scenes/LaserBeam.tscn"
-	w.damage = 12.0
-	w.fire_interval = 2.5
+	w.damage = 20.0
+	w.fire_interval = 2.0
 	w.projectile_speed = 0.0
-	w.range = 700.0
+	w.range = 500.0
 	w.crit_rate = 0.08
 	w.crit_mult = 1.6
+	w.beam_width = 20.0
+	w.duration = 2.0
 	w.exclusive_upgrades = [
 		{"id": "laser_duration", "name": "高能光束", "desc": "激光持续时间 +20%", "max": 3},
 		{"id": "laser_width", "name": "高效射击", "desc": "激光宽度 +20%", "max": 3},
@@ -256,14 +262,16 @@ static func _medium_railgun_data() -> WeaponData:
 static func _medium_laser_data() -> WeaponData:
 	var w = WeaponData.new()
 	w.weapon_id = WeaponID.MEDIUM_LASER
-	w.display_name = "中型激光束"
+	w.display_name = "中型激光炮"
 	w.scene_path = "res://scenes/LaserBeam.tscn"
-	w.damage = 18.0
-	w.fire_interval = 3.0
+	w.damage = 40.0
+	w.fire_interval = 2.8
 	w.projectile_speed = 0.0
-	w.range = 850.0
-	w.crit_rate = 0.1
-	w.crit_mult = 1.7
+	w.range = 750.0
+	w.crit_rate = 0.12
+	w.crit_mult = 1.8
+	w.beam_width = 30.0
+	w.duration = 2.8
 	w.exclusive_upgrades = [
 		{"id": "laser_duration", "name": "高能光束", "desc": "激光持续时间 +20%", "max": 3},
 		{"id": "laser_width", "name": "高效射击", "desc": "激光宽度 +20%", "max": 3},
@@ -328,14 +336,16 @@ static func _large_railgun_data() -> WeaponData:
 static func _large_laser_data() -> WeaponData:
 	var w = WeaponData.new()
 	w.weapon_id = WeaponID.LARGE_LASER
-	w.display_name = "大型激光束"
+	w.display_name = "大型激光炮"
 	w.scene_path = "res://scenes/LaserBeam.tscn"
-	w.damage = 30.0
-	w.fire_interval = 3.5
+	w.damage = 55.0
+	w.fire_interval = 3.2
 	w.projectile_speed = 0.0
-	w.range = 1000.0
-	w.crit_rate = 0.12
-	w.crit_mult = 1.8
+	w.range = 900.0
+	w.crit_rate = 0.14
+	w.crit_mult = 1.9
+	w.beam_width = 38.0
+	w.duration = 3.2
 	w.exclusive_upgrades = [
 		{"id": "laser_duration", "name": "高能光束", "desc": "激光持续时间 +20%", "max": 3},
 		{"id": "laser_width", "name": "高效射击", "desc": "激光宽度 +20%", "max": 3},
@@ -400,14 +410,16 @@ static func _flagship_railgun_data() -> WeaponData:
 static func _flagship_laser_data() -> WeaponData:
 	var w = WeaponData.new()
 	w.weapon_id = WeaponID.FLAGSHIP_LASER
-	w.display_name = "旗舰级激光束"
+	w.display_name = "旗舰级激光炮"
 	w.scene_path = "res://scenes/LaserBeam.tscn"
-	w.damage = 45.0
-	w.fire_interval = 4.0
+	w.damage = 75.0
+	w.fire_interval = 3.8
 	w.projectile_speed = 0.0
-	w.range = 1200.0
-	w.crit_rate = 0.15
+	w.range = 1050.0
+	w.crit_rate = 0.16
 	w.crit_mult = 2.0
+	w.beam_width = 48.0
+	w.duration = 3.8
 	w.exclusive_upgrades = [
 		{"id": "laser_duration", "name": "高能光束", "desc": "激光持续时间 +20%", "max": 3},
 		{"id": "laser_width", "name": "高效射击", "desc": "激光宽度 +20%", "max": 3},

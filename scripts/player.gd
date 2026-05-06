@@ -471,7 +471,7 @@ func _fire_weapon(weapon: WeaponData) -> void:
 		_fire_railgun_at(target_pos)
 	elif weapon.weapon_id in [WeaponData.WeaponID.LASER, WeaponData.WeaponID.SMALL_LASER, WeaponData.WeaponID.MEDIUM_LASER, WeaponData.WeaponID.LARGE_LASER, WeaponData.WeaponID.FLAGSHIP_LASER]:
 		print("[Player] match: LASER branch")
-		_fire_laser_at(target_pos, weapon)
+		_fire_laser_at(weapon)
 	else:
 		print("[Player] match: NO BRANCH MATCHED, weapon_id=", weapon.weapon_id)
 
@@ -496,6 +496,21 @@ func _find_closest_enemy(max_range: float) -> Vector2:
 	if closest:
 		return closest.global_position
 	return Vector2.ZERO
+
+func _find_farthest_enemy_in_range(max_range: float) -> Node2D:
+	var enemy_root = game_manager.get("enemy_root")
+	if not enemy_root or not is_instance_valid(enemy_root):
+		return null
+	var farthest: Node2D = null
+	var farthest_dist_sq: float = -1.0
+	for enemy in enemy_root.get_children():
+		if not is_instance_valid(enemy) or not enemy is Node2D:
+			continue
+		var dist = global_position.distance_to(enemy.global_position)
+		if dist <= max_range and dist * dist > farthest_dist_sq:
+			farthest_dist_sq = dist * dist
+			farthest = enemy
+	return farthest
 
 func _fire_missiles_at(target_pos: Vector2, weapon) -> void:
 	_debug("firing missiles at " + str(target_pos))
@@ -648,8 +663,8 @@ func _fire_single_railgun(target_pos: Vector2) -> void:
 			game_manager
 		)
 
-func _fire_laser_at(target_pos: Vector2, weapon: WeaponData) -> void:
-	print("[Player] _fire_laser_at ENTRY: target=", target_pos, " weapon=", weapon.display_name, " weapon_id=", weapon.weapon_id)
+func _fire_laser_at(weapon: WeaponData) -> void:
+	print("[Player] _fire_laser_at ENTRY: weapon=", weapon.display_name, " weapon_id=", weapon.weapon_id)
 	SoundManager.play_sfx("shoot_laser")
 	if not game_manager:
 		print("[Player] _fire_laser_at FAIL: no game_manager")
@@ -669,17 +684,22 @@ func _fire_laser_at(target_pos: Vector2, weapon: WeaponData) -> void:
 	bullet_root.add_child(laser)
 	laser.global_position = global_position
 
-	var dir = (target_pos - global_position).normalized()
-	laser.owner_player = self
+	var dir = Vector2.RIGHT
+	var farthest = _find_farthest_enemy_in_range(weapon.range)
+	if farthest != null:
+		dir = (farthest.global_position - global_position).normalized()
+
 	laser.setup(
 		dir,
 		weapon.damage,
-		laser_duration,
-		crit_rate,
-		crit_mult,
+		weapon.duration,
+		weapon.crit_rate,
+		weapon.crit_mult,
 		game_manager,
-		laser_width,
-		laser_shield_mult
+		weapon.beam_width,
+		laser_shield_mult,
+		self,
+		weapon.range
 	)
 	print("[Player] _fire_laser_at: DONE, laser instance=", laser)
 

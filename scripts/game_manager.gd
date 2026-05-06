@@ -83,10 +83,10 @@ var railgun_fire_interval: float = 0.6
 var railgun_crit_bonus: float = 0.0
 var railgun_multi_count: int = 1
 
-var laser_damage: float = 12.0
-var laser_duration: float = 2.0
-var laser_width: float = 16.0
-var laser_fire_interval: float = 2.5
+var laser_damage: float = 28.0
+var laser_duration: float = 2.4
+var laser_width: float = 24.0
+var laser_fire_interval: float = 2.4
 var laser_shield_mult: float = 1.0
 
 var current_xp: float = 0.0
