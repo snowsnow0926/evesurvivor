@@ -81,6 +81,7 @@ func _on_upgrade_requested() -> void:
 
 func _on_upgrade_selected(upgrade_id: String) -> void:
 	SoundManager.play_sfx("upgrade_select")
+	game_manager.apply_upgrade(upgrade_id)
 
 func _on_retreat_requested() -> void:
 	SoundManager.play_sfx("retreat_success")

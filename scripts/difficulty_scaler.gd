@@ -39,7 +39,11 @@ func _get_combo_multiplier() -> float:
 		return 1.5
 	return 1.0
 
+func on_difficulty_tick() -> void:
+	pass
+
 func reset() -> void:
 	combo_count = 0
 	combo_timer = 0.0
 	combo_multiplier = 1.0
+	_difficulty_tick_counter = 0

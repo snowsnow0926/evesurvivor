@@ -1,0 +1,1 @@
+fix: add missing on_difficulty_tick method and connect upgrade selection
