@@ -1,5 +1,9 @@
 # Godot-specific ignores
-.godot/
+.godot/imported/
+.godot/shader_cache/
+.godot/exported/
+.godot/.gdignore
+.godot/editor/
 *.import
 
 # Build outputs

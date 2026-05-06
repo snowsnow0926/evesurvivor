@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://b5x damage_number01"]
+[gd_scene load_steps=2 format=3 uid="uid://cf8dmgnum001"]
 
 [ext_resource type="Script" path="res://scripts/damage_number.gd" id="1_dmgnum"]
 
