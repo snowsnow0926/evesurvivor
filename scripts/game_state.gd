@@ -31,7 +31,7 @@ const SAVE_PATH := "user://game_save.cfg"
 const SAVE_SLOTS := 3
 const DEBUG := false
 
-var current_save_slot: int = -1
+var current_save_slot: int = 0  # 默认存档位 0，避免 -1 导致存档路径错误
 
 func _debug(msg: String) -> void:
 	if DEBUG:
@@ -123,20 +123,20 @@ func load_game() -> bool:
 	highest_level = cfg.get_value("progress", "highest_level", 1)
 	ship_damaged = cfg.get_value("progress", "ship_damaged", false)
 	first_run = cfg.get_value("progress", "first_run", true)
-	unlocked_chapters = cfg.get_value("progress", "unlocked_chapters", [1])
-	unlocked_stages = cfg.get_value("progress", "unlocked_stages", {})
-	cleared_stages = cfg.get_value("progress", "cleared_stages", {})
+	unlocked_chapters = cfg.get_value("progress", "unlocked_chapters", [1]) as Array
+	unlocked_stages = cfg.get_value("progress", "unlocked_stages", {}) as Dictionary
+	cleared_stages = cfg.get_value("progress", "cleared_stages", {}) as Dictionary
 
 	selected_race_id = cfg.get_value("player", "selected_race_id", 0)
 	selected_ship_id = cfg.get_value("player", "selected_ship_id", 1)
 	player_name = cfg.get_value("player", "player_name", "")
 
-	unlocked_ships = cfg.get_value("ships", "unlocked_ships", [])
-	upgraded_ships = cfg.get_value("ships", "upgraded_ships", {})
+	unlocked_ships = cfg.get_value("ships", "unlocked_ships", []) as Array
+	upgraded_ships = cfg.get_value("ships", "upgraded_ships", {}) as Dictionary
 
-	equipment_inventory = cfg.get_value("equipment", "equipment_inventory", [])
-	equipped_weapons = cfg.get_value("equipment", "equipped_weapons", {})
-	equipped_armor = _migrate_armor_data(cfg.get_value("equipment", "equipped_armor", {}))
+	equipment_inventory = cfg.get_value("equipment", "equipment_inventory", []) as Array
+	equipped_weapons = cfg.get_value("equipment", "equipped_weapons", {}) as Dictionary
+	equipped_armor = _migrate_armor_data(cfg.get_value("equipment", "equipped_armor", {}) as Dictionary)
 
 	print("[GameState] Game loaded from ", SAVE_PATH)
 	return true
@@ -193,6 +193,8 @@ func save_save_slot(slot_idx: int) -> bool:
 	return true
 
 func load_save_slot(slot_idx: int) -> bool:
+	# Set current_save_slot BEFORE loading, so _ready() picks the right path
+	current_save_slot = slot_idx
 	var path = get_save_slot_path(slot_idx)
 	if not FileAccess.file_exists(path):
 		print("[GameState] No save file for slot %d" % slot_idx)
@@ -213,22 +215,22 @@ func load_save_slot(slot_idx: int) -> bool:
 	highest_level = cfg.get_value("progress", "highest_level", 1)
 	ship_damaged = cfg.get_value("progress", "ship_damaged", false)
 	first_run = cfg.get_value("progress", "first_run", false)
-	unlocked_chapters = cfg.get_value("progress", "unlocked_chapters", [1])
-	unlocked_stages = cfg.get_value("progress", "unlocked_stages", {})
-	cleared_stages = cfg.get_value("progress", "cleared_stages", {})
+	unlocked_chapters = cfg.get_value("progress", "unlocked_chapters", [1]) as Array
+	unlocked_stages = cfg.get_value("progress", "unlocked_stages", {}) as Dictionary
+	cleared_stages = cfg.get_value("progress", "cleared_stages", {}) as Dictionary
 
 	selected_race_id = cfg.get_value("player", "selected_race_id", 0)
 	selected_ship_id = cfg.get_value("player", "selected_ship_id", 1)
 	player_name = cfg.get_value("player", "player_name", "")
 
-	unlocked_ships = cfg.get_value("ships", "unlocked_ships", [])
-	upgraded_ships = cfg.get_value("ships", "upgraded_ships", {})
+	unlocked_ships = cfg.get_value("ships", "unlocked_ships", []) as Array
+	upgraded_ships = cfg.get_value("ships", "upgraded_ships", {}) as Dictionary
 
-	research_progress = cfg.get_value("research", "research_progress", {})
+	research_progress = cfg.get_value("research", "research_progress", {}) as Dictionary
 
-	equipment_inventory = cfg.get_value("equipment", "equipment_inventory", [])
-	equipped_weapons = cfg.get_value("equipment", "equipped_weapons", {})
-	equipped_armor = _migrate_armor_data(cfg.get_value("equipment", "equipped_armor", {}))
+	equipment_inventory = cfg.get_value("equipment", "equipment_inventory", []) as Array
+	equipped_weapons = cfg.get_value("equipment", "equipped_weapons", {}) as Dictionary
+	equipped_armor = _migrate_armor_data(cfg.get_value("equipment", "equipped_armor", {}) as Dictionary)
 
 	print("[GameState] Loaded from slot %d: %s" % [slot_idx, path])
 	return true

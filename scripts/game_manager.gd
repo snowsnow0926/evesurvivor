@@ -122,6 +122,8 @@ var current_stage: StageData.StageInfo
 var current_chapter_id: int = 1
 var boss_remaining: int = 0
 var is_boss_phase: bool = false
+var is_boss_infinite: bool = false
+var _timer_expired_once: bool = false
 
 var session_loot: Array = []
 
@@ -496,11 +498,15 @@ func start_run_timer() -> void:
 		else:
 			time_remaining = FIRST_RUN_DURATION
 		elites_killed_this_run = 0
+		_timer_expired_once = false
+		is_boss_infinite = false
 		GameState.on_run_started()
 	else:
 		has_timer = false
 		is_unlimited_mode = false
 		time_remaining = 0.0
+		_timer_expired_once = false
+		is_boss_infinite = false
 
 func _process(delta: float) -> void:
 	if is_game_over or is_paused or is_upgrading:

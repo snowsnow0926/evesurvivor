@@ -15,6 +15,7 @@ extends Control
 @onready var repair_panel: Control = $RepairPanel
 @onready var crafting_panel: Control = $CraftingPanel
 @onready var storage_panel: Control = $StoragePanel
+@onready var save_ui: Control = $SaveUI
 
 var base_pause_menu: Control
 var current_panel: Control = null
@@ -37,8 +38,24 @@ func _ready() -> void:
 	_bind_buttons()
 	_update_currency_display()
 	base_pause_menu = find_child("BasePauseMenu", true, false)
+	_connect_save_ui_signals()
 	if GameState.player_name.is_empty() or GameState.first_run:
 		get_tree().change_scene_to_file("res://scenes/CharacterCreate.tscn")
+
+func _connect_save_ui_signals() -> void:
+	if save_ui and save_ui.has_signal("save_completed"):
+		save_ui.save_completed.connect(_on_save_completed)
+	if save_ui and save_ui.has_signal("back_requested"):
+		save_ui.back_requested.connect(_on_save_ui_back)
+
+func _on_save_completed(slot_idx: int) -> void:
+	var popup = AcceptDialog.new()
+	popup.dialog_text = "存档已保存到位置 %d" % (slot_idx + 1)
+	get_tree().current_scene.add_child(popup)
+	popup.popup_centered()
+
+func _on_save_ui_back() -> void:
+	pass
 
 func _bind_buttons() -> void:
 	if repair_btn:
@@ -208,3 +225,11 @@ func _on_start_battle() -> void:
 func _show_no_weapon_warning() -> void:
 	no_weapon_warning.visible = true
 	warning_timer = 3.0
+
+func open_save_ui_for_save() -> void:
+	if save_ui:
+		save_ui.open_as(save_ui.Mode.SAVE)
+
+func open_save_ui_for_load() -> void:
+	if save_ui:
+		save_ui.open_as(save_ui.Mode.LOAD)

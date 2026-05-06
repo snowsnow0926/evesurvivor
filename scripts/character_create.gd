@@ -9,6 +9,7 @@ const ShipData = preload("res://resources/ship_data.gd")
 
 var selected_race_id: RaceData.RaceID = RaceData.RaceID.HUMAN
 var race_buttons: Array = []
+var _selected_slot: int = 0  # 0-based save slot, default to slot 0 for new games
 
 func _ready() -> void:
 	# 为 PanelContainer 设置默认样式，防止 add_theme_style_override 时 rp_style 为 null
@@ -207,8 +208,10 @@ func _on_confirm() -> void:
 	GameState.minerals_high = 200000
 	GameState.selected_ship_id = ShipData.ShipID.FRIGATE
 	GameState.first_run = false
-	GameState.current_save_slot = 0
-	GameState.save_save_slot(0)
+	# Use the selected slot so BaseScene's _ready() loads the right data
+	# 使用 _selected_slot 指定的槽位（由 SaveUI 打开时通过 GameState.current_save_slot 传入）
+	GameState.current_save_slot = _selected_slot
+	GameState.save_save_slot(_selected_slot)
 	get_tree().change_scene_to_file("res://scenes/BaseScene.tscn")
 
 func _on_back() -> void:

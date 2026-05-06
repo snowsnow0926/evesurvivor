@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://d1ssqpenrgm4a" path="res://scripts/crafting_table.gd" id="3_craft"]
 [ext_resource type="Script" uid="uid://cgxiak3fj5gsl" path="res://scripts/ship_storage.gd" id="4_storage"]
 [ext_resource type="Script" uid="uid://1wq6kw27revi" path="res://scripts/base_pause_menu.gd" id="8_pause"]
+[ext_resource type="Script" uid="uid://csaveui001" path="res://scripts/save_ui.gd" id="9_save"]
 
 [node name="BaseScene" type="Control" unique_id=492705084]
 layout_mode = 3
@@ -415,3 +416,69 @@ text = "返回主菜单"
 [node name="QuitBtn" type="Button" parent="BasePauseMenu/Panel/VBox" unique_id=359427005]
 layout_mode = 2
 text = "结束游戏"
+
+[node name="SaveUI" type="Control" parent="." unique_id=csaveui001]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("9_save")
+
+[node name="BG" type="ColorRect" parent="SaveUI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Panel" type="PanelContainer" parent="SaveUI"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -240.0
+offset_right = 320.0
+offset_bottom = 240.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="SaveUI/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="SaveUI/Panel/VBox"]
+layout_mode = 2
+text = "读取存档"
+horizontal_alignment = 1
+
+[node name="SlotsContainer" type="VBoxContainer" parent="SaveUI/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HSep" type="HSeparator" parent="SaveUI/Panel/VBox"]
+layout_mode = 2
+
+[node name="BtnRow" type="HBoxContainer" parent="SaveUI/Panel/VBox"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 12
+
+[node name="ConfirmBtn" type="Button" parent="SaveUI/Panel/VBox/BtnRow"]
+layout_mode = 2
+visible = false
+text = "确认"
+
+[node name="NewGameBtn" type="Button" parent="SaveUI/Panel/VBox/BtnRow"]
+layout_mode = 2
+text = "新建游戏"
+
+[node name="BackBtn" type="Button" parent="SaveUI/Panel/VBox/BtnRow"]
+layout_mode = 2
+text = "返回"

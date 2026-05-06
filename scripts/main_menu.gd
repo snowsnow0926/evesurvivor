@@ -22,6 +22,7 @@ func _ready() -> void:
 		repairs_btn.pressed.connect(_on_repair_pressed)
 	save_ui.save_loaded.connect(_on_save_loaded)
 	save_ui.new_game_requested.connect(_on_new_game_requested)
+	save_ui.save_completed.connect(_on_save_completed)
 
 func _update_display() -> void:
 	if coin_label:
@@ -52,6 +53,9 @@ func _on_load_game_pressed() -> void:
 	save_ui.visible = true
 
 func _on_save_loaded(_slot_idx: int) -> void:
+	save_ui.visible = false
+
+func _on_save_completed(slot_idx: int) -> void:
 	save_ui.visible = false
 
 func _on_new_game_requested() -> void:
