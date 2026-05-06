@@ -24,18 +24,18 @@ func _ready() -> void:
 	hp_bar_bg = $HPBarBg
 	if polygon:
 		polygon.rotation = PI / 2
-	scale = Vector2(3.0, 3.0)
+	_visual_scale = 1.2
 	_update_shader_params()
 	_death_particle_color = Color(0.5, 0.0, 0.5, 1.0)
 	_init_lock()
 	setup_icon()
 
 func setup_icon() -> void:
-	var tex: Texture2D = ShipIconGenerator.get_texture(ShipIconGenerator.Category.SHIP, "npcbattleCruiser")
+	var tex: Texture2D = ShipIconGenerator.get_texture(ShipIconGenerator.Category.ENEMY, "boss_void")
 	if tex != null:
 		_icon_tex = tex
 		ship_sprite.texture = tex
-		ship_sprite.material = _tint_mat
+		ship_sprite.material = null
 		ship_sprite.visible = true
 		ship_sprite.offset = Vector2.ZERO
 		polygon.visible = false
@@ -121,18 +121,11 @@ func setup_boss(gm: Node2D, b_hp: float = 500.0, b_damage: float = 15.0, b_speed
 	_setup_tonnage_icon(tonnage_chapter)
 
 func _setup_tonnage_icon(cid: int) -> void:
-	var icon_name := "npcbattleCruiser"
-	match cid:
-		1: icon_name = "npcdestroyer"
-		2: icon_name = "npccruiser"
-		3: icon_name = "npcbattleCruiser"
-		4: icon_name = "npcbattleship"
-		5: icon_name = "npcdreadnought"
-	var tex: Texture2D = ShipIconGenerator.get_texture(ShipIconGenerator.Category.SHIP, icon_name)
+	var tex: Texture2D = ShipIconGenerator.get_texture(ShipIconGenerator.Category.ENEMY, "boss_void")
 	if tex != null:
 		_icon_tex = tex
 		ship_sprite.texture = tex
-		ship_sprite.material = _tint_mat
+		ship_sprite.material = null
 		ship_sprite.visible = true
 		ship_sprite.offset = Vector2.ZERO
 		polygon.visible = false

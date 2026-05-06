@@ -6,9 +6,18 @@ func _debug(msg: String) -> void:
 	if DEBUG:
 		print("[Player] ", msg)
 
+const RaceData = preload("res://resources/race_data.gd")
 const ShipData = preload("res://resources/ship_data.gd")
 const WeaponData = preload("res://resources/weapon_data.gd")
 const ShipIconGenerator = preload("res://scripts/ship_icon_generator.gd")
+
+const _RACE_ICON_MAP: Dictionary = {
+	RaceData.RaceID.HUMAN:   "player_human",
+	RaceData.RaceID.ORC:     "player_orc",
+	RaceData.RaceID.PLANT:   "player_plant",
+	RaceData.RaceID.SILICON: "player_silicon",
+	RaceData.RaceID.DIVINE:  "player_human",
+}
 
 var game_manager: Node2D
 
@@ -92,13 +101,25 @@ func set_ship_icon() -> void:
 	var sid = int(GameState.selected_ship_id)
 	if sid == 0:
 		sid = ShipData.ShipID.FRIGATE
-	var icon_id: String = _SHIP_ICON_MAP.get(sid, "frigate")
+
+	var icon_id: String = ""
+	var race_id: int = GameState.selected_race_id as int
+	var race_icon: String = _RACE_ICON_MAP.get(race_id, "")
+	if not race_icon.is_empty():
+		var race_entry: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.SHIP, race_icon)
+		if race_entry != null and race_entry.get_texture() != null:
+			icon_id = race_icon
+
+	if icon_id.is_empty():
+		icon_id = _SHIP_ICON_MAP.get(sid, "frigate")
+
 	var entry: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.SHIP, icon_id)
 	if entry == null:
 		return
 	var tex: Texture2D = entry.get_texture()
 	if tex != null and ship_sprite != null:
 		ship_sprite.texture = tex
+		ship_sprite.scale = Vector2(0.3, 0.3)
 		ship_sprite.visible = true
 		if polygon != null:
 			polygon.visible = false

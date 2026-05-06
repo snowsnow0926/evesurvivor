@@ -27,7 +27,7 @@ var _icon_tex: Texture2D
 var _tint_mat: ShaderMaterial
 
 # === Visual Identity (subclasses override) ===
-var _visual_scale: float = 1.0
+var _visual_scale: float = 0.3
 var _tint_mult: float = 1.0
 var _base_tint: Color = Color(1.0, 0.3, 0.3)
 var _stage_visual_level: int = 0
@@ -98,7 +98,7 @@ func set_elite(val: bool) -> void:
 
 func _apply_elite_appearance() -> void:
 	_base_tint = elite_glow_color
-	_visual_scale = 1.4
+	_visual_scale = 0.42
 	max_hp = int(float(max_hp) * 1.5)
 	hp = max_hp
 	damage *= 1.5
@@ -167,7 +167,7 @@ func setup_enemy(gm: Node2D, e_hp: float, e_damage: float, e_speed: float, e_shi
 
 func _apply_stage_visual(level: int) -> void:
 	_stage_visual_level = level
-	_visual_scale = 1.0 + (level - 1) * 0.05
+	_visual_scale = 0.3 + (level - 1) * 0.05
 	_tint_mult = 0.6 + (level - 1) * 0.12
 	var extra := (level - 1) * 2
 	_death_particle_count = maxf(_death_particle_count, 12) + extra
@@ -185,7 +185,7 @@ func _apply_chapter_icon() -> void:
 	_icon_tex = entry.get_texture()
 	if ship_sprite != null:
 		ship_sprite.texture = _icon_tex
-		ship_sprite.material = _tint_mat
+		ship_sprite.material = null
 		ship_sprite.visible = true
 	if polygon != null:
 		polygon.visible = false
@@ -261,7 +261,7 @@ func set_enemy_icon() -> void:
 	_icon_tex = entry.get_texture()
 	if ship_sprite != null:
 		ship_sprite.texture = _icon_tex
-		ship_sprite.material = _tint_mat
+		ship_sprite.material = null
 		ship_sprite.visible = true
 	if polygon != null:
 		polygon.visible = false

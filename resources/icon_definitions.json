@@ -35,11 +35,11 @@
 		}
 	],
 	"enemies": [
-		{
-			"id": "enemy_melee",
+{
+		"id": "enemy_melee",
 			"name_en": "Melee Enemy",
 			"name_zh": "近战敌人",
-			"texture_path": "res://assets/32/npcdestroyer_32.png",
+			"texture_path": "res://assets/newship/enemy/EnemyMeleefrigate (1).png",
 			"tonnage": "destroyer",
 			"path": [
 				["M", 50.0, 20.0],
@@ -53,10 +53,18 @@
 			]
 		},
 		{
-			"id": "enemy_raven",
+			"id": "boss_void",
+			"name_en": "Boss Void",
+			"name_zh": "虚空领主",
+			"texture_path": "res://assets/newship/enemy/BossVoid (1).png",
+			"tonnage": "boss",
+			"path": []
+		},
+	{
+		"id": "enemy_raven",
 			"name_en": "Raven Enemy",
 			"name_zh": "乌鸦型敌机",
-			"texture_path": "res://assets/32/npcfrigate_32.png",
+			"texture_path": "res://assets/newship/enemy/EnemyRaven (1).png",
 			"tonnage": "frigate",
 			"path": [
 				["M", 50.0, 25.0],
@@ -70,7 +78,7 @@
 			"id": "enemy_sentry",
 			"name_en": "Sentry Turret",
 			"name_zh": "哨兵炮台",
-			"texture_path": "res://assets/32/npcbattleCruiser_32.png",
+			"texture_path": "res://assets/newship/enemy/EnemySentry (1).png",
 			"tonnage": "battlecruiser",
 			"path": [
 				["M", 50.0, 30.0],
@@ -95,7 +103,7 @@
 			"id": "enemy_melee_battlecruiser",
 			"name_en": "Melee Enemy (Battlecruiser)",
 			"name_zh": "近战敌人-战列巡洋舰",
-			"texture_path": "res://assets/32/npcbattleCruiser_32.png",
+			"texture_path": "res://assets/newship/enemy/EnemySentry (1).png",
 			"tonnage": "battlecruiser",
 			"path": []
 		},
@@ -111,7 +119,7 @@
 			"id": "enemy_raven_battlecruiser",
 			"name_en": "Raven Enemy (Battlecruiser)",
 			"name_zh": "乌鸦型敌机-战列巡洋舰",
-			"texture_path": "res://assets/32/npcbattleCruiser_32.png",
+			"texture_path": "res://assets/newship/enemy/EnemySentry (1).png",
 			"tonnage": "battlecruiser",
 			"path": []
 		},
@@ -127,7 +135,7 @@
 			"id": "enemy_sentry_battlecruiser",
 			"name_en": "Sentry Turret (Battlecruiser)",
 			"name_zh": "哨兵炮台-战列巡洋舰",
-			"texture_path": "res://assets/32/npcbattleCruiser_32.png",
+			"texture_path": "res://assets/newship/enemy/EnemySentry (1).png",
 			"tonnage": "battlecruiser",
 			"path": []
 		},
@@ -181,6 +189,34 @@
 		}
 	],
 	"ships": [
+		{
+			"id": "player_human",
+			"name_en": "Human Ship",
+			"name_zh": "人类舰船",
+			"texture_path": "res://assets/newship/player/人类.png",
+			"path": []
+		},
+		{
+			"id": "player_orc",
+			"name_en": "Orc Ship",
+			"name_zh": "兽人舰船",
+			"texture_path": "res://assets/newship/player/兽人.png",
+			"path": []
+		},
+		{
+			"id": "player_plant",
+			"name_en": "Plant Ship",
+			"name_zh": "植物舰船",
+			"texture_path": "res://assets/newship/player/植物.png",
+			"path": []
+		},
+		{
+			"id": "player_silicon",
+			"name_en": "Silicon Ship",
+			"name_zh": "硅基舰船",
+			"texture_path": "res://assets/newship/player/硅基.png",
+			"path": []
+		},
 		{
 			"id": "battleship",
 			"name_en": "Battleship",
@@ -527,7 +563,7 @@
 			"id": "npcbattleCruiser",
 			"name_en": "NPC Battlecruiser",
 			"name_zh": "NPC战列巡洋舰",
-			"texture_path": "res://assets/32/npcbattleCruiser_32.png",
+			"texture_path": "res://assets/newship/enemy/EnemySentry (1).png",
 			"path": []
 		},
 		{
@@ -541,7 +577,7 @@
 			"id": "npcdestroyer",
 			"name_en": "NPC Destroyer",
 			"name_zh": "NPC驱逐舰",
-			"texture_path": "res://assets/32/npcdestroyer_32.png",
+			"texture_path": "res://assets/newship/enemy/EnemyMeleefrigate (1).png",
 			"path": []
 		},
 		{

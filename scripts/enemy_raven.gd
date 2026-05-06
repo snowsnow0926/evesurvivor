@@ -30,7 +30,7 @@ func _apply_chapter_icon() -> void:
 				_icon_tex = entry.get_texture()
 				if ship_sprite:
 					ship_sprite.texture = _icon_tex
-					ship_sprite.material = _tint_mat
+					ship_sprite.material = null
 					ship_sprite.visible = true
 				if polygon:
 					polygon.visible = false
@@ -40,7 +40,7 @@ func _apply_chapter_icon() -> void:
 				_icon_tex = entry2.get_texture()
 				if ship_sprite:
 					ship_sprite.texture = _icon_tex
-					ship_sprite.material = _tint_mat
+					ship_sprite.material = null
 					ship_sprite.visible = true
 				if polygon:
 					polygon.visible = false
@@ -50,7 +50,7 @@ func _apply_chapter_icon() -> void:
 				_icon_tex = entry3.get_texture()
 				if ship_sprite:
 					ship_sprite.texture = _icon_tex
-					ship_sprite.material = _tint_mat
+					ship_sprite.material = null
 					ship_sprite.visible = true
 				if polygon:
 					polygon.visible = false
@@ -60,7 +60,7 @@ func _apply_chapter_icon() -> void:
 				_icon_tex = entry4.get_texture()
 				if ship_sprite:
 					ship_sprite.texture = _icon_tex
-					ship_sprite.material = _tint_mat
+					ship_sprite.material = null
 					ship_sprite.visible = true
 				if polygon:
 					polygon.visible = false

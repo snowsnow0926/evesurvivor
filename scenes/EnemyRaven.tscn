@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/enemy_raven.gd" id="1_raven"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_raven"]
-radius = 12.0
+radius = 16.0
 
 [node name="EnemyRaven" type="CharacterBody2D"]
 collision_layer = 2
