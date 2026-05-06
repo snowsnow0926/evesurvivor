@@ -196,6 +196,8 @@ func _apply_race_to_player_stats(race: RaceData) -> void:
 			_:
 				pass
 	_apply_armor_bonuses()
+	if player and is_instance_valid(player) and player.has_method("_init_weapon_defaults"):
+		player._init_weapon_defaults()
 
 func _apply_armor_bonuses() -> void:
 	var ship_id = int(GameState.selected_ship_id)
@@ -492,6 +494,8 @@ func reset_for_new_run() -> void:
 		player.global_position = get_viewport_rect().size / 2.0
 		if player.has_method("reset_state"):
 			player.reset_state()
+		if player.has_method("_init_weapon_defaults"):
+			player._init_weapon_defaults()
 	else:
 		_spawn_player()
 

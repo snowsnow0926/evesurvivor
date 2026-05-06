@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://d1ssqpenrgm4a" path="res://scripts/crafting_table.gd" id="3_craft"]
 [ext_resource type="Script" uid="uid://cgxiak3fj5gsl" path="res://scripts/ship_storage.gd" id="4_storage"]
 [ext_resource type="Script" uid="uid://1wq6kw27revi" path="res://scripts/base_pause_menu.gd" id="8_pause"]
-[ext_resource type="Script" uid="uid://bsaveui002" path="res://scripts/save_ui.gd" id="9_save"]
+[ext_resource type="Script" uid="uid://btclujxwxuon5" path="res://scripts/save_ui.gd" id="9_save"]
 
 [node name="BaseScene" type="Control" unique_id=492705084]
 layout_mode = 3

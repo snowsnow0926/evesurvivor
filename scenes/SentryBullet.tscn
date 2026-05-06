@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dj3udnxthtjho"]
 
-[ext_resource type="Script" path="res://scripts/sentry_bullet.gd" id="1_sb"]
+[ext_resource type="Script" path="res://scripts/enemy_bullet.gd" id="1_sb"]
 
 [node name="SentryBullet" type="Area2D"]
 collision_layer = 4

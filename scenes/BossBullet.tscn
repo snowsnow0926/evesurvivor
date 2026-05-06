@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://drchg1sge3gro"]
 
-[ext_resource type="Script" path="res://scripts/boss_bullet.gd" id="1_bb"]
+[ext_resource type="Script" path="res://scripts/enemy_bullet.gd" id="1_bb"]
 
 [node name="BossBullet" type="Area2D"]
 collision_layer = 4

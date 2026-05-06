@@ -17,7 +17,6 @@ func _ready() -> void:
 	base_y = position.y
 	base_x = position.x
 	_start_float_animation()
-	print("[ExpOrb] _ready called at pos=", position)
 
 func _start_float_animation() -> void:
 	tween = create_tween()

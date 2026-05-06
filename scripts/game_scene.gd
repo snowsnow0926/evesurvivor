@@ -1,5 +1,11 @@
 extends Node2D
 
+const DEBUG := false
+
+func _debug(msg: String) -> void:
+	if DEBUG:
+		print("[GameScene] ", msg)
+
 const StageData = preload("res://resources/stage_data.gd")
 
 var game_manager: Node2D
@@ -66,9 +72,6 @@ func _process(_delta: float) -> void:
 	# 屏幕震动
 	_update_screen_shake(_delta)
 
-func _input(event: InputEvent) -> void:
-	pass
-
 func _on_upgrade_requested() -> void:
 	SoundManager.play_sfx("upgrade")
 	_notify_guide_level_up()
@@ -78,7 +81,6 @@ func _on_upgrade_requested() -> void:
 
 func _on_upgrade_selected(upgrade_id: String) -> void:
 	SoundManager.play_sfx("upgrade_select")
-	pass
 
 func _on_retreat_requested() -> void:
 	SoundManager.play_sfx("retreat_success")
@@ -116,6 +118,24 @@ func _show_settlement_screen(reason) -> void:
 	var kills = game_manager.total_kills
 	var level = game_manager.player_level
 
+	_record_run_and_loot(reason, kills, level, coin_gained, minerals_gained)
+	_handle_stage_progression(reason)
+
+	get_tree().paused = false
+
+	var settlement = _build_settlement_scene(reason, coin_gained, minerals_gained, kills, level)
+	if settlement == null:
+		return
+
+	var ui_root = $UIRoot
+	if ui_root:
+		ui_root.add_child(settlement)
+	else:
+		add_child(settlement)
+
+	_connect_settlement_buttons(settlement)
+
+func _record_run_and_loot(reason: String, kills: int, level: int, coin_gained: int, minerals_gained: int) -> void:
 	match reason:
 		"dead":
 			GameState.last_run_reason = "dead"
@@ -132,11 +152,9 @@ func _show_settlement_screen(reason) -> void:
 		_:
 			GameState.last_run_reason = reason
 			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, false)
-	var earned_loot: Array = []
+
 	var raw_loot: Array = game_manager.get_session_loot()
-	print("[GameScene] earned_loot: raw_loot.size()=", raw_loot.size())
 	for loot_item: Dictionary in raw_loot:
-		print("  raw: equip_id=", loot_item.get("equip_id"), " type=", loot_item.get("type"), " name=", loot_item.get("name"))
 		var item_dict := {
 			"equip_id": loot_item.get("equip_id", ""),
 			"type": loot_item.get("type", "weapon"),
@@ -154,16 +172,13 @@ func _show_settlement_screen(reason) -> void:
 			"scene_path": loot_item.get("scene_path", ""),
 			"is_new": true,
 		}
-		earned_loot.append(item_dict)
 		GameState.equipment_inventory.append(item_dict)
-	print("[GameScene] earned_loot built: size=", earned_loot.size(), " equipment_inventory.size()=", GameState.equipment_inventory.size())
 	game_manager.get_session_loot().clear()
 
-	# 撤离时：不解锁下一关（只有倒计时结束才算通关）
+func _handle_stage_progression(reason: String) -> void:
 	if reason == "retreat" and game_manager.current_stage != null:
 		var cur_chapter: int = game_manager.current_chapter_id
 		var cur_stage: int = game_manager.current_stage.id
-		# 第6关撤离时解锁下一章节
 		if cur_stage == 6:
 			match cur_chapter:
 				1: GameState.unlock_chapter(2)
@@ -172,28 +187,23 @@ func _show_settlement_screen(reason) -> void:
 				4: GameState.unlock_chapter(5)
 				5: GameState.unlock_chapter(6)
 
-	# 首次通关条件：坚持倒计时结束（5分钟）+ 击杀至少1只精英怪物 → 标记为cleared（解锁无限时模式）且解锁下一关
 	if reason == "timeout" and game_manager.current_stage != null:
 		var c_ch: int = game_manager.current_chapter_id
 		var c_st: int = game_manager.current_stage.id
 		if game_manager.elites_killed_this_run > 0:
-			# 标记为已通关（解锁无限模式）
 			var changed := GameState.clear_stage(c_ch, c_st)
-			if changed:
-				print("[GameScene] First clear: stage %d-%d unlimited mode unlocked (killed %d elite)" % [c_ch, c_st, game_manager.elites_killed_this_run])
-			# 解锁下一关
+			_debug("First clear: stage %d-%d unlimited mode unlocked (killed %d elite)" % [c_ch, c_st, game_manager.elites_killed_this_run])
 			var chapter := StageData.get_chapter(c_ch)
 			if chapter != null and c_st < chapter.stages.size() + 1:
 				GameState.unlock_stage(c_ch, c_st + 1)
 
-	get_tree().paused = false
-
-	var settlement_scene_res = load("res://scenes/SettlementScene.tscn")
-	if not settlement_scene_res:
+func _build_settlement_scene(reason: String, coin_gained: int, minerals_gained: int, kills: int, level: int) -> Node:
+	var scene_res = load("res://scenes/SettlementScene.tscn")
+	if not scene_res:
 		push_error("[GameScene] failed to load SettlementScene.tscn")
-		return
+		return null
 
-	var settlement = settlement_scene_res.instantiate()
+	var settlement = scene_res.instantiate()
 	settlement.process_mode = Node.PROCESS_MODE_ALWAYS
 
 	var result_labels = {
@@ -231,9 +241,7 @@ func _show_settlement_screen(reason) -> void:
 		earned_minerals_label.text = "+%d" % minerals_gained
 
 	if settlement.has_method("set_settlement_data"):
-		print("[GameScene] Calling set_settlement_data with earned_loot.size()=", earned_loot.size())
-		settlement.set_settlement_data(reason, kills, level, coin_gained, minerals_gained, earned_loot)
-		print("[GameScene] set_settlement_data returned")
+		settlement.set_settlement_data(reason, kills, level, coin_gained, minerals_gained, [])
 
 	var ship_status_label = settlement.get_node_or_null("Panel/VBox/ShipStatusLabel")
 	if ship_status_label:
@@ -256,15 +264,7 @@ func _show_settlement_screen(reason) -> void:
 			retry_btn.text = "重新开始"
 			retry_btn.disabled = GameState.ship_damaged
 
-	var ui_root = $UIRoot
-	if ui_root:
-		ui_root.add_child(settlement)
-	else:
-		add_child(settlement)
-
-	_connect_settlement_buttons(settlement)
-
-	print("[GameScene] SettlementScene added with kills=", kills, " level=", level, " coin=", coin_gained)
+	return settlement
 
 func _connect_settlement_buttons(settlement: Node) -> void:
 	var retry_btn = settlement.get_node_or_null("Panel/VBox/ButtonsHBox/RetryBtn")

@@ -49,20 +49,13 @@ func _ready() -> void:
 
 func _connect_buttons() -> void:
 	if retry_btn:
-		print("[SettlementScene] retry_btn found, disabled=", retry_btn.disabled, " mouse_filter=", retry_btn.mouse_filter)
 		retry_btn.pressed.connect(_on_retry_pressed)
 	if base_btn:
-		print("[SettlementScene] base_btn found, disabled=", base_btn.disabled, " mouse_filter=", base_btn.mouse_filter)
 		base_btn.pressed.connect(_on_base_pressed)
 	if menu_btn:
-		print("[SettlementScene] menu_btn found, disabled=", menu_btn.disabled, " mouse_filter=", menu_btn.mouse_filter)
 		menu_btn.pressed.connect(_on_menu_pressed)
 
 func set_settlement_data(reason: String, kills: int, level: int, coin: int, minerals: int, loot: Array = []) -> void:
-	print("[SettlementScene] set_settlement_data ENTRY: loot.size()=", loot.size(), " loot_slots.size()=", loot_slots.size())
-	for i: int in range(loot.size()):
-		var item: Dictionary = loot[i]
-		print("  loot[", i, "]: type=", item.get("type"), " name=", item.get("name"), " weapon_id=", item.get("weapon_id"), " armor_id=", item.get("armor_id"), " quality=", item.get("quality"))
 	settlement_reason = reason
 	session_kills = kills
 	session_level = level
@@ -73,7 +66,6 @@ func set_settlement_data(reason: String, kills: int, level: int, coin: int, mine
 	earned_minerals = minerals
 
 	session_loot = loot.duplicate(true)
-	print("[SettlementScene] After duplicate: session_loot.size()=", session_loot.size())
 
 	GameState.last_run_reason = reason
 
@@ -84,7 +76,7 @@ func set_settlement_data(reason: String, kills: int, level: int, coin: int, mine
 		_build_loot_list()
 
 func _gui_input(event: InputEvent) -> void:
-	print("[SettlementScene] _gui_input: ", event.as_text())
+	pass
 
 func _update_display() -> void:
 	if result_label:
@@ -145,8 +137,6 @@ func _update_display() -> void:
 			retry_btn.disabled = GameState.ship_damaged
 
 func _build_loot_list() -> void:
-	print("[SettlementScene] _build_loot_list: session_loot.size()=", session_loot.size())
-	
 	# Hide/show section label and scroll container based on loot count
 	if loot_section_label:
 		loot_section_label.visible = session_loot.size() > 0
@@ -165,7 +155,6 @@ func _build_loot_list() -> void:
 		var name_label: Label = slot.get_node_or_null("NameLabel")
 		
 		if type_label == null or name_label == null:
-			print("[SettlementScene] WARNING: Slot ", i, " missing labels!")
 			continue
 		
 		# Determine type and name
@@ -189,23 +178,19 @@ func _build_loot_list() -> void:
 		name_label.text = name_str
 		name_label.add_theme_color_override("font_color", quality_color)
 		slot.visible = true
-		print("  Slot ", i, ": type=", type_str, " name=", name_str)
 
 func set_reason(reason: String) -> void:
 	settlement_reason = reason
 	_update_display()
 
 func _on_retry_pressed() -> void:
-	print("[SettlementScene] retry pressed")
 	if GameState.ship_damaged:
 		if GameState.star_coin >= GameState.get_repair_cost():
 			GameState.repair_ship()
 	get_tree().change_scene_to_file("res://scenes/GameScene.tscn")
 
 func _on_menu_pressed() -> void:
-	print("[SettlementScene] menu pressed")
 	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
 
 func _on_base_pressed() -> void:
-	print("[SettlementScene] base pressed")
 	get_tree().change_scene_to_file("res://scenes/BaseScene.tscn")

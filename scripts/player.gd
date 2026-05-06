@@ -121,6 +121,25 @@ const _SCENE_TO_BASE_WEAPON: Dictionary = {
 	"res://scenes/LaserBeam.tscn": WeaponData.WeaponID.LASER,
 }
 
+## Sets weapon-related player_stats to their base defaults.
+## Call once at game start after race/armor bonuses are applied.
+func _init_weapon_defaults() -> void:
+	player_stats.cannon_fire_interval = 1.2
+	player_stats.cannon_pierce_count = 1
+	player_stats.cannon_explode_chance = 0.0
+	player_stats.cannon_bloodthirst = 0
+	player_stats.railgun_damage = 30.0
+	player_stats.railgun_speed = 1000.0
+	player_stats.railgun_range = 400.0
+	player_stats.railgun_fire_interval = 0.6
+	player_stats.railgun_crit_bonus = 0.0
+	player_stats.railgun_multi_count = 1
+	player_stats.laser_damage = 12.0
+	player_stats.laser_duration = 2.0
+	player_stats.laser_width = 16.0
+	player_stats.laser_fire_interval = 2.5
+	player_stats.laser_shield_mult = 1.0
+
 func _get_weapon_type_from_equipped(equipped_dict: Dictionary, scene_path: String) -> int:
 	if equipped_dict.has("shop_item_id"):
 		var sid = equipped_dict.get("shop_item_id")
@@ -173,25 +192,9 @@ func init_weapons() -> void:
 		var weapon_data = WeaponData.get_weapon(weapon_type)
 		active_weapons.append(weapon_data)
 		weapon_fire_timers[weapon_data.weapon_id] = 0.0
+		_init_weapon_defaults()
 	else:
 		_debug("loaded " + str(active_weapons.size()) + " weapon(s) from shop")
-
-	if player_stats:
-		player_stats.cannon_fire_interval = 1.2
-		player_stats.cannon_pierce_count = 1
-		player_stats.cannon_explode_chance = 0.0
-		player_stats.cannon_bloodthirst = 0
-		player_stats.railgun_damage = 30.0
-		player_stats.railgun_speed = 1000.0
-		player_stats.railgun_range = 400.0
-		player_stats.railgun_fire_interval = 0.6
-		player_stats.railgun_crit_bonus = 0.0
-		player_stats.railgun_multi_count = 1
-		player_stats.laser_damage = 12.0
-		player_stats.laser_duration = 2.0
-		player_stats.laser_width = 16.0
-		player_stats.laser_fire_interval = 2.5
-		player_stats.laser_shield_mult = 1.0
 
 func _physics_process(delta: float) -> void:
 	_physics_tick_counter += 1
@@ -657,9 +660,6 @@ func get_secondary_weapon() -> WeaponData:
 	return null
 
 func reset_state() -> void:
-	pass
-
-func _input(event: InputEvent) -> void:
 	pass
 
 func _draw() -> void:

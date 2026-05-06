@@ -25,11 +25,14 @@ const _ENEMY_SCENE_MAP: Dictionary = {
 
 const StageData = preload("res://resources/stage_data.gd")
 
+var _balance_config: Dictionary = {}
+
 var enemy_root: Node2D
 var exp_orb_root: Node2D
 var boss_warning: Node
 
 var spawn_timer: float = 0.0
+var spawn_interval: float = 2.0
 
 var boss_active: bool = false
 var boss_remaining: int = 0
@@ -42,6 +45,32 @@ signal boss_killed(boss: Node2D)
 func _init(gm: Node2D, ps: PlayerStats) -> void:
 	game_manager = gm
 	player_stats = ps
+	_load_balance_config()
+
+func _load_balance_config() -> void:
+	var path := "res://resources/game_balance.json"
+	if ResourceLoader.exists(path):
+		var res = ResourceLoader.load(path)
+		if res is Dictionary:
+			_balance_config = res
+		else:
+			var f = FileAccess.open(path, FileAccess.READ)
+			if f:
+				var json_str = f.get_as_text()
+				f.close()
+				var json = JSON.new()
+				if json.parse(json_str) == OK:
+					_balance_config = json.data if json.data is Dictionary else {}
+	else:
+		_balance_config = {}
+
+func _get_balance_value(section: String, key: String, default: int) -> int:
+	var sec = _balance_config.get(section, {})
+	if sec is Dictionary:
+		var val = sec.get(key)
+		if val is int or val is float:
+			return int(val)
+	return default
 
 func setup_references(er: Node2D, eor: Node2D, bw: Node) -> void:
 	enemy_root = er
@@ -58,6 +87,8 @@ func setup_stage(chapter_id: int, stage_id: int, player_level: int) -> void:
 	boss_active = false
 	kill_since_boss = 0
 	spawn_timer = 0.0
+	var level_bonus := 1.0 + 0.3 * (player_level - 1)
+	spawn_interval = 2.0 / (stage.density_mult * level_bonus)
 
 	if boss_warning and boss_warning.has_method("hide_warning"):
 		boss_warning.hide_warning()
@@ -75,10 +106,10 @@ func update_spawning(delta: float, current_stage: StageData.StageInfo, current_c
 	var stats_chapter: int = current_chapter_id if current_chapter_id != 6 else 1
 	var level_bonus := 1.0 + 0.3 * (player_level - 1)
 	var final_density := current_stage.density_mult * level_bonus
-	var interval := (2.0 / final_density)
+	spawn_interval = 2.0 / final_density
 
 	spawn_timer += delta
-	if spawn_timer >= interval:
+	if spawn_timer >= spawn_interval:
 		spawn_timer = 0.0
 		_spawn_enemy(current_stage, current_chapter_id, player_level)
 
@@ -137,7 +168,7 @@ func _choose_enemy_type() -> String:
 			return ENEMY_MELEE_PATH
 		else:
 			return ENEMY_SENTRY_PATH
-	elif kill_since_boss < 50:
+	elif kill_since_boss < _get_balance_value("difficulty", "boss_trigger_kills", 50):
 		if rng < 0.60:
 			return ENEMY_MELEE_PATH
 		elif rng < 0.85:
@@ -159,10 +190,12 @@ func _check_boss_warning(current_chapter_id: int, player_level: int) -> void:
 		if boss_remaining > 0:
 			_spawn_boss(current_chapter_id, player_level)
 		return
-	if kill_since_boss >= 45 and kill_since_boss < 50:
+	var warn_kills := _get_balance_value("difficulty", "boss_warning_kills", 45)
+	var spawn_kills := _get_balance_value("difficulty", "boss_trigger_kills", 50)
+	if kill_since_boss >= warn_kills and kill_since_boss < spawn_kills:
 		if boss_warning and boss_warning.has_method("show_warning"):
 			boss_warning.show_warning()
-	elif kill_since_boss >= 50:
+	elif kill_since_boss >= spawn_kills:
 		_spawn_boss(current_chapter_id, player_level)
 
 func _spawn_boss(current_chapter_id: int, player_level: int) -> void:
