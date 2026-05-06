@@ -17,10 +17,10 @@ func _ready() -> void:
 	_death_particle_color = Color(1.0, 0.5, 0.0, 1.0)
 
 func _apply_chapter_icon() -> void:
-	var cid := _chapter_id_override if _chapter_id_override > 0 else (game_manager.current_chapter_id if game_manager else 0)
-	var raven_stats := StageData.get_chapter_stats(cid, "raven")
-	var level_bonus := 1.0 + 0.3 * (game_manager.player_level - 1) if game_manager else 1.0
-	var final_strength := (game_manager.current_stage.strength_mult * level_bonus) if game_manager and game_manager.current_stage else 1.0
+	var cid: int = _chapter_id_override if _chapter_id_override > 0 else (game_manager.current_chapter_id if game_manager else 0)
+	var raven_stats: StageData.ToncalStats = StageData.get_chapter_stats(cid, "raven")
+	var level_bonus: float = 1.0 + 0.3 * (game_manager.player_level - 1) if game_manager else 1.0
+	var final_strength: float = (game_manager.current_stage.strength_mult * level_bonus) if game_manager and game_manager.current_stage else 1.0
 	explosion_damage = raven_stats.explosion_damage * final_strength
 	move_speed = raven_stats.speed * (1.0 + (final_strength - 1.0) * 0.2)
 	match cid:

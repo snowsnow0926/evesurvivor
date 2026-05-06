@@ -97,12 +97,12 @@ func set_elite(val: bool) -> void:
 		_apply_elite_appearance()
 
 func _apply_elite_appearance() -> void:
-	_tint_color = elite_glow_color
-	_scale_mult = 1.4
-	_max_hp = int(float(_max_hp) * 1.5)
-	_current_hp = _max_hp
-	enemy_damage *= 1.5
-	enemy_move_speed *= 0.8
+	_base_tint = elite_glow_color
+	_visual_scale = 1.4
+	max_hp = int(float(max_hp) * 1.5)
+	hp = max_hp
+	damage *= 1.5
+	move_speed *= 0.8
 
 func _physics_process(delta: float) -> void:
 	_update_enemy_shield_regen(delta)

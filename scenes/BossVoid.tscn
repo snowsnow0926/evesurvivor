@@ -36,3 +36,11 @@ offset_top = -24.0
 offset_right = 51.0
 offset_bottom = -22.0
 color = Color(0.8, 0.0, 0.8, 1.0)
+
+[node name="ShieldBar" type="ColorRect" parent="."]
+z_index = 1
+offset_left = -51.0
+offset_top = -20.0
+offset_right = 51.0
+offset_bottom = -18.0
+color = Color(0.2, 0.4, 1.0, 0.8)

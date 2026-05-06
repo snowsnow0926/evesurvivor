@@ -142,8 +142,9 @@ func try_drop_equipment(enemy: Node2D) -> void:
 		var sid := _weapon_id_to_shop_id(wid)
 		var shop_item = ShopItemData.get_item(sid)
 		loot_data = {
+			"equip_id": "w_%d_%d" % [sid, randi() % 100000],
 			"type": "weapon",
-			"shop_item_id": sid,
+			"weapon_id": sid,
 			"scene_path": shop_item.scene_path,
 			"quality": quality,
 			"name": shop_item.display_name,
@@ -157,7 +158,7 @@ func try_drop_equipment(enemy: Node2D) -> void:
 		}
 	else:
 		var aid := DROP_ARMOR[randi() % DROP_ARMOR.size()]
-		loot_data = {"type": "armor", "armor_id": aid, "quality": quality, "pos": enemy.global_position}
+		loot_data = {"equip_id": "a_%d_%d" % [aid, randi() % 100000], "type": "armor", "armor_id": aid, "quality": quality, "pos": enemy.global_position}
 	add_loot(loot_data)
 	_spawn_loot_effect(enemy.global_position, loot_type)
 
@@ -172,8 +173,9 @@ func spawn_boss_loot(boss_node: Node2D) -> void:
 		var sid := _weapon_id_to_shop_id(wid)
 		var shop_item = ShopItemData.get_item(sid)
 		loot_data = {
+			"equip_id": "w_%d_%d" % [sid, randi() % 100000],
 			"type": "weapon",
-			"shop_item_id": sid,
+			"weapon_id": sid,
 			"scene_path": shop_item.scene_path,
 			"quality": quality,
 			"name": shop_item.display_name,
@@ -187,7 +189,7 @@ func spawn_boss_loot(boss_node: Node2D) -> void:
 		}
 	else:
 		var aid := DROP_ARMOR[randi() % DROP_ARMOR.size()]
-		loot_data = {"type": "armor", "armor_id": aid, "quality": quality, "pos": boss_node.global_position}
+		loot_data = {"equip_id": "a_%d_%d" % [aid, randi() % 100000], "type": "armor", "armor_id": aid, "quality": quality, "pos": boss_node.global_position}
 	add_loot(loot_data)
 	_spawn_loot_effect(boss_node.global_position, loot_type)
 
@@ -969,18 +971,22 @@ func add_loot(loot_data: Dictionary) -> void:
 func get_session_loot() -> Array:
 	return session_loot
 
-func grant_loot_to_player() -> void:
+func grant_loot_to_player() -> Array:
+	var granted: Array = []
 	for loot: Dictionary in session_loot:
 		var item_dict := {
+			"equip_id": loot.get("equip_id", ""),
 			"type": loot.get("type", "weapon"),
 			"weapon_id": loot.get("weapon_id", 0),
 			"armor_id": loot.get("armor_id", 0),
 			"quality": loot.get("quality", 0),
 			"is_new": true,
 		}
+		granted.append(item_dict)
 		GameState.equipment_inventory.append(item_dict)
 	_debug("grant_loot: granted " + str(session_loot.size()) + " items to player inventory")
 	session_loot.clear()
+	return granted
 
 func _on_player_dead() -> void:
 	SoundManager.play_sfx("player_death")

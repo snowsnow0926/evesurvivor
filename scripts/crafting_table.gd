@@ -180,7 +180,7 @@ func _on_craft_pressed() -> void:
 	GameState.equipment_inventory.append(new_item)
 
 	selected_items = [null, null]
-	GameState.save_game()
+	GameState.save(GameState.current_save_slot)
 	_build_inventory()
 	_update_crafting_slots()
 
@@ -285,7 +285,7 @@ func _on_quick_craft_pressed() -> void:
 
 	if craft_count > 0:
 		result_preview.text = "一键合成完成！共合成 %d 件" % craft_count
-		GameState.save_game()
+		GameState.save(GameState.current_save_slot)
 		_build_inventory()
 	else:
 		result_preview.text = "无可用配对或星币不足"

@@ -259,7 +259,7 @@ func _on_buy() -> void:
 		return
 
 	GameState.star_coin -= selected_shop_item.star_coin_price
-	GameState.save_game()
+	GameState.save(GameState.current_save_slot)
 
 	var item_dict = selected_shop_item.to_inventory_dict()
 

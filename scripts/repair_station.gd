@@ -65,7 +65,6 @@ func _on_repair_pressed() -> void:
 	if GameState.repair_ship():
 		_build_ship_list()
 		detail_label.text = "维修完成！"
-		GameState.save_game()
 	else:
 		detail_label.text = "星币不足！"
 

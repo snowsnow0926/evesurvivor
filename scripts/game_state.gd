@@ -1,12 +1,19 @@
 extends Node
 
+const SAVE_VERSION := 2
+const SAVE_PATH := "user://game_save.cfg"
+const SAVE_SLOTS := 3
+const DEBUG := false
+
+var current_save_slot: int = 0
+
 var selected_race_id: int = 0
 var player_name: String = ""
-var selected_ship_id: int = 1  # 默认护卫舰，避免与0值混淆
+var selected_ship_id: int = 1
 var unlocked_ships: Array = []
-var unlocked_chapters: Array = [1]  # 默认章节1始终解锁
-var unlocked_stages: Dictionary = {}  # {chapter_id: [stage_ids unlocked]}
-var cleared_stages: Dictionary = {}  # {chapter_id: [stage_ids first-cleared]}
+var unlocked_chapters: Array = [1]
+var unlocked_stages: Dictionary = {}
+var cleared_stages: Dictionary = {}
 var equipment_inventory: Array = []
 var equipped_weapons: Dictionary = {}
 var equipped_armor: Dictionary = {}
@@ -27,15 +34,121 @@ var pre_run_minerals_total: int = 0
 var selected_chapter_id: int = 1
 var selected_stage_id: int = 1
 
-const SAVE_PATH := "user://game_save.cfg"
-const SAVE_SLOTS := 3
-const DEBUG := false
-
-var current_save_slot: int = 0  # 默认存档位 0，避免 -1 导致存档路径错误
+var _pending_save := false
+var _pending_slot: int = -1
+var _save_timer: Timer
 
 func _debug(msg: String) -> void:
 	if DEBUG:
 		print("[GameState] ", msg)
+
+func _ready() -> void:
+	_save_timer = Timer.new()
+	_save_timer.wait_time = 1.0
+	_save_timer.one_shot = true
+	_save_timer.timeout.connect(_do_pending_save)
+	add_child(_save_timer)
+	load_game()
+
+func _do_pending_save() -> void:
+	if _pending_save:
+		save(_pending_slot)
+		_pending_save = false
+
+func _resolve_path(slot: int) -> String:
+	if slot >= 0:
+		return "user://save_slot_%d.cfg" % slot
+	return SAVE_PATH
+
+func _collect_save_data() -> Dictionary:
+	return {
+		"meta": {
+			"version": SAVE_VERSION,
+			"saved_at": Time.get_datetime_string_from_system(),
+		},
+		"progress": {
+			"star_coin": star_coin,
+			"minerals_low": minerals_low,
+			"minerals_mid": minerals_mid,
+			"minerals_high": minerals_high,
+			"total_kills": total_kills,
+			"total_deaths": total_deaths,
+			"highest_level": highest_level,
+			"ship_damaged": ship_damaged,
+			"first_run": first_run,
+			"unlocked_chapters": unlocked_chapters,
+			"unlocked_stages": unlocked_stages,
+			"cleared_stages": cleared_stages,
+		},
+		"player": {
+			"selected_race_id": selected_race_id,
+			"selected_ship_id": selected_ship_id,
+			"player_name": player_name,
+		},
+		"ships": {
+			"unlocked_ships": unlocked_ships,
+			"upgraded_ships": upgraded_ships,
+		},
+		"research": {
+			"research_progress": research_progress,
+		},
+		"equipment": {
+			"equipment_inventory": equipment_inventory,
+			"equipped_weapons": equipped_weapons,
+			"equipped_armor": equipped_armor,
+		},
+	}
+
+func _apply_save_data(data: Dictionary) -> void:
+	var version = data.get("meta", {}).get("version", 1)
+	data = _migrate_data(version, data)
+
+	var progress = data.get("progress", {})
+	star_coin = progress.get("star_coin", 0)
+	minerals_low = progress.get("minerals_low", 0)
+	minerals_mid = progress.get("minerals_mid", 0)
+	minerals_high = progress.get("minerals_high", 0)
+	total_kills = progress.get("total_kills", 0)
+	total_deaths = progress.get("total_deaths", 0)
+	highest_level = progress.get("highest_level", 1)
+	ship_damaged = progress.get("ship_damaged", false)
+	first_run = progress.get("first_run", true)
+	unlocked_chapters = progress.get("unlocked_chapters", [1]) as Array
+	unlocked_stages = progress.get("unlocked_stages", {}) as Dictionary
+	cleared_stages = progress.get("cleared_stages", {}) as Dictionary
+
+	var player = data.get("player", {})
+	selected_race_id = player.get("selected_race_id", 0)
+	selected_ship_id = player.get("selected_ship_id", 1)
+	player_name = player.get("player_name", "")
+
+	var ships = data.get("ships", {})
+	unlocked_ships = ships.get("unlocked_ships", []) as Array
+	upgraded_ships = ships.get("upgraded_ships", {}) as Dictionary
+
+	var research = data.get("research", {})
+	research_progress = research.get("research_progress", {}) as Dictionary
+
+	var equipment = data.get("equipment", {})
+	equipment_inventory = equipment.get("equipment_inventory", []) as Array
+	equipped_weapons = equipment.get("equipped_weapons", {}) as Dictionary
+	equipped_armor = _migrate_armor_data(equipment.get("equipped_armor", {}) as Dictionary)
+
+func _migrate_data(from_version: int, data: Dictionary) -> Dictionary:
+	var v = from_version
+	if v < 2:
+		data = _migrate_v1_to_v2(data)
+		v = 2
+	data["meta"] = data.get("meta", {})
+	data["meta"]["version"] = SAVE_VERSION
+	return data
+
+func _migrate_v1_to_v2(data: Dictionary) -> Dictionary:
+	if data.has("equipment"):
+		var eq = data["equipment"]
+		if eq.has("equipped_armor"):
+			eq["equipped_armor"] = _migrate_armor_data(eq["equipped_armor"])
+	return data
 
 func _migrate_armor_data(raw) -> Dictionary:
 	if raw is Dictionary:
@@ -54,186 +167,100 @@ func _migrate_armor_data(raw) -> Dictionary:
 		return migrated
 	return {}
 
-func _ready() -> void:
-	load_game()
-
-func save_game() -> bool:
+func save(slot: int = -1) -> bool:
 	var cfg = ConfigFile.new()
-	cfg.set_value("meta", "version", 1)
-	cfg.set_value("meta", "saved_at", Time.get_datetime_string_from_system())
+	var save_data = _collect_save_data()
 
-	cfg.set_value("progress", "star_coin", star_coin)
-	cfg.set_value("progress", "minerals_low", minerals_low)
-	cfg.set_value("progress", "minerals_mid", minerals_mid)
-	cfg.set_value("progress", "minerals_high", minerals_high)
-	cfg.set_value("progress", "total_kills", total_kills)
-	cfg.set_value("progress", "total_deaths", total_deaths)
-	cfg.set_value("progress", "highest_level", highest_level)
+	cfg.set_value("meta", "version", save_data["meta"]["version"])
+	cfg.set_value("meta", "saved_at", save_data["meta"]["saved_at"])
 
-	cfg.set_value("progress", "ship_damaged", ship_damaged)
-	cfg.set_value("progress", "first_run", first_run)
-	cfg.set_value("progress", "unlocked_chapters", unlocked_chapters)
-	cfg.set_value("progress", "unlocked_stages", unlocked_stages)
-	cfg.set_value("progress", "cleared_stages", cleared_stages)
+	var progress = save_data["progress"]
+	for key in progress:
+		cfg.set_value("progress", key, progress[key])
 
-	cfg.set_value("player", "selected_race_id", selected_race_id)
-	cfg.set_value("player", "selected_ship_id", selected_ship_id)
-	cfg.set_value("player", "player_name", player_name)
+	var player = save_data["player"]
+	for key in player:
+		cfg.set_value("player", key, player[key])
 
-	cfg.set_value("ships", "unlocked_ships", unlocked_ships)
-	cfg.set_value("ships", "upgraded_ships", upgraded_ships)
+	var ships = save_data["ships"]
+	for key in ships:
+		cfg.set_value("ships", key, ships[key])
 
-	cfg.set_value("research", "research_progress", research_progress)
+	var research = save_data["research"]
+	for key in research:
+		cfg.set_value("research", key, research[key])
 
-	cfg.set_value("equipment", "equipment_inventory", equipment_inventory)
-	cfg.set_value("equipment", "equipped_weapons", equipped_weapons)
-	cfg.set_value("equipment", "equipped_armor", equipped_armor)
+	var equipment = save_data["equipment"]
+	for key in equipment:
+		cfg.set_value("equipment", key, equipment[key])
 
-	var path = get_save_slot_path(current_save_slot)
+	var path = _resolve_path(slot)
 	var err = cfg.save(path)
 	if err != OK:
-		push_error("[GameState] Failed to save game: error " + str(err))
+		push_error("[GameState] Save failed (slot %d): error %d" % [slot, err])
 		return false
-	print("[GameState] Game saved to ", path)
+	print("[GameState] Saved to slot %d: %s" % [slot if slot >= 0 else -1, path])
 	return true
 
-func load_game() -> bool:
-	var path = get_save_slot_path(current_save_slot)
+func _do_load(slot: int = -1) -> bool:
+	var path = _resolve_path(slot)
 	if not FileAccess.file_exists(path):
-		if current_save_slot >= 0:
-			print("[GameState] No save file for slot %d, trying legacy path" % current_save_slot)
-		if FileAccess.file_exists(SAVE_PATH):
-			path = SAVE_PATH
-		else:
+		if slot < 0:
 			print("[GameState] No save file found, starting fresh")
 			return false
+		print("[GameState] No save file for slot %d, trying legacy path" % slot)
+		return _do_load(-1)
 
 	var cfg = ConfigFile.new()
 	var err = cfg.load(path)
 	if err != OK:
-		push_error("[GameState] Failed to load game: error " + str(err))
+		push_error("[GameState] Load failed (slot %d): error %d" % [slot, err])
 		return false
 
-	star_coin = cfg.get_value("progress", "star_coin", 0)
-	minerals_low = cfg.get_value("progress", "minerals_low", 0)
-	minerals_mid = cfg.get_value("progress", "minerals_mid", 0)
-	minerals_high = cfg.get_value("progress", "minerals_high", 0)
-	total_kills = cfg.get_value("progress", "total_kills", 0)
-	total_deaths = cfg.get_value("progress", "total_deaths", 0)
-	highest_level = cfg.get_value("progress", "highest_level", 1)
-	ship_damaged = cfg.get_value("progress", "ship_damaged", false)
-	first_run = cfg.get_value("progress", "first_run", true)
-	unlocked_chapters = cfg.get_value("progress", "unlocked_chapters", [1]) as Array
-	unlocked_stages = cfg.get_value("progress", "unlocked_stages", {}) as Dictionary
-	cleared_stages = cfg.get_value("progress", "cleared_stages", {}) as Dictionary
+	var raw_data: Dictionary = {
+		"meta": {},
+		"progress": {},
+		"player": {},
+		"ships": {},
+		"research": {},
+		"equipment": {},
+	}
 
-	selected_race_id = cfg.get_value("player", "selected_race_id", 0)
-	selected_ship_id = cfg.get_value("player", "selected_ship_id", 1)
-	player_name = cfg.get_value("player", "player_name", "")
+	for key in cfg.get_section_keys("meta"):
+		raw_data["meta"][key] = cfg.get_value("meta", key)
+	for key in cfg.get_section_keys("progress"):
+		raw_data["progress"][key] = cfg.get_value("progress", key)
+	for key in cfg.get_section_keys("player"):
+		raw_data["player"][key] = cfg.get_value("player", key)
+	for key in cfg.get_section_keys("ships"):
+		raw_data["ships"][key] = cfg.get_value("ships", key)
+	for key in cfg.get_section_keys("research"):
+		raw_data["research"][key] = cfg.get_value("research", key)
+	for key in cfg.get_section_keys("equipment"):
+		raw_data["equipment"][key] = cfg.get_value("equipment", key)
 
-	unlocked_ships = cfg.get_value("ships", "unlocked_ships", []) as Array
-	upgraded_ships = cfg.get_value("ships", "upgraded_ships", {}) as Dictionary
-
-	equipment_inventory = cfg.get_value("equipment", "equipment_inventory", []) as Array
-	equipped_weapons = cfg.get_value("equipment", "equipped_weapons", {}) as Dictionary
-	equipped_armor = _migrate_armor_data(cfg.get_value("equipment", "equipped_armor", {}) as Dictionary)
-
-	print("[GameState] Game loaded from ", SAVE_PATH)
+	_apply_save_data(raw_data)
+	print("[GameState] Loaded from slot %d: %s" % [slot if slot >= 0 else -1, path])
 	return true
 
-func delete_save() -> void:
-	if FileAccess.file_exists(SAVE_PATH):
-		DirAccess.remove_absolute(SAVE_PATH)
-		print("[GameState] Save file deleted")
+func save_game() -> bool:
+	return save(current_save_slot)
 
-func get_save_slot_path(slot_idx: int) -> String:
-	return "user://save_slot_%d.cfg" % slot_idx
-
-func save_save_slot(slot_idx: int) -> bool:
-	if slot_idx < 0:
-		print("[GameState] No save slot selected, skipping save")
-		return false
-	var cfg = ConfigFile.new()
-	cfg.set_value("meta", "version", 1)
-	cfg.set_value("meta", "saved_at", Time.get_datetime_string_from_system())
-
-	cfg.set_value("progress", "star_coin", star_coin)
-	cfg.set_value("progress", "minerals_low", minerals_low)
-	cfg.set_value("progress", "minerals_mid", minerals_mid)
-	cfg.set_value("progress", "minerals_high", minerals_high)
-	cfg.set_value("progress", "total_kills", total_kills)
-	cfg.set_value("progress", "total_deaths", total_deaths)
-	cfg.set_value("progress", "highest_level", highest_level)
-
-	cfg.set_value("progress", "ship_damaged", ship_damaged)
-	cfg.set_value("progress", "first_run", first_run)
-	cfg.set_value("progress", "unlocked_chapters", unlocked_chapters)
-	cfg.set_value("progress", "unlocked_stages", unlocked_stages)
-	cfg.set_value("progress", "cleared_stages", cleared_stages)
-
-	cfg.set_value("player", "selected_race_id", selected_race_id)
-	cfg.set_value("player", "selected_ship_id", selected_ship_id)
-	cfg.set_value("player", "player_name", player_name)
-
-	cfg.set_value("ships", "unlocked_ships", unlocked_ships)
-	cfg.set_value("ships", "upgraded_ships", upgraded_ships)
-
-	cfg.set_value("research", "research_progress", research_progress)
-
-	cfg.set_value("equipment", "equipment_inventory", equipment_inventory)
-	cfg.set_value("equipment", "equipped_weapons", equipped_weapons)
-	cfg.set_value("equipment", "equipped_armor", equipped_armor)
-
-	var path = get_save_slot_path(slot_idx)
-	var err = cfg.save(path)
-	if err != OK:
-		push_error("[GameState] Failed to save slot %d: error %d" % [slot_idx, err])
-		return false
-	print("[GameState] Saved to slot %d: %s" % [slot_idx, path])
-	return true
+func load_game() -> bool:
+	return _do_load(current_save_slot)
 
 func load_save_slot(slot_idx: int) -> bool:
-	# Set current_save_slot BEFORE loading, so _ready() picks the right path
 	current_save_slot = slot_idx
-	var path = get_save_slot_path(slot_idx)
-	if not FileAccess.file_exists(path):
-		print("[GameState] No save file for slot %d" % slot_idx)
-		return false
+	return _do_load(slot_idx)
 
-	var cfg = ConfigFile.new()
-	var err = cfg.load(path)
-	if err != OK:
-		push_error("[GameState] Failed to load slot %d: error %d" % [slot_idx, err])
-		return false
+func save_save_slot(slot_idx: int) -> bool:
+	return save(slot_idx)
 
-	star_coin = cfg.get_value("progress", "star_coin", 0)
-	minerals_low = cfg.get_value("progress", "minerals_low", 0)
-	minerals_mid = cfg.get_value("progress", "minerals_mid", 0)
-	minerals_high = cfg.get_value("progress", "minerals_high", 0)
-	total_kills = cfg.get_value("progress", "total_kills", 0)
-	total_deaths = cfg.get_value("progress", "total_deaths", 0)
-	highest_level = cfg.get_value("progress", "highest_level", 1)
-	ship_damaged = cfg.get_value("progress", "ship_damaged", false)
-	first_run = cfg.get_value("progress", "first_run", false)
-	unlocked_chapters = cfg.get_value("progress", "unlocked_chapters", [1]) as Array
-	unlocked_stages = cfg.get_value("progress", "unlocked_stages", {}) as Dictionary
-	cleared_stages = cfg.get_value("progress", "cleared_stages", {}) as Dictionary
-
-	selected_race_id = cfg.get_value("player", "selected_race_id", 0)
-	selected_ship_id = cfg.get_value("player", "selected_ship_id", 1)
-	player_name = cfg.get_value("player", "player_name", "")
-
-	unlocked_ships = cfg.get_value("ships", "unlocked_ships", []) as Array
-	upgraded_ships = cfg.get_value("ships", "upgraded_ships", {}) as Dictionary
-
-	research_progress = cfg.get_value("research", "research_progress", {}) as Dictionary
-
-	equipment_inventory = cfg.get_value("equipment", "equipment_inventory", []) as Array
-	equipped_weapons = cfg.get_value("equipment", "equipped_weapons", {}) as Dictionary
-	equipped_armor = _migrate_armor_data(cfg.get_value("equipment", "equipped_armor", {}) as Dictionary)
-
-	print("[GameState] Loaded from slot %d: %s" % [slot_idx, path])
-	return true
+func delete_save() -> void:
+	var path = _resolve_path(current_save_slot)
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)
+		print("[GameState] Save file deleted: ", path)
 
 func reset_for_new_run() -> void:
 	pre_run_coin = star_coin
@@ -284,10 +311,7 @@ func repair_ship() -> bool:
 		return false
 	star_coin -= get_repair_cost()
 	ship_damaged = false
-	if current_save_slot >= 0:
-		save_save_slot(current_save_slot)
-	else:
-		save_game()
+	save(current_save_slot)
 	return true
 
 func add_rewards(coin: int, minrl: int) -> void:
@@ -298,10 +322,7 @@ func add_rewards(coin: int, minrl: int) -> void:
 	minerals_low += low
 	minerals_mid += mid
 	minerals_high += high
-	if current_save_slot >= 0:
-		save_save_slot(current_save_slot)
-	else:
-		save_game()
+	save(current_save_slot)
 
 func on_run_started() -> void:
 	if first_run:
@@ -334,10 +355,7 @@ func unlock_chapter(chapter_id: int) -> void:
 	if not unlocked_chapters.has(chapter_id):
 		unlocked_chapters.append(chapter_id)
 		print("[GameState] Chapter %d unlocked!" % chapter_id)
-		if current_save_slot >= 0:
-			save_save_slot(current_save_slot)
-		else:
-			save_game()
+		save(current_save_slot)
 
 func is_stage_unlocked(chapter_id: int, stage_id: int) -> bool:
 	if not unlocked_chapters.has(chapter_id):
@@ -353,10 +371,7 @@ func unlock_stage(chapter_id: int, stage_id: int) -> bool:
 		if not unlocked_stages[chapter_id].has(stage_id):
 			unlocked_stages[chapter_id].append(stage_id)
 			print("[GameState] Stage %d-%d unlocked!" % [chapter_id, stage_id])
-			if current_save_slot >= 0:
-				save_save_slot(current_save_slot)
-			else:
-				save_game()
+			save(current_save_slot)
 			return true
 	return false
 
@@ -370,10 +385,7 @@ func clear_stage(chapter_id: int, stage_id: int) -> bool:
 		if not cleared_stages[chapter_id].has(stage_id):
 			cleared_stages[chapter_id].append(stage_id)
 			print("[GameState] Stage %d-%d cleared (first clear)!" % [chapter_id, stage_id])
-			if current_save_slot >= 0:
-				save_save_slot(current_save_slot)
-			else:
-				save_game()
+			save(current_save_slot)
 			return true
 	return false
 
@@ -398,7 +410,4 @@ func reset_progress() -> void:
 	equipped_weapons = {}
 	equipped_armor = {}
 	upgraded_ships = {}
-	if current_save_slot >= 0:
-		save_save_slot(current_save_slot)
-	else:
-		save_game()
+	save(current_save_slot)

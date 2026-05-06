@@ -19,10 +19,10 @@ func _ready() -> void:
 	_death_particle_color = Color(0.5, 0.2, 1.0, 1.0)
 
 func _apply_chapter_icon() -> void:
-	var cid := _chapter_id_override if _chapter_id_override > 0 else (game_manager.current_chapter_id if game_manager else 0)
+	var cid: int = _chapter_id_override if _chapter_id_override > 0 else (game_manager.current_chapter_id if game_manager else 0)
 	var sentry_stats := StageData.get_chapter_stats(cid, "sentry")
-	var level_bonus := 1.0 + 0.3 * (game_manager.player_level - 1) if game_manager else 1.0
-	var final_strength := (game_manager.current_stage.strength_mult * level_bonus) if game_manager and game_manager.current_stage else 1.0
+	var level_bonus: float = 1.0 + 0.3 * (game_manager.player_level - 1) if game_manager else 1.0
+	var final_strength: float = (game_manager.current_stage.strength_mult * level_bonus) if game_manager and game_manager.current_stage else 1.0
 	bullet_damage = sentry_stats.damage * final_strength
 	match cid:
 		2:

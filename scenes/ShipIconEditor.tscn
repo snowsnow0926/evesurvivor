@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://b3ywq8xu2v4"]
 
 [ext_resource type="Script" uid="uid://38a00fd7-2b0f-443b-9778-e046e4f0dffc" path="res://scripts/ship_icon_editor.gd" id="1_editor"]
-[ext_resource type="Script" uid="uid://drawing_canvas" path="res://scripts/drawing_canvas.gd" id="2_canvas"]
+[ext_resource type="Script" uid="uid://drawhx01" path="res://scripts/drawing_canvas.gd" id="2_canvas"]
 
-[ext_resource type="Script" uid="uid://preview_canvas" path="res://scripts/drawing_canvas.gd" id="3_preview"]
+[ext_resource type="Script" uid="uid://prevhx01" path="res://scripts/drawing_canvas.gd" id="3_preview"]
 
 [node name="ShipIconEditor" type="Control"]
 layout_mode = 3

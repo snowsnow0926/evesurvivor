@@ -12,7 +12,7 @@ func _ready() -> void:
 	_death_particle_color = Color(1.0, 0.2, 0.2, 1.0)
 
 func _apply_chapter_icon() -> void:
-	var cid := _chapter_id_override if _chapter_id_override > 0 else (game_manager.current_chapter_id if game_manager else 0)
+	var cid: int = _chapter_id_override if _chapter_id_override > 0 else (game_manager.current_chapter_id if game_manager else 0)
 	match cid:
 		2:
 			var entry: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.ENEMY, "enemy_melee_cruiser")

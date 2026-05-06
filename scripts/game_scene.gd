@@ -82,7 +82,7 @@ func _on_upgrade_selected(upgrade_id: String) -> void:
 
 func _on_retreat_requested() -> void:
 	SoundManager.play_sfx("retreat_success")
-	_show_settlement_screen("retreat")
+	game_manager.on_retreat()
 
 func _on_player_dead() -> void:
 	_show_settlement_screen("dead")

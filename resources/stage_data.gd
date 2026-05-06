@@ -164,10 +164,11 @@ func _setup_chapters() -> void:
 		var name := "第%d关" % stage_id
 		var strength: float = stage_strengths[i]
 		var density: float = stage_strengths[i]
-		if stage_id < 6:
-			chapter1.stages.append(StageInfo.normal(stage_id, name, strength, density))
+		var is_last_stage := (stage_id == 6)
+		if not is_last_stage:
+			chapter1.stages.append(StageInfo.normal(stage_id, name, strength, density, true))
 		else:
-			chapter1.stages.append(StageInfo.boss_only(stage_id, name, strength, density))
+			chapter1.stages.append(StageInfo.boss_only(stage_id, name, strength, density, true))
 	_chapters.append(chapter1)
 
 	# 婓德之境 — 第二大关
@@ -189,10 +190,11 @@ func _setup_chapters() -> void:
 		var name := "第%d关" % stage_id
 		var strength: float = stage_strengths2[i]
 		var density: float = stage_strengths2[i]
-		if stage_id < 6:
-			chapter2.stages.append(StageInfo.normal(stage_id, name, strength, density))
+		var is_last_stage := (stage_id == 6)
+		if not is_last_stage:
+			chapter2.stages.append(StageInfo.normal(stage_id, name, strength, density, true))
 		else:
-			chapter2.stages.append(StageInfo.boss_only(stage_id, name, strength, density))
+			chapter2.stages.append(StageInfo.boss_only(stage_id, name, strength, density, true))
 	_chapters.append(chapter2)
 
 	# 德克廉深渊 — 第三大关
@@ -214,10 +216,11 @@ func _setup_chapters() -> void:
 		var name := "第%d关" % stage_id
 		var strength: float = stage_strengths3[i]
 		var density: float = stage_strengths3[i]
-		if stage_id < 6:
-			chapter3.stages.append(StageInfo.normal(stage_id, name, strength, density))
+		var is_last_stage := (stage_id == 6)
+		if not is_last_stage:
+			chapter3.stages.append(StageInfo.normal(stage_id, name, strength, density, true))
 		else:
-			chapter3.stages.append(StageInfo.boss_only(stage_id, name, strength, density))
+			chapter3.stages.append(StageInfo.boss_only(stage_id, name, strength, density, true))
 	_chapters.append(chapter3)
 
 	# 特布特前线 — 第四大关
@@ -239,10 +242,11 @@ func _setup_chapters() -> void:
 		var name := "第%d关" % stage_id
 		var strength: float = stage_strengths4[i]
 		var density: float = stage_strengths4[i]
-		if stage_id < 6:
-			chapter4.stages.append(StageInfo.normal(stage_id, name, strength, density))
+		var is_last_stage := (stage_id == 6)
+		if not is_last_stage:
+			chapter4.stages.append(StageInfo.normal(stage_id, name, strength, density, true))
 		else:
-			chapter4.stages.append(StageInfo.boss_only(stage_id, name, strength, density))
+			chapter4.stages.append(StageInfo.boss_only(stage_id, name, strength, density, true))
 	_chapters.append(chapter4)
 
 	# 维纳尔混乱之地 — 第五大关
@@ -264,10 +268,11 @@ func _setup_chapters() -> void:
 		var name := "第%d关" % stage_id
 		var strength: float = stage_strengths5[i]
 		var density: float = stage_strengths5[i]
-		if stage_id < 6:
-			chapter5.stages.append(StageInfo.normal(stage_id, name, strength, density))
+		var is_last_stage := (stage_id == 6)
+		if not is_last_stage:
+			chapter5.stages.append(StageInfo.normal(stage_id, name, strength, density, true))
 		else:
-			chapter5.stages.append(StageInfo.boss_only(stage_id, name, strength, density))
+			chapter5.stages.append(StageInfo.boss_only(stage_id, name, strength, density, true))
 	_chapters.append(chapter5)
 
 	# 血脉死域 — 第六大关
@@ -282,10 +287,11 @@ func _setup_chapters() -> void:
 		var name := "第%d关" % stage_id
 		var strength: float = stage_strengths6[i]
 		var density: float = stage_strengths6[i]
-		if stage_id < 6:
-			chapter6.stages.append(StageInfo.normal(stage_id, name, strength, density))
+		var is_last_stage := (stage_id == 6)
+		if not is_last_stage:
+			chapter6.stages.append(StageInfo.normal(stage_id, name, strength, density, true))
 		else:
-			chapter6.stages.append(StageInfo.boss_only(stage_id, name, strength, density))
+			chapter6.stages.append(StageInfo.boss_only(stage_id, name, strength, density, true))
 	_chapters.append(chapter6)
 
 static func get_chapter(chapter_id: int) -> ChapterInfo:
