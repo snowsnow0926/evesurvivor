@@ -132,7 +132,7 @@ func set_ship_icon() -> void:
 		# fall back to polygon
 		if entry.path.is_empty():
 			return
-		var polygon_points := _build_polygon_from_path(entry.path)
+		var polygon_points := ShipIconGenerator.build_polygon_from_path(entry.path)
 		if polygon_points.is_empty():
 			return
 		if polygon != null:
@@ -140,63 +140,6 @@ func set_ship_icon() -> void:
 		if ship_sprite != null:
 			ship_sprite.visible = false
 		queue_redraw()
-
-func _build_polygon_from_path(path: Array) -> PackedVector2Array:
-	var closed_polygons: Array[PackedVector2Array] = []
-	var current_open: Array[Vector2] = []
-	var last_pt := Vector2.ZERO
-	var sub_start := Vector2.ZERO
-
-	for cmd: Array in path:
-		if cmd.is_empty():
-			continue
-		var t: String = cmd[0]
-		match t:
-			"M":
-				if not current_open.is_empty() and current_open.size() >= 2:
-					closed_polygons.append(PackedVector2Array(current_open))
-				current_open.clear()
-				last_pt = Vector2(cmd[1], cmd[2])
-				current_open.append(last_pt)
-				sub_start = last_pt
-			"L":
-				var p: Vector2 = Vector2(cmd[1], cmd[2])
-				current_open.append(p)
-				last_pt = p
-			"Q":
-				if cmd.size() >= 5:
-					var p0 := last_pt
-					var p1 := Vector2(cmd[1], cmd[2])
-					var p2 := Vector2(cmd[3], cmd[4])
-					for j: int in range(1, 13):
-						var tt: float = float(j) / 12.0
-						var mt: float = 1.0 - tt
-						var pt := Vector2(
-							mt * mt * p0.x + 2.0 * mt * tt * p1.x + tt * tt * p2.x,
-							mt * mt * p0.y + 2.0 * mt * tt * p1.y + tt * tt * p2.y
-						)
-						current_open.append(pt)
-					last_pt = p2
-			"Z":
-				if not current_open.is_empty() and current_open.size() >= 2:
-					current_open.append(sub_start)
-
-	if not current_open.is_empty() and current_open.size() >= 2:
-		closed_polygons.append(PackedVector2Array(current_open))
-
-	if closed_polygons.is_empty():
-		return PackedVector2Array()
-
-	var primary := closed_polygons[0]
-	var icon_size: float = ShipIconGenerator.ICON_SIZE
-	var icon_viewbox: float = ShipIconGenerator.ICON_VIEWBOX
-	var scale_val: float = icon_size / icon_viewbox
-	var offset := Vector2(-50.0 * scale_val, -50.0 * scale_val)
-
-	var result := PackedVector2Array()
-	for p: Vector2 in primary:
-		result.append(p * scale_val + offset)
-	return result
 
 func _ready() -> void:
 	polygon = $Polygon2D
