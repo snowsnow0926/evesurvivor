@@ -81,6 +81,7 @@ func _load_slot_info(slot_idx: int) -> Dictionary:
 		"selected_race_id": cfg.get_value("player", "selected_race_id", 0),
 		"star_coin": cfg.get_value("progress", "star_coin", 0),
 		"highest_level": cfg.get_value("progress", "highest_level", 1),
+		"unlocked_stages": cfg.get_value("progress", "unlocked_stages", {}),
 	}
 
 func _create_slot_row(slot_idx: int, data: Dictionary) -> HBoxContainer:
@@ -99,9 +100,10 @@ func _create_slot_row(slot_idx: int, data: Dictionary) -> HBoxContainer:
 	else:
 		var name = data.get("player_name", "")
 		var coin = data.get("star_coin", 0)
-		var lvl = data.get("highest_level", 1)
+		var stages: Dictionary = data.get("unlocked_stages", {})
+		var progress = GameState._compute_progress_from_dict(stages)
 		var date = data.get("saved_at", "")
-		info_label.text = "%s  |  星币:%d  |  最高等级:%d  |  %s" % [name, coin, lvl, date]
+		info_label.text = "%s  |  星币:%d  |  %s  |  %s" % [name, coin, progress, date]
 		info_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
 	row.add_child(info_label)
 

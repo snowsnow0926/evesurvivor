@@ -27,6 +27,7 @@ var ship_damaged: bool = false
 var total_kills: int = 0
 var total_deaths: int = 0
 var highest_level: int = 1
+var progress_text: String = ""
 var first_run: bool = true
 var last_run_reason: String = ""
 var pre_run_coin: int = 0
@@ -41,6 +42,29 @@ var _save_timer: Timer
 func _debug(msg: String) -> void:
 	if DEBUG:
 		print("[GameState] ", msg)
+
+func _compute_progress_text() -> String:
+	if unlocked_stages.is_empty():
+		return "第1章·第1关"
+	return _compute_progress_from_dict(unlocked_stages)
+
+static func _compute_progress_from_dict(stages_dict: Dictionary) -> String:
+	if stages_dict.is_empty():
+		return "第1章·第1关"
+	var max_chapter := 1
+	var max_stage := 0
+	for chapter_id in stages_dict:
+		var ch = int(chapter_id)
+		if ch > max_chapter:
+			max_chapter = ch
+		var stages: Array = stages_dict[chapter_id]
+		for stage_id in stages:
+			var st = int(stage_id)
+			if ch == max_chapter and st > max_stage:
+				max_stage = st
+	if max_stage == 0:
+		max_stage = 1
+	return "第%d章·第%d关" % [max_chapter, max_stage]
 
 func _ready() -> void:
 	_save_timer = Timer.new()
@@ -74,6 +98,7 @@ func _collect_save_data() -> Dictionary:
 			"total_kills": total_kills,
 			"total_deaths": total_deaths,
 			"highest_level": highest_level,
+			"progress_text": _compute_progress_text(),
 			"ship_damaged": ship_damaged,
 			"first_run": first_run,
 			"unlocked_chapters": unlocked_chapters,
@@ -111,11 +136,14 @@ func _apply_save_data(data: Dictionary) -> void:
 	total_kills = progress.get("total_kills", 0)
 	total_deaths = progress.get("total_deaths", 0)
 	highest_level = progress.get("highest_level", 1)
+	progress_text = progress.get("progress_text", "")
 	ship_damaged = progress.get("ship_damaged", false)
 	first_run = progress.get("first_run", true)
 	unlocked_chapters = progress.get("unlocked_chapters", [1]) as Array
 	unlocked_stages = progress.get("unlocked_stages", {}) as Dictionary
 	cleared_stages = progress.get("cleared_stages", {}) as Dictionary
+	if progress_text.is_empty():
+		progress_text = _compute_progress_text()
 
 	var player = data.get("player", {})
 	selected_race_id = player.get("selected_race_id", 0)

@@ -125,9 +125,9 @@ func _apply_race_to_player_stats(race: RaceData) -> void:
 	var ship_base_hp = ship.base_hp if ship else 100
 	player_stats.max_hp = ship_base_hp
 	player_stats.hp = ship_base_hp
-	player_stats.shield_max = race.shield_max
-	player_stats.shield = race.shield_max
-	player_stats.shield_regen = race.shield_regen
+	player_stats.shield_max = ship.base_shield + race.shield_max
+	player_stats.shield = player_stats.shield_max
+	player_stats.shield_regen = ship.base_shield_regen + race.shield_regen
 	player_stats.move_speed = race.move_speed
 	player_stats.dodge = race.dodge_rate
 	player_stats.crit_rate = race.crit_rate
