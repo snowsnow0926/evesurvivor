@@ -12,7 +12,7 @@ var is_crit: bool = false
 var is_enemy_damage: bool = false
 
 func _ready() -> void:
-	print("[DamageNumber] _ready called")
+	pass
 
 func setup(world_pos: Vector2, amount: float, is_crit_hit: bool = false, enemy_dmg: bool = false) -> void:
 	global_position = world_pos
@@ -25,7 +25,7 @@ func setup(world_pos: Vector2, amount: float, is_crit_hit: bool = false, enemy_d
 
 	var label = $DamageLabel
 	if not label:
-		print("[DamageNumber] ERROR: DamageLabel child not found!")
+		push_error("[DamageNumber] DamageLabel child not found!")
 		return
 
 	if is_enemy_damage:
@@ -44,8 +44,6 @@ func setup(world_pos: Vector2, amount: float, is_crit_hit: bool = false, enemy_d
 		else:
 			label.add_theme_color_override("font_color", Color(1.0, 1.0, 0.8))
 			label.add_theme_font_size_override("font_size", BASE_FONT_SIZE)
-
-	print("[DamageNumber] setup done: pos=", world_pos, " amount=", damage_amount, " crit=", is_crit, " enemy=", is_enemy_damage)
 
 func _process(delta: float) -> void:
 	lifetime += delta

@@ -10,32 +10,14 @@ signal player_dead
 signal upgrade_requested
 signal game_paused(is_paused: bool)
 signal game_ended(reason: String)
-signal currency_changed(currency: int)
-signal minerals_changed(minerals: int)
-
-const ENEMY_MELEE_PATH = "res://scenes/EnemyMelee.tscn"
-const ENEMY_SENTRY_PATH = "res://scenes/EnemySentry.tscn"
-const ENEMY_RAVEN_PATH = "res://scenes/EnemyRaven.tscn"
-const BOSS_SCENE_PATH = "res://scenes/BossVoid.tscn"
 
 const _SCENE_PLAYER: PackedScene = preload("res://scenes/Player.tscn")
-const _SCENE_MELEE: PackedScene = preload("res://scenes/EnemyMelee.tscn")
-const _SCENE_SENTRY: PackedScene = preload("res://scenes/EnemySentry.tscn")
-const _SCENE_RAVEN: PackedScene = preload("res://scenes/EnemyRaven.tscn")
-const _SCENE_BOSS: PackedScene = preload("res://scenes/BossVoid.tscn")
-const _SCENE_EXP_ORB: PackedScene = preload("res://scenes/ExpOrb.tscn")
 const _SCENE_DAMAGE_NUMBER: PackedScene = preload("res://scenes/DamageNumber.tscn")
 
-const _ENEMY_SCENE_MAP: Dictionary = {
-	ENEMY_MELEE_PATH: _SCENE_MELEE,
-	ENEMY_SENTRY_PATH: _SCENE_SENTRY,
-	ENEMY_RAVEN_PATH: _SCENE_RAVEN,
-}
+const RaceData = preload("res://resources/race_data.gd")
 const ShipData = preload("res://resources/ship_data.gd")
 const StageData = preload("res://resources/stage_data.gd")
-const WeaponData = preload("res://resources/weapon_data.gd")
-const EquipmentData = preload("res://resources/equipment_data.gd")
-const ShopItemData = preload("res://resources/shop_data.gd")
+const PlayerStats = preload("res://resources/player_stats.gd")
 
 var player: Node2D
 var enemy_root: Node2D
@@ -44,314 +26,62 @@ var exp_orb_root: Node2D
 var damage_root: Node2D
 var boss_warning: Node
 
+var player_stats: PlayerStats
+var spawn_manager: SpawnManager
+var upgrade_system: UpgradeSystem
+var difficulty_scaler: DifficultyScaler
+var loot_system: LootSystem
+
+var upgrade_counts: Dictionary:
+	get: return upgrade_system.upgrade_counts if upgrade_system else {}
+
+var combo_count: int:
+	get: return difficulty_scaler.combo_count if difficulty_scaler else 0
+
+var upgrade_pool: Array:
+	get: return upgrade_system.upgrade_pool if upgrade_system else []
+
+var session_star_coin: int:
+	get: return loot_system.session_star_coin if loot_system else 0
+
+var session_minerals: int:
+	get: return loot_system.session_minerals if loot_system else 0
+
 var kill_count: int = 0
 var total_kills: int = 0
-var kill_since_boss: int = 0
-var boss_active: bool = false
-var boss_scene_path: Node2D
-
-var enemy_hp: float = 30.0
-var enemy_damage: float = 10.0
-var enemy_move_speed: float = 100.0
-var spawn_interval: float = 2.0
-var spawn_timer: float = 0.0
-
-var player_hp: int = 100
-var player_max_hp: int = 100
-var player_shield: float = 50.0
-var player_shield_max: float = 50.0
-var player_shield_regen: float = 4.0
-var player_move_speed: float = 320.0
-var player_damage: float = 15.0
-var player_dodge: float = 0.1
-var player_crit_rate: float = 0.05
-var player_crit_mult: float = 1.5
-var missile_range: float = 500.0
-var missile_speed: float = 600.0
-var player_lifesteal: float = 0.0
-var xp_boost: float = 1.0
-
-var spread_count: int = 1
-var spread_angle: float = 6.0
-var spread_damage_mult: float = 1.0
-var missile_splash_radius: float = 0.0
-var missile_splash_count: int = 0
-var mobile_fire_mult: float = 1.0
-var is_moving: bool = false
-
-var silent_hunter_level: int = 0
-
-var cannon_fire_interval: float = 1.2
-var cannon_damage: float = 25.0
-var cannon_pierce_count: int = 1
-var cannon_explode_chance: float = 0.0
-var cannon_bloodthirst: int = 0
-var cannon_rush_level: int = 0
-var cannon_vengeance_level: int = 0
-
-var railgun_damage: float = 30.0
-var railgun_speed: float = 1000.0
-var railgun_range: float = 400.0
-var railgun_fire_interval: float = 0.6
-var railgun_crit_bonus: float = 0.0
-var railgun_multi_count: int = 1
-
-var laser_damage: float = 28.0
-var laser_duration: float = 2.4
-var laser_width: float = 24.0
-var laser_fire_interval: float = 2.4
-var laser_shield_mult: float = 1.0
+var elites_killed_this_run: int = 0
+var is_game_over: bool = false
+var is_paused: bool = false
+var is_upgrading: bool = false
 
 var current_xp: float = 0.0
 var xp_to_next_level: float = 10.0
 var player_level: int = 1
 
-var session_star_coin: int = 0
-var session_minerals: int = 0
-
-var combo_count: int = 0
-var combo_timer: float = 0.0
-var combo_timeout: float = 3.0
-var combo_multiplier: float = 1.0
-
-var is_game_over: bool = false
-var is_paused: bool = false
-var is_upgrading: bool = false
-
 var time_remaining: float = 0.0
 var has_timer: bool = false
-var is_unlimited_mode: bool = false  # true = stage has been first-cleared
-var run_time_elapsed: float = 0.0  # count-up in unlimited mode
-var elites_killed_this_run: int = 0  # special enemies killed this run
+var is_unlimited_mode: bool = false
+var run_time_elapsed: float = 0.0
+var is_boss_infinite: bool = false
+var _timer_expired_once: bool = false
 const FIRST_RUN_DURATION: float = 300.0
-
-var shield_regen_timer: float = 0.0
-var lifesteal_timer: float = 0.0
-
-var upgrade_counts: Dictionary = {}
-var upgrade_pool: Array = []
 
 var current_stage: StageData.StageInfo
 var current_chapter_id: int = 1
-var boss_remaining: int = 0
-var is_boss_phase: bool = false
-var is_boss_infinite: bool = false
-var _timer_expired_once: bool = false
-
-var session_loot: Array = []
-
-const DROP_ARMOR: Array[int] = [0, 1]
-
-func try_drop_equipment(enemy: Node2D) -> void:
-	var loot_chapter: int = enemy._get_loot_tonnage_chapter() if enemy.has_method("_get_loot_tonnage_chapter") else current_chapter_id
-	var loot := StageData.get_chapter_loot(loot_chapter)
-	if randf() > loot.drop_rate:
-		return
-	var quality := _roll_equipment_quality(loot.quality_weights)
-	var loot_type := "weapon" if randf() < 0.7 else "armor"
-	var loot_data: Dictionary = {}
-	if loot_type == "weapon":
-		var wid := _get_random_weapon_id(loot.equipment_tier)
-		var sid := _weapon_id_to_shop_id(wid)
-		var shop_item = ShopItemData.get_item(sid)
-		loot_data = {
-			"equip_id": "w_%d_%d" % [sid, randi() % 100000],
-			"type": "weapon",
-			"weapon_id": sid,
-			"scene_path": shop_item.scene_path,
-			"quality": quality,
-			"name": shop_item.display_name,
-			"base_damage": shop_item.base_damage,
-			"fire_interval": shop_item.fire_interval,
-			"range": shop_item.range,
-			"crit_rate": shop_item.crit_rate,
-			"crit_mult": shop_item.crit_mult,
-			"tonnage_tier": loot.equipment_tier,
-			"pos": enemy.global_position
-		}
-	else:
-		var aid := DROP_ARMOR[randi() % DROP_ARMOR.size()]
-		loot_data = {"equip_id": "a_%d_%d" % [aid, randi() % 100000], "type": "armor", "armor_id": aid, "quality": quality, "pos": enemy.global_position}
-	add_loot(loot_data)
-	_spawn_loot_effect(enemy.global_position, loot_type)
-
-func spawn_boss_loot(boss_node: Node2D) -> void:
-	var loot_chapter: int = boss_node._get_loot_tonnage_chapter() if boss_node.has_method("_get_loot_tonnage_chapter") else current_chapter_id
-	var loot := StageData.get_chapter_loot(loot_chapter)
-	var quality := _roll_equipment_quality(loot.quality_weights)
-	var loot_type := "weapon" if randf() < 0.7 else "armor"
-	var loot_data: Dictionary = {}
-	if loot_type == "weapon":
-		var wid := _get_random_weapon_id(loot.equipment_tier)
-		var sid := _weapon_id_to_shop_id(wid)
-		var shop_item = ShopItemData.get_item(sid)
-		loot_data = {
-			"equip_id": "w_%d_%d" % [sid, randi() % 100000],
-			"type": "weapon",
-			"weapon_id": sid,
-			"scene_path": shop_item.scene_path,
-			"quality": quality,
-			"name": shop_item.display_name,
-			"base_damage": shop_item.base_damage,
-			"fire_interval": shop_item.fire_interval,
-			"range": shop_item.range,
-			"crit_rate": shop_item.crit_rate,
-			"crit_mult": shop_item.crit_mult,
-			"tonnage_tier": loot.equipment_tier,
-			"pos": boss_node.global_position
-		}
-	else:
-		var aid := DROP_ARMOR[randi() % DROP_ARMOR.size()]
-		loot_data = {"equip_id": "a_%d_%d" % [aid, randi() % 100000], "type": "armor", "armor_id": aid, "quality": quality, "pos": boss_node.global_position}
-	add_loot(loot_data)
-	_spawn_loot_effect(boss_node.global_position, loot_type)
-
-func _roll_equipment_quality(weights: Array) -> int:
-	var roll := randf()
-	var cumulative := 0.0
-	for i in range(weights.size()):
-		cumulative += weights[i]
-		if roll < cumulative:
-			return i
-	return 0
-
-func _get_random_weapon_id(tier: int) -> int:
-	var pool: Array = []
-	match tier:
-		0:
-			pool = [
-				WeaponData.WeaponID.SMALL_MISSILE,
-				WeaponData.WeaponID.SMALL_CANNON,
-				WeaponData.WeaponID.SMALL_RAILGUN,
-				WeaponData.WeaponID.SMALL_LASER,
-			]
-		1:
-			pool = [
-				WeaponData.WeaponID.MEDIUM_MISSILE,
-				WeaponData.WeaponID.MEDIUM_CANNON,
-				WeaponData.WeaponID.MEDIUM_RAILGUN,
-				WeaponData.WeaponID.MEDIUM_LASER,
-			]
-		2:
-			pool = [
-				WeaponData.WeaponID.LARGE_MISSILE,
-				WeaponData.WeaponID.LARGE_CANNON,
-				WeaponData.WeaponID.LARGE_RAILGUN,
-				WeaponData.WeaponID.LARGE_LASER,
-			]
-		3:
-			pool = [
-				WeaponData.WeaponID.FLAGSHIP_MISSILE,
-				WeaponData.WeaponID.FLAGSHIP_CANNON,
-				WeaponData.WeaponID.FLAGSHIP_RAILGUN,
-				WeaponData.WeaponID.FLAGSHIP_LASER,
-			]
-		_:
-			pool = [
-				WeaponData.WeaponID.SMALL_MISSILE,
-				WeaponData.WeaponID.SMALL_CANNON,
-				WeaponData.WeaponID.SMALL_RAILGUN,
-				WeaponData.WeaponID.SMALL_LASER,
-			]
-	return pool[randi() % pool.size()]
-
-func _weapon_id_to_shop_id(wid: int) -> int:
-	var mapping: Dictionary = {
-		WeaponData.WeaponID.SMALL_MISSILE: ShopItemData.ShopItemID.SMALL_MISSILE,
-		WeaponData.WeaponID.SMALL_CANNON: ShopItemData.ShopItemID.SMALL_CANNON,
-		WeaponData.WeaponID.SMALL_RAILGUN: ShopItemData.ShopItemID.SMALL_RAILGUN,
-		WeaponData.WeaponID.SMALL_LASER: ShopItemData.ShopItemID.SMALL_LASER,
-		WeaponData.WeaponID.MEDIUM_MISSILE: ShopItemData.ShopItemID.MEDIUM_MISSILE,
-		WeaponData.WeaponID.MEDIUM_CANNON: ShopItemData.ShopItemID.MEDIUM_CANNON,
-		WeaponData.WeaponID.MEDIUM_RAILGUN: ShopItemData.ShopItemID.MEDIUM_RAILGUN,
-		WeaponData.WeaponID.MEDIUM_LASER: ShopItemData.ShopItemID.MEDIUM_LASER,
-		WeaponData.WeaponID.LARGE_MISSILE: ShopItemData.ShopItemID.LARGE_MISSILE,
-		WeaponData.WeaponID.LARGE_CANNON: ShopItemData.ShopItemID.LARGE_CANNON,
-		WeaponData.WeaponID.LARGE_RAILGUN: ShopItemData.ShopItemID.LARGE_RAILGUN,
-		WeaponData.WeaponID.LARGE_LASER: ShopItemData.ShopItemID.LARGE_LASER,
-		WeaponData.WeaponID.FLAGSHIP_MISSILE: ShopItemData.ShopItemID.FLAGSHIP_MISSILE,
-		WeaponData.WeaponID.FLAGSHIP_CANNON: ShopItemData.ShopItemID.FLAGSHIP_CANNON,
-		WeaponData.WeaponID.FLAGSHIP_RAILGUN: ShopItemData.ShopItemID.FLAGSHIP_RAILGUN,
-		WeaponData.WeaponID.FLAGSHIP_LASER: ShopItemData.ShopItemID.FLAGSHIP_LASER,
-	}
-	return mapping.get(wid, ShopItemData.ShopItemID.SMALL_MISSILE)
-
-func _spawn_loot_effect(world_pos: Vector2, loot_type: String) -> void:
-	if not damage_root or not is_instance_valid(damage_root):
-		return
-	var label := Label.new()
-	label.text = "[%s]" % ("武器" if loot_type == "weapon" else "防具")
-	label.add_theme_font_size_override("font_size", 16)
-	label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.3))
-	label.position = world_pos + Vector2(randf_range(-30, 30), -40)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	damage_root.call_deferred("add_child", label)
-	var tween := create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(label, "position:y", label.position.y - 60, 1.0)
-	tween.tween_property(label, "modulate:a", 0.0, 1.0)
-	tween.tween_callback(label.queue_free)
 
 func _ready() -> void:
-	_setup_upgrade_pool()
+	_init_subsystems()
 	_setup_references()
 	_spawn_player()
 
-func _setup_upgrade_pool() -> void:
-	upgrade_pool = [
-		{"id": "damage", "name": "伤害强化", "desc": "所有武器伤害 x1.2", "max": 3, "weight": "high"},
-		{"id": "shield_max", "name": "临时护盾", "desc": "shield_max +30，立即补满", "max": 3, "weight": "mid"},
-		{"id": "fire_coverage", "name": "火力覆盖", "desc": "导弹哒哒哒连射（Lv.1=2发/Lv.2=3发/Lv.3=4发）", "max": 3, "weight": "high"},
-		{"id": "shield_regen", "name": "护盾充能", "desc": "shield_regen x1.5", "max": 3, "weight": "mid"},
-		{"id": "silent_hunter", "name": "静默猎手", "desc": "静止时射速+15%（fire_interval x0.85）", "max": 3, "weight": "low"},
-		{"id": "precision_kill", "name": "精准猎杀", "desc": "导弹索敌范围 +100", "max": 3, "weight": "low"},
-		{"id": "cannon_bloodthirst", "name": "嗜血残暴", "desc": "单次加农炮子弹数量 +1", "max": 3, "weight": "mid"},
-		{"id": "cannon_rush", "name": "狂飙突进", "desc": "移动时射速 +15%", "max": 3, "weight": "low"},
-		{"id": "cannon_vengeance", "name": "为了部落", "desc": "受伤时射速 +15%，持续2秒", "max": 3, "weight": "low"},
-		{"id": "railgun_damage", "name": "一发入魂", "desc": "磁轨炮伤害 +20%", "max": 3, "weight": "low"},
-		{"id": "railgun_crit", "name": "命中注定", "desc": "磁轨炮暴击率 +10%", "max": 3, "weight": "low"},
-		{"id": "railgun_multi", "name": "多重射击", "desc": "单次射击次数 +1", "max": 3, "weight": "low"},
-		{"id": "laser_duration", "name": "高能光束", "desc": "激光持续时间 +20%", "max": 3, "weight": "mid"},
-		{"id": "laser_width", "name": "高效射击", "desc": "激光宽度 +20%", "max": 3, "weight": "low"},
-		{"id": "laser_shield", "name": "护盾中和", "desc": "激光对护盾伤害 +20%", "max": 3, "weight": "low"},
-	]
+func _init_subsystems() -> void:
+	player_stats = PlayerStats.new()
+	spawn_manager = SpawnManager.new(self, player_stats)
+	upgrade_system = UpgradeSystem.new(player_stats)
+	difficulty_scaler = DifficultyScaler.new()
+	loot_system = LootSystem.new(self)
 
-func setup_for_stage(chapter_id: int, stage_id: int) -> void:
-	current_chapter_id = chapter_id
-	current_stage = StageData.get_stage(chapter_id, stage_id)
-	if current_stage == null:
-		push_warning("[GameManager] Stage not found, using defaults")
-		current_stage = StageData.get_stage(1, 1)
-
-	boss_remaining = current_stage.boss_count
-	is_boss_phase = current_stage.type == StageData.StageType.BOSS_ONLY
-
-	var stats_chapter := chapter_id if chapter_id != 6 else 1
-	var melee_stats := StageData.get_chapter_stats(stats_chapter, "melee")
-	var level_bonus := 1.0 + 0.3 * (player_level - 1)
-	var final_strength := current_stage.strength_mult * level_bonus
-	var final_density := current_stage.density_mult * level_bonus
-	enemy_hp = melee_stats.hp * final_strength
-	enemy_damage = melee_stats.damage * final_strength
-	enemy_move_speed = melee_stats.speed * (1.0 + (final_strength - 1.0) * 0.2)
-	spawn_interval = 2.0 / final_density
-
-	if current_stage.has_timer:
-		has_timer = true
-		is_unlimited_mode = GameState.is_stage_cleared(chapter_id, stage_id)
-		if is_unlimited_mode:
-			time_remaining = 0.0
-			run_time_elapsed = 0.0
-		else:
-			time_remaining = FIRST_RUN_DURATION
-	else:
-		has_timer = false
-		is_unlimited_mode = false
-		time_remaining = 0.0
-
-	session_loot = []
-	_debug("setup_for_stage: chapter=%d stage=%d strength=%.2f interval=%.2f" % [
-		chapter_id, stage_id, final_strength, spawn_interval])
+	upgrade_system.upgrade_requested.connect(_on_upgrade_requested)
 
 func _setup_references() -> void:
 	var game_scene = get_parent()
@@ -361,122 +91,9 @@ func _setup_references() -> void:
 	damage_root = game_scene.get_node_or_null("DamageRoot")
 	boss_warning = game_scene.get_node_or_null("UIRoot/BossWarning")
 
-func _apply_race_to_gm(race: RaceData) -> void:
-	var ship = ShipData.get_ship(GameState.selected_ship_id)
-	var ship_base_hp = ship.base_hp if ship else 100
-	player_hp = ship_base_hp
-	player_max_hp = ship_base_hp
-	player_shield_max = race.shield_max
-	player_shield = race.shield_max
-	player_shield_regen = race.shield_regen
-	player_move_speed = race.move_speed
-	player_dodge = race.dodge_rate
-	player_crit_rate = race.crit_rate
-	player_crit_mult = race.crit_mult
-	cannon_fire_interval = 1.2
-	cannon_pierce_count = 1
-	cannon_explode_chance = 0.0
-	cannon_bloodthirst = 0
-	cannon_rush_level = 0
-	cannon_vengeance_level = 0
-	railgun_damage = 30.0
-	railgun_speed = 1000.0
-	railgun_range = 400.0
-	railgun_fire_interval = 0.6
-	railgun_crit_bonus = 0.0
-	railgun_multi_count = 1
-	laser_damage = 12.0
-	laser_duration = 2.0
-	laser_width = 16.0
-	laser_fire_interval = 2.5
-	laser_shield_mult = 1.0
-
-	for talent in race.talents:
-		match talent.get("type"):
-			"cannon_fire_rate":
-				cannon_fire_interval *= (1.0 - talent.get("value", 0.0))
-			"cannon_base_level":
-				for i in range(int(talent.get("value", 1))):
-					upgrade_counts["cannon_bloodthirst"] = upgrade_counts.get("cannon_bloodthirst", 0) + 1
-					upgrade_counts["cannon_rush"] = upgrade_counts.get("cannon_rush", 0) + 1
-					upgrade_counts["cannon_vengeance"] = upgrade_counts.get("cannon_vengeance", 0) + 1
-					_apply_upgrade_effect("cannon_bloodthirst")
-					_apply_upgrade_effect("cannon_rush")
-					_apply_upgrade_effect("cannon_vengeance")
-			"missile_range":
-				missile_range *= (1.0 + talent.get("value", 0.0))
-			"missile_base_level":
-				for i in range(int(talent.get("value", 1))):
-					upgrade_counts["fire_coverage"] = upgrade_counts.get("fire_coverage", 0) + 1
-					upgrade_counts["silent_hunter"] = upgrade_counts.get("silent_hunter", 0) + 1
-					upgrade_counts["precision_kill"] = upgrade_counts.get("precision_kill", 0) + 1
-					_apply_upgrade_effect("fire_coverage")
-					_apply_upgrade_effect("silent_hunter")
-					_apply_upgrade_effect("precision_kill")
-			"railgun_base_level":
-				for i in range(int(talent.get("value", 1))):
-					upgrade_counts["railgun_damage"] = upgrade_counts.get("railgun_damage", 0) + 1
-					upgrade_counts["railgun_crit"] = upgrade_counts.get("railgun_crit", 0) + 1
-					upgrade_counts["railgun_multi"] = upgrade_counts.get("railgun_multi", 0) + 1
-					_apply_upgrade_effect("railgun_damage")
-					_apply_upgrade_effect("railgun_crit")
-					_apply_upgrade_effect("railgun_multi")
-			"railgun_crit":
-				railgun_crit_bonus += talent.get("value", 0.0)
-			"laser_base_level":
-				for i in range(int(talent.get("value", 1))):
-					upgrade_counts["laser_duration"] = upgrade_counts.get("laser_duration", 0) + 1
-					upgrade_counts["laser_width"] = upgrade_counts.get("laser_width", 0) + 1
-					upgrade_counts["laser_shield"] = upgrade_counts.get("laser_shield", 0) + 1
-					_apply_upgrade_effect("laser_duration")
-					_apply_upgrade_effect("laser_width")
-					_apply_upgrade_effect("laser_shield")
-			"laser_width_duration":
-				laser_width *= (1.0 + talent.get("value", 0.0))
-				laser_duration *= (1.0 + talent.get("value", 0.0))
-			_:
-				pass
-	_apply_armor_bonuses_to_gm()
-
-func _apply_armor_bonuses_to_gm() -> void:
-	var ship_id = int(GameState.selected_ship_id)
-	if ship_id == 0:
-		ship_id = ShipData.ShipID.FRIGATE
-	var armor_list: Array = GameState.equipped_armor.get(ship_id, [])
-	if not (armor_list is Array):
-		armor_list = []
-	for armor in armor_list:
-		if armor is Dictionary:
-			player_shield_max += armor.get("shield_bonus", 0.0)
-			player_shield_regen += armor.get("shield_regen_bonus", 0.0)
-	player_shield = player_shield_max
-
-func _apply_upgrade_effect(upgrade_id: String) -> void:
-	match upgrade_id:
-		"cannon_rf":
-			cannon_fire_interval *= 0.8
-		"cannon_pierce":
-			cannon_pierce_count += 1
-		"cannon_explode":
-			cannon_explode_chance += 0.3
-		"railgun_damage":
-			railgun_damage *= 1.2
-		"railgun_crit":
-			railgun_crit_bonus += 0.1
-		"railgun_multi":
-			railgun_multi_count += 1
-		"laser_duration":
-			laser_duration *= 1.2
-		"laser_width":
-			laser_width *= 1.2
-		"laser_shield":
-			laser_shield_mult += 0.2
-		"fire_coverage":
-			spread_count += 1
-		"silent_hunter":
-			silent_hunter_level = upgrade_counts.get("silent_hunter", 0)
-		"precision_kill":
-			missile_range += 100.0
+	spawn_manager.setup_references(enemy_root, exp_orb_root, boss_warning)
+	spawn_manager.enemy_dead.connect(_on_enemy_dead)
+	spawn_manager.boss_killed.connect(_on_boss_killed)
 
 func _spawn_player() -> void:
 	if player != null and is_instance_valid(player):
@@ -491,13 +108,133 @@ func _spawn_player() -> void:
 		_debug("Player spawned at: " + str(player.global_position))
 		if player.has_method("set_game_manager"):
 			player.set_game_manager(self)
+		if player.has_method("set_player_stats"):
+			player.set_player_stats(player_stats)
 		var race = RaceData.get_race(GameState.selected_race_id)
 		if race and player.has_method("apply_race_data"):
 			player.apply_race_data(race)
 		if race:
-			_apply_race_to_gm(race)
+			_apply_race_to_player_stats(race)
+			if player.has_method("sync_from_player_stats"):
+				player.sync_from_player_stats(player_stats)
 	else:
 		push_error("[GameManager] failed to load Player scene")
+
+func _apply_race_to_player_stats(race: RaceData) -> void:
+	var ship = ShipData.get_ship(GameState.selected_ship_id)
+	var ship_base_hp = ship.base_hp if ship else 100
+	player_stats.max_hp = ship_base_hp
+	player_stats.hp = ship_base_hp
+	player_stats.shield_max = race.shield_max
+	player_stats.shield = race.shield_max
+	player_stats.shield_regen = race.shield_regen
+	player_stats.move_speed = race.move_speed
+	player_stats.dodge = race.dodge_rate
+	player_stats.crit_rate = race.crit_rate
+	player_stats.crit_mult = race.crit_mult
+	player_stats.cannon_fire_interval = 1.2
+	player_stats.cannon_pierce_count = 1
+	player_stats.cannon_explode_chance = 0.0
+	player_stats.cannon_bloodthirst = 0
+	player_stats.cannon_rush_level = 0
+	player_stats.cannon_vengeance_level = 0
+	player_stats.railgun_damage = 30.0
+	player_stats.railgun_speed = 1000.0
+	player_stats.railgun_range = 400.0
+	player_stats.railgun_fire_interval = 0.6
+	player_stats.railgun_crit_bonus = 0.0
+	player_stats.railgun_multi_count = 1
+	player_stats.laser_damage = 12.0
+	player_stats.laser_duration = 2.0
+	player_stats.laser_width = 16.0
+	player_stats.laser_fire_interval = 2.5
+	player_stats.laser_shield_mult = 1.0
+
+	for talent in race.talents:
+		match talent.get("type"):
+			"cannon_fire_rate":
+				player_stats.cannon_fire_interval *= (1.0 - talent.get("value", 0.0))
+			"cannon_base_level":
+				for i in range(int(talent.get("value", 1))):
+					upgrade_system.upgrade_counts["cannon_bloodthirst"] = upgrade_system.upgrade_counts.get("cannon_bloodthirst", 0) + 1
+					upgrade_system.upgrade_counts["cannon_rush"] = upgrade_system.upgrade_counts.get("cannon_rush", 0) + 1
+					upgrade_system.upgrade_counts["cannon_vengeance"] = upgrade_system.upgrade_counts.get("cannon_vengeance", 0) + 1
+					upgrade_system.player_stats.apply_upgrade("cannon_bloodthirst")
+					upgrade_system.player_stats.apply_upgrade("cannon_rush")
+					upgrade_system.player_stats.apply_upgrade("cannon_vengeance")
+			"missile_range":
+				player_stats.missile_range *= (1.0 + talent.get("value", 0.0))
+			"missile_base_level":
+				for i in range(int(talent.get("value", 1))):
+					upgrade_system.upgrade_counts["fire_coverage"] = upgrade_system.upgrade_counts.get("fire_coverage", 0) + 1
+					upgrade_system.upgrade_counts["silent_hunter"] = upgrade_system.upgrade_counts.get("silent_hunter", 0) + 1
+					upgrade_system.upgrade_counts["precision_kill"] = upgrade_system.upgrade_counts.get("precision_kill", 0) + 1
+					upgrade_system.player_stats.apply_upgrade("fire_coverage")
+					upgrade_system.player_stats.apply_upgrade("silent_hunter")
+					upgrade_system.player_stats.apply_upgrade("precision_kill")
+			"railgun_base_level":
+				for i in range(int(talent.get("value", 1))):
+					upgrade_system.upgrade_counts["railgun_damage"] = upgrade_system.upgrade_counts.get("railgun_damage", 0) + 1
+					upgrade_system.upgrade_counts["railgun_crit"] = upgrade_system.upgrade_counts.get("railgun_crit", 0) + 1
+					upgrade_system.upgrade_counts["railgun_multi"] = upgrade_system.upgrade_counts.get("railgun_multi", 0) + 1
+					upgrade_system.player_stats.apply_upgrade("railgun_damage")
+					upgrade_system.player_stats.apply_upgrade("railgun_crit")
+					upgrade_system.player_stats.apply_upgrade("railgun_multi")
+			"railgun_crit":
+				player_stats.railgun_crit_bonus += talent.get("value", 0.0)
+			"laser_base_level":
+				for i in range(int(talent.get("value", 1))):
+					upgrade_system.upgrade_counts["laser_duration"] = upgrade_system.upgrade_counts.get("laser_duration", 0) + 1
+					upgrade_system.upgrade_counts["laser_width"] = upgrade_system.upgrade_counts.get("laser_width", 0) + 1
+					upgrade_system.upgrade_counts["laser_shield"] = upgrade_system.upgrade_counts.get("laser_shield", 0) + 1
+					upgrade_system.player_stats.apply_upgrade("laser_duration")
+					upgrade_system.player_stats.apply_upgrade("laser_width")
+					upgrade_system.player_stats.apply_upgrade("laser_shield")
+			"laser_width_duration":
+				player_stats.laser_width *= (1.0 + talent.get("value", 0.0))
+				player_stats.laser_duration *= (1.0 + talent.get("value", 0.0))
+			_:
+				pass
+	_apply_armor_bonuses()
+
+func _apply_armor_bonuses() -> void:
+	var ship_id = int(GameState.selected_ship_id)
+	if ship_id == 0:
+		ship_id = ShipData.ShipID.FRIGATE
+	var armor_list: Array = GameState.equipped_armor.get(ship_id, [])
+	if not (armor_list is Array):
+		armor_list = []
+	for armor in armor_list:
+		if armor is Dictionary:
+			player_stats.shield_max += armor.get("shield_bonus", 0.0)
+			player_stats.shield_regen += armor.get("shield_regen_bonus", 0.0)
+	player_stats.shield = player_stats.shield_max
+
+func setup_for_stage(chapter_id: int, stage_id: int) -> void:
+	current_chapter_id = chapter_id
+	current_stage = StageData.get_stage(chapter_id, stage_id)
+	if current_stage == null:
+		push_warning("[GameManager] Stage not found, using defaults")
+		current_stage = StageData.get_stage(1, 1)
+
+	spawn_manager.setup_stage(chapter_id, stage_id, player_level)
+	difficulty_scaler.setup_stage(current_stage.strength_mult, current_stage.density_mult, player_level)
+	loot_system.reset()
+
+	if current_stage.has_timer:
+		has_timer = true
+		is_unlimited_mode = GameState.is_stage_cleared(chapter_id, stage_id)
+		if is_unlimited_mode:
+			time_remaining = 0.0
+			run_time_elapsed = 0.0
+		else:
+			time_remaining = FIRST_RUN_DURATION
+	else:
+		has_timer = false
+		is_unlimited_mode = false
+		time_remaining = 0.0
+
+	_debug("setup_for_stage: chapter=%d stage=%d" % [chapter_id, stage_id])
 
 func start_run_timer() -> void:
 	if current_stage != null and current_stage.has_timer:
@@ -524,11 +261,10 @@ func _process(delta: float) -> void:
 		return
 
 	_update_timer(delta)
-	_spawn_enemies(delta)
-	_update_shield_regen(delta)
-	_update_lifesteal(delta)
-	_update_combo(delta)
-	_check_boss_warning()
+	spawn_manager.update_spawning(delta, current_stage, current_chapter_id, player_level)
+	player_stats.update_regen(delta)
+	difficulty_scaler.update_combo(delta)
+	_notify_hud_update()
 
 func _update_timer(delta: float) -> void:
 	if not has_timer:
@@ -546,10 +282,7 @@ func _update_timer(delta: float) -> void:
 		_on_timer_expired()
 
 func _on_timer_expired() -> void:
-	print("[GM] _on_timer_expired, is_boss_phase=", is_boss_phase, " _timer_expired_once=", _timer_expired_once)
-
 	if is_boss_phase and not _timer_expired_once:
-		# BOSS关卡：倒计时结束，进入无限BOSS模式（游戏继续，不立即结算）
 		_timer_expired_once = true
 		is_boss_infinite = true
 		is_game_over = false
@@ -558,283 +291,64 @@ func _on_timer_expired() -> void:
 		time_remaining = 0.0
 		_notify_hud_update()
 		return
-
-	# 非BOSS关卡或无限模式：倒计时结束，触发结算
 	is_game_over = true
 	get_tree().paused = true
 	game_ended.emit("timeout")
 
-func _show_settlement(reason: String) -> void:
-	var game_scene = get_parent()
-	if game_scene and game_scene.has_method("_show_settlement_screen"):
-		game_scene._show_settlement_screen(reason)
-
-func _update_combo(delta: float) -> void:
-	if combo_count > 0:
-		combo_timer -= delta
-		if combo_timer <= 0:
-			combo_count = 0
-			combo_multiplier = _get_combo_multiplier()
-			_notify_hud_update()
-
-func _spawn_enemies(delta: float) -> void:
-	spawn_timer += delta
-	if spawn_timer >= spawn_interval:
-		spawn_timer = 0.0
-		_spawn_enemy()
-
-func _spawn_enemy() -> void:
-	if not player or not is_instance_valid(player):
-		return
-
-	if boss_active:
-		if randf() < 0.5:
-			return
-
-	if is_boss_phase:
-		return
-
-	var enemy_path := _choose_enemy_type()
-	if enemy_path == "":
-		return
-
-	var is_chapter6 := current_chapter_id == 6
-	var level_bonus := 1.0 + 0.3 * (player_level - 1)
-	var final_strength := current_stage.strength_mult * level_bonus
-
-	var spawn_distance := randf_range(600.0, 900.0)
-	var spawn_angle := randf_range(0, TAU)
-
-	if not _ENEMY_SCENE_MAP.has(enemy_path):
-		push_error("[GameManager] Enemy scene not in preload map: " + enemy_path)
-		return
-
-	var enemy_scene: PackedScene = _ENEMY_SCENE_MAP[enemy_path]
-	var enemy = enemy_scene.instantiate()
-	enemy_root.add_child(enemy)
-	enemy.global_position = player.global_position + Vector2.from_angle(spawn_angle) * spawn_distance
-
-	var is_elite_spawn: bool = randf() < 0.15
-
-	match enemy_path:
-		ENEMY_MELEE_PATH:
-			var tonnage_chapter := StageData.get_random_tonnage_chapter() if is_chapter6 else current_chapter_id
-			var melee_stats := StageData.get_chapter_stats(tonnage_chapter, "melee")
-			var m_hp := melee_stats.hp * final_strength
-			var m_dmg := melee_stats.damage * final_strength
-			var m_spd := melee_stats.speed * (1.0 + (final_strength - 1.0) * 0.2)
-			enemy.setup_enemy(self, m_hp, m_dmg, m_spd, 0.0, 0.0, 0, "", "", tonnage_chapter, is_elite_spawn)
-			enemy.enemy_dead.connect(_on_enemy_dead)
-		ENEMY_SENTRY_PATH:
-			var tonnage_chapter := StageData.get_random_tonnage_chapter() if is_chapter6 else current_chapter_id
-			var sentry_stats := StageData.get_chapter_stats(tonnage_chapter, "sentry")
-			var s_hp := sentry_stats.hp * final_strength
-			var s_dmg := sentry_stats.damage * final_strength
-			var s_spd := sentry_stats.speed * (1.0 + (final_strength - 1.0) * 0.2)
-			enemy.setup_enemy(self, s_hp, s_dmg, s_spd, 0.0, 0.0, 0, "", "", tonnage_chapter, is_elite_spawn)
-			enemy.enemy_dead.connect(_on_enemy_dead)
-		ENEMY_RAVEN_PATH:
-			var tonnage_chapter := StageData.get_random_tonnage_chapter() if is_chapter6 else current_chapter_id
-			var raven_stats := StageData.get_chapter_stats(tonnage_chapter, "raven")
-			var r_hp := raven_stats.hp * final_strength
-			var r_dmg := raven_stats.damage * final_strength
-			var r_spd := raven_stats.speed * (1.0 + (final_strength - 1.0) * 0.2)
-			enemy.setup_enemy(self, r_hp, r_dmg, r_spd, 0.0, 0.0, 0, "", "", tonnage_chapter, is_elite_spawn)
-			enemy.enemy_dead.connect(_on_enemy_dead)
-	if enemy.has_method("_apply_chapter_icon"):
-		enemy._apply_chapter_icon()
-
-func _choose_enemy_type() -> String:
-	var rng = randf()
-	if kill_since_boss < 20:
-		if rng < 0.8:
-			return ENEMY_MELEE_PATH
-		else:
-			return ENEMY_SENTRY_PATH
-	elif kill_since_boss < 50:
-		if rng < 0.60:
-			return ENEMY_MELEE_PATH
-		elif rng < 0.85:
-			return ENEMY_SENTRY_PATH
-		else:
-			return ENEMY_RAVEN_PATH
-	else:
-		if rng < 0.50:
-			return ENEMY_MELEE_PATH
-		elif rng < 0.80:
-			return ENEMY_SENTRY_PATH
-		else:
-			return ENEMY_RAVEN_PATH
-
-func _check_boss_warning() -> void:
-	if boss_active:
-		return
-	if is_boss_phase:
-		if boss_remaining > 0:
-			_spawn_boss()
-		return
-	if kill_since_boss >= 45 and kill_since_boss < 50:
-		if boss_warning and boss_warning.has_method("show_warning"):
-			boss_warning.show_warning()
-	elif kill_since_boss >= 50:
-		_spawn_boss()
-
-func _spawn_boss() -> void:
-	SoundManager.play_sfx("boss_appear")
-	SoundManager.play_music("battle_boss")
-	if not player or not is_instance_valid(player):
-		return
-
-	boss_active = true
-	kill_since_boss = 0
-
-	if boss_warning and boss_warning.has_method("hide_warning"):
-		boss_warning.hide_warning()
-
-	var game_scene = get_parent()
-	if game_scene and game_scene.has_method("trigger_screen_shake"):
-		game_scene.trigger_screen_shake(15.0, 0.3)
-		var overlay = ColorRect.new()
-		overlay.color = Color(1.0, 1.0, 1.0, 0.5)
-		overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-		game_scene.add_child(overlay)
-		var t = game_scene.create_tween()
-		t.tween_property(overlay, "modulate:a", 0.0, 0.3)
-		t.tween_callback(overlay.queue_free)
-
-	var boss_scene = _SCENE_BOSS
-	var boss = boss_scene.instantiate()
-	enemy_root.add_child(boss)
-
-	var spawn_dist = 500.0
-	var spawn_angle = randf_range(0, TAU)
-	boss.global_position = player.global_position + Vector2.from_angle(spawn_angle) * spawn_dist
-
-	var is_chapter6 := current_chapter_id == 6
-	var boss_tonnage_chapter := StageData.get_random_tonnage_chapter() if is_chapter6 else current_chapter_id
-	var boss_stats := StageData.get_chapter_stats(boss_tonnage_chapter, "boss")
-	var level_bonus := 1.0 + 0.3 * (player_level - 1)
-	var final_strength := current_stage.strength_mult * level_bonus
-	var b_hp := boss_stats.hp * final_strength
-	var b_dmg := boss_stats.damage * final_strength
-	var b_spd := boss_stats.speed * (1.0 + (final_strength - 1.0) * 0.2)
-	var b_shield := boss_stats.shield * final_strength
-
-	boss.setup_boss(self, b_hp, b_dmg, b_spd, b_shield, boss_tonnage_chapter)
-	boss.enemy_dead.connect(_on_enemy_dead)
-
-func on_boss_killed(boss_node: Node2D) -> void:
-	SoundManager.play_music("battle")
-	boss_active = false
-	kill_since_boss = 0
-
-	if boss_warning and boss_warning.has_method("hide_warning"):
-		boss_warning.hide_warning()
-
-	var loot_chapter: int = boss_node._get_loot_tonnage_chapter() if boss_node.has_method("_get_loot_tonnage_chapter") else current_chapter_id
-	var loot := StageData.get_chapter_loot(loot_chapter)
-	var reward_coin := loot.get_coin("boss")
-	var reward_mineral := int(_scale_mineral(loot.get_mineral("boss"), loot.get_mineral_tier("boss")))
-	session_star_coin += reward_coin
-	session_minerals += reward_mineral
-
-	if is_boss_phase:
-		boss_remaining -= 1
-		if boss_remaining <= 0:
-			is_game_over = true
-			get_tree().paused = true
-			game_ended.emit("retreat")
-			_show_settlement("retreat")
-	_notify_hud_update()
-
-func _update_shield_regen(delta: float) -> void:
-	shield_regen_timer += delta
-	if shield_regen_timer >= 1.0:
-		shield_regen_timer = 0.0
-		player_shield = min(player_shield + player_shield_regen, player_shield_max)
-		_notify_hud_update()
-
-func _update_lifesteal(delta: float) -> void:
-	if player_lifesteal <= 0.0:
-		return
-	lifesteal_timer += delta
-	if lifesteal_timer >= 1.0:
-		lifesteal_timer = 0.0
-		player_hp = mini(player_hp + int(player_lifesteal), player_max_hp)
-		_notify_hud_update()
-
-func _notify_hud_update() -> void:
-	var game_scene = get_parent()
-	if game_scene and game_scene.has_node("UIRoot/HUD"):
-		var hud = game_scene.get_node("UIRoot/HUD")
-		hud.update_display(
-			player_hp, player_max_hp, player_shield, player_shield_max,
-			GameState.star_coin, GameState.minerals_low + GameState.minerals_mid + GameState.minerals_high,
-			kill_count, current_xp, xp_to_next_level, player_level
-		)
-
-func _get_combo_multiplier() -> float:
-	if combo_count >= 30:
-		return 3.0
-	elif combo_count >= 20:
-		return 2.5
-	elif combo_count >= 10:
-		return 2.0
-	elif combo_count >= 5:
-		return 1.5
-	return 1.0
-
-func _scale_mineral(base: int, tier: StageData.LootTier) -> float:
-	match tier:
-		StageData.LootTier.LOW: return base as float
-		StageData.LootTier.MEDIUM: return base as float * 1.5
-		StageData.LootTier.HIGH: return base as float * 2.5
-	return base as float
+var is_boss_phase: bool = false
 
 func _on_enemy_dead(enemy: Node2D, enemy_type: String) -> void:
 	match enemy_type:
 		"boss":
-			on_boss_killed(enemy)
+			spawn_manager.on_boss_killed(enemy)
 		_:
 			on_enemy_killed(enemy, enemy_type)
 
 func on_enemy_killed(enemy: Node2D, enemy_type: String) -> void:
 	kill_count += 1
 	total_kills += 1
-	kill_since_boss += 1
+	spawn_manager.on_enemy_killed()
+	difficulty_scaler.on_enemy_killed()
 
 	if enemy.get("is_elite"):
 		elites_killed_this_run += 1
 
-	combo_count += 1
-	combo_timer = combo_timeout
-	combo_multiplier = _get_combo_multiplier()
+	var reward_coin = loot_system.on_enemy_killed(enemy, enemy_type)
+	spawn_manager.spawn_exp_orb(enemy.global_position)
+	loot_system.try_drop_equipment(enemy)
 
-	var loot_chapter: int = enemy._get_loot_tonnage_chapter() if enemy.has_method("_get_loot_tonnage_chapter") else current_chapter_id
-	var loot := StageData.get_chapter_loot(loot_chapter)
-	var reward_coin := int(loot.get_coin(enemy_type) * combo_multiplier)
-	var reward_mineral := int(_scale_mineral(loot.get_mineral(enemy_type), loot.get_mineral_tier(enemy_type)) * combo_multiplier)
-	session_star_coin += reward_coin
-	session_minerals += reward_mineral
+	if spawn_manager.kill_since_boss > 0 and spawn_manager.kill_since_boss % 20 == 0:
+		difficulty_scaler.on_difficulty_tick()
 
-	_spawn_exp_orb(enemy.global_position)
+func _on_boss_killed(boss_node: Node2D) -> void:
+	loot_system.spawn_boss_loot(boss_node)
+	loot_system.on_boss_killed(boss_node)
 
-	if kill_since_boss > 0 and kill_since_boss % 20 == 0:
-		_difficulty_scale()
+	if is_boss_phase:
+		if spawn_manager.boss_remaining <= 0:
+			is_game_over = true
+			get_tree().paused = true
+			game_ended.emit("retreat")
+			_show_settlement("retreat")
+	_notify_hud_update()
 
-func _spawn_exp_orb(pos: Vector2) -> void:
-	var orb = _SCENE_EXP_ORB.instantiate()
-	orb.set_game_manager(self)
-	orb.global_position = pos
-	exp_orb_root.call_deferred("add_child", orb)
+func _notify_hud_update() -> void:
+	var game_scene = get_parent()
+	if game_scene and game_scene.has_node("UIRoot/HUD"):
+		var hud = game_scene.get_node("UIRoot/HUD")
+		hud.update_display(
+			player_stats.hp, player_stats.max_hp, player_stats.shield, player_stats.shield_max,
+			GameState.star_coin, GameState.minerals_low + GameState.minerals_mid + GameState.minerals_high,
+			kill_count, current_xp, xp_to_next_level, player_level
+		)
 
-func _difficulty_scale() -> void:
-	enemy_hp *= 1.1
-	spawn_interval = maxf(0.8, spawn_interval - 0.1)
+func _show_settlement(reason: String) -> void:
+	var game_scene = get_parent()
+	if game_scene and game_scene.has_method("_show_settlement_screen"):
+		game_scene._show_settlement_screen(reason)
 
 func on_exp_orb_collected(amount: float) -> void:
-	_debug("on_exp_orb_collected: amount=" + str(amount) + " current_xp=" + str(current_xp))
-	current_xp += amount * xp_boost
+	current_xp += amount * player_stats.xp_boost
 	var leveled_up = false
 	while current_xp >= xp_to_next_level:
 		current_xp -= xp_to_next_level
@@ -848,112 +362,39 @@ func on_exp_orb_collected(amount: float) -> void:
 func _trigger_upgrade() -> void:
 	is_upgrading = true
 	get_tree().paused = true
+	upgrade_system.trigger_upgrade_request(is_paused, get_tree())
+
+func _on_upgrade_requested() -> void:
 	upgrade_requested.emit()
 
-func _get_equipped_weapon_id() -> int:
-	if player and is_instance_valid(player) and player.has_method("get_primary_weapon"):
-		var pw = player.get_primary_weapon()
-		if pw:
-			return pw.weapon_id
-	return 0
-
-func apply_upgrade(upgrade_id: String) -> void:
-	_debug("apply_upgrade: " + upgrade_id + " upgrade_counts=" + str(upgrade_counts))
-
-	if not upgrade_counts.has(upgrade_id):
-		upgrade_counts[upgrade_id] = 0
-
-	var upgrade_data = upgrade_pool.filter(func(u): return u["id"] == upgrade_id)
-	if upgrade_data.is_empty():
-		_debug("upgrade not found in pool!")
-		is_upgrading = false
-		get_tree().paused = false
-		return
-
-	var data = upgrade_data[0]
-	var research_bonus = GameState.research_progress.get(upgrade_id, 0)
-	var effective_max = data["max"] + research_bonus
-	if upgrade_counts[upgrade_id] >= effective_max:
-		_debug("upgrade max reached!")
-		is_upgrading = false
-		get_tree().paused = false
-		return
-
-	upgrade_counts[upgrade_id] += 1
-
-	match upgrade_id:
-		"damage":
-			player_damage *= 1.2
-		"shield_max":
-			player_shield_max += 30.0
-			player_shield = player_shield_max
-		"fire_coverage":
-			spread_count += 1
-		"shield_regen":
-			player_shield_regen *= 1.5
-		"silent_hunter":
-			silent_hunter_level = upgrade_counts["silent_hunter"]
-		"precision_kill":
-			missile_range += 100.0
-		"cannon_bloodthirst":
-			cannon_bloodthirst += 1
-		"cannon_rush":
-			cannon_rush_level = upgrade_counts["cannon_rush"]
-		"cannon_vengeance":
-			cannon_vengeance_level = upgrade_counts["cannon_vengeance"]
-		"railgun_damage":
-			railgun_damage *= 1.2
-		"railgun_crit":
-			railgun_crit_bonus += 0.1
-		"railgun_multi":
-			railgun_multi_count += 1
-		"laser_duration":
-			laser_duration *= 1.2
-		"laser_width":
-			laser_width *= 1.2
-		"laser_shield":
-			laser_shield_mult += 0.2
-
-	if player and is_instance_valid(player) and player.has_method("sync_from_game_manager"):
-		player.sync_from_game_manager(self)
-
-	is_upgrading = false
-	get_tree().paused = false
-	_notify_hud_update()
-
 func on_player_take_damage(damage: float) -> void:
-	if randf() < player_dodge:
-		return
-
+	player_stats.is_injured = true
+	player_stats.injured_timer = PlayerStats.INJURED_DURATION
 	var final_damage = damage
-	var is_crit = randf() < player_crit_rate
-	if is_crit:
-		final_damage *= player_crit_mult
 
-	if player_shield > 0:
-		var shield_dmg = minf(player_shield, final_damage)
-		player_shield -= shield_dmg
+	if player_stats.shield > 0:
+		var shield_dmg = minf(player_stats.shield, final_damage)
+		player_stats.shield -= shield_dmg
 		final_damage -= shield_dmg
 		if shield_dmg > 0:
-			if player_shield <= 0:
+			if player_stats.shield <= 0:
 				SoundManager.play_sfx("shield_break")
 			else:
 				SoundManager.play_sfx("shield_hit")
 
 	if final_damage > 0:
 		SoundManager.play_sfx("player_hurt")
-		player_hp -= int(final_damage)
+		player_stats.hp -= int(final_damage)
 		var game_scene = get_parent()
 		if game_scene and game_scene.has_method("trigger_screen_shake"):
 			game_scene.trigger_screen_shake(5.0, 0.15)
-
-	if final_damage > 0:
-		_spawn_damage_number(player.global_position if player and is_instance_valid(player) else Vector2.ZERO, final_damage, is_crit, true)
+		var world_pos = player.global_position if player and is_instance_valid(player) else Vector2.ZERO
+		_spawn_damage_number(world_pos, final_damage, false, true)
 
 	_notify_hud_update()
 
-	if player_hp <= 0:
-		player_hp = 0
+	if player_stats.hp <= 0:
+		player_stats.hp = 0
 		_notify_hud_update()
 		_on_player_dead()
 
@@ -964,38 +405,19 @@ func _spawn_damage_number(world_pos: Vector2, amount: float, is_crit: bool, enem
 	damage_root.add_child(node)
 	node.setup(world_pos, amount, is_crit, enemy_dmg)
 
-func add_loot(loot_data: Dictionary) -> void:
-	session_loot.append(loot_data)
-	_debug("add_loot: " + str(loot_data) + " total: " + str(session_loot.size()))
+func apply_upgrade(upgrade_id: String) -> void:
+	var success = upgrade_system.apply_upgrade(upgrade_id)
+	if not success:
+		is_upgrading = false
+		get_tree().paused = false
+		return
 
-func get_session_loot() -> Array:
-	return session_loot
+	if player and is_instance_valid(player) and player.has_method("sync_from_player_stats"):
+		player.sync_from_player_stats(player_stats)
 
-func grant_loot_to_player() -> Array:
-	var granted: Array = []
-	for loot: Dictionary in session_loot:
-		var item_dict := {
-			"equip_id": loot.get("equip_id", ""),
-			"type": loot.get("type", "weapon"),
-			"weapon_id": loot.get("weapon_id", 0),
-			"armor_id": loot.get("armor_id", 0),
-			"quality": loot.get("quality", 0),
-			"name": loot.get("name", "?"),
-			"base_damage": loot.get("base_damage", 0.0),
-			"fire_interval": loot.get("fire_interval", 1.0),
-			"range": loot.get("range", 0.0),
-			"crit_rate": loot.get("crit_rate", 0.0),
-			"crit_mult": loot.get("crit_mult", 1.5),
-			"tonnage_tier": loot.get("tonnage_tier", 0),
-			"equip_type": loot.get("type", "weapon"),
-			"scene_path": loot.get("scene_path", ""),
-			"is_new": true,
-		}
-		granted.append(item_dict)
-		GameState.equipment_inventory.append(item_dict)
-	_debug("grant_loot: granted " + str(session_loot.size()) + " items to player inventory")
-	session_loot.clear()
-	return granted
+	is_upgrading = false
+	get_tree().paused = false
+	_notify_hud_update()
 
 func _on_player_dead() -> void:
 	SoundManager.play_sfx("player_death")
@@ -1021,74 +443,39 @@ func on_self_destruct() -> void:
 	get_tree().paused = true
 	game_ended.emit("self_destruct")
 
+func get_session_loot() -> Array:
+	return loot_system.get_session_loot()
+
+func try_drop_equipment(enemy: Node2D) -> void:
+	loot_system.try_drop_equipment(enemy)
+
+func spawn_boss_loot(boss_node: Node2D) -> void:
+	loot_system.spawn_boss_loot(boss_node)
+
+func grant_loot_to_player() -> Array:
+	return loot_system.grant_loot_to_player()
+
 func reset_for_new_run() -> void:
 	is_game_over = false
 	is_paused = false
 	is_upgrading = false
 	kill_count = 0
 	total_kills = 0
-	kill_since_boss = 0
-	boss_active = false
-	boss_remaining = current_stage.boss_count if current_stage else 1
-	is_boss_phase = current_stage.type == StageData.StageType.BOSS_ONLY if current_stage else false
-	enemy_hp = 30.0
-	enemy_damage = 10.0
-	enemy_move_speed = 100.0
-	spawn_interval = 2.0
-	spawn_timer = 0.0
-	player_hp = 100
-	player_max_hp = 100
-	player_shield = 50.0
-	player_shield_max = 50.0
-	player_shield_regen = 4.0
-	player_move_speed = 320.0
-	player_damage = 15.0
-	player_dodge = 0.1
-	player_crit_rate = 0.05
-	player_crit_mult = 1.5
-	missile_range = 500.0
-	missile_speed = 600.0
-	player_lifesteal = 0.0
-	xp_boost = 1.0
-	spread_count = 1
-	spread_angle = 6.0
-	spread_damage_mult = 1.0
-	missile_splash_radius = 0.0
-	missile_splash_count = 0
-	mobile_fire_mult = 1.0
-	is_moving = false
-	silent_hunter_level = 0
-	cannon_fire_interval = 1.2
-	cannon_damage = 25.0
-	cannon_pierce_count = 1
-	cannon_explode_chance = 0.0
-	cannon_bloodthirst = 0
-	cannon_rush_level = 0
-	cannon_vengeance_level = 0
-	railgun_damage = 30.0
-	railgun_speed = 1000.0
-	railgun_range = 400.0
-	railgun_fire_interval = 0.6
-	railgun_crit_bonus = 0.0
-	railgun_multi_count = 1
-	laser_damage = 12.0
-	laser_duration = 2.0
-	laser_width = 16.0
-	laser_fire_interval = 2.5
-	laser_shield_mult = 1.0
+	elites_killed_this_run = 0
 	current_xp = 0.0
 	xp_to_next_level = 10.0
 	player_level = 1
-	session_star_coin = 0
-	session_minerals = 0
-	shield_regen_timer = 0.0
-	lifesteal_timer = 0.0
-	upgrade_counts = {}
-	upgrade_pool = []
-	_setup_upgrade_pool()
+	time_remaining = 0.0
+	has_timer = false
+	_timer_expired_once = false
+	is_boss_infinite = false
 
-	if boss_warning and boss_warning.has_method("hide_warning"):
-		boss_warning.hide_warning()
+	spawn_manager.reset()
+	difficulty_scaler.reset()
+	upgrade_system.reset()
+	loot_system.reset()
+
+	setup_for_stage(current_chapter_id, current_stage.id if current_stage else 1)
 
 	for child in enemy_root.get_children():
 		child.queue_free()
@@ -1097,14 +484,12 @@ func reset_for_new_run() -> void:
 	for child in exp_orb_root.get_children():
 		child.queue_free()
 
-	has_timer = false
-	time_remaining = 0.0
-
 	if player and is_instance_valid(player):
 		if player.has_method("init_weapons"):
 			player.init_weapons()
-		_apply_race_to_gm(RaceData.get_race(GameState.selected_race_id))
-		player.sync_from_game_manager(self)
+		_apply_race_to_player_stats(RaceData.get_race(GameState.selected_race_id))
+		if player.has_method("sync_from_player_stats"):
+			player.sync_from_player_stats(player_stats)
 		player.global_position = get_viewport_rect().size / 2.0
 		if player.has_method("reset_state"):
 			player.reset_state()

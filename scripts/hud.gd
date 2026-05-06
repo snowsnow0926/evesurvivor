@@ -4,6 +4,7 @@ const RaceData = preload("res://resources/race_data.gd")
 const ShipData = preload("res://resources/ship_data.gd")
 const WeaponData = preload("res://resources/weapon_data.gd")
 const EquipmentData = preload("res://resources/equipment_data.gd")
+const PlayerStats = preload("res://resources/player_stats.gd")
 
 const UPGRADE_NAME_MAP: Dictionary = {
 	"damage": "伤害强化",
@@ -183,10 +184,10 @@ func _process(_delta: float) -> void:
 				defense_name = "%s 等+%d" % [defense_name, armor_list.size() - 1]
 
 	update_display(
-		gm.player_hp,
-		gm.player_max_hp,
-		gm.player_shield,
-		gm.player_shield_max,
+		gm.player_stats.hp,
+		gm.player_stats.max_hp,
+		gm.player_stats.shield,
+		gm.player_stats.shield_max,
 		GameState.star_coin,
 		GameState.minerals_low + GameState.minerals_mid + GameState.minerals_high,
 		gm.kill_count,
@@ -200,11 +201,11 @@ func _process(_delta: float) -> void:
 	_update_race_and_ship_display()
 	_update_upgrade_list_display(gm)
 	if ship_hp_label:
-		ship_hp_label.text = "HP: %d / %d" % [gm.player_hp, gm.player_max_hp]
+		ship_hp_label.text = "HP: %d / %d" % [gm.player_stats.hp, gm.player_stats.max_hp]
 	if ship_shield_label:
-		ship_shield_label.text = "护盾: %.0f / %.0f" % [gm.player_shield, gm.player_shield_max]
+		ship_shield_label.text = "护盾: %.0f / %.0f" % [gm.player_stats.shield, gm.player_stats.shield_max]
 	if ship_atk_label:
-		ship_atk_label.text = "攻击: %.1f" % gm.player_damage
+		ship_atk_label.text = "攻击: %.1f" % gm.player_stats.damage
 	if ship_firerate_label:
 		var primary_fire_interval = 0.8
 		if player and player.get("active_weapons"):
@@ -215,11 +216,11 @@ func _process(_delta: float) -> void:
 					primary_fire_interval = pw.fire_interval
 		ship_firerate_label.text = "射速: %.2fs" % primary_fire_interval
 	if ship_speed_label:
-		ship_speed_label.text = "移速: %.0f" % gm.player_move_speed
+		ship_speed_label.text = "移速: %.0f" % gm.player_stats.move_speed
 	if ship_crit_label:
-		ship_crit_label.text = "暴击: %.0f%%" % (gm.player_crit_rate * 100.0)
+		ship_crit_label.text = "暴击: %.0f%%" % (gm.player_stats.crit_rate * 100.0)
 	if ship_dodge_label:
-		ship_dodge_label.text = "闪避: %.0f%%" % (gm.player_dodge * 100.0)
+		ship_dodge_label.text = "闪避: %.0f%%" % (gm.player_stats.dodge * 100.0)
 
 func _get_weapon_upgrade_level(weapon_id) -> int:
 	var upgrade_ids = _get_upgrade_ids_for_weapon(weapon_id)

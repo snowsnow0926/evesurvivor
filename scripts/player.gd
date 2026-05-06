@@ -10,6 +10,7 @@ const RaceData = preload("res://resources/race_data.gd")
 const ShipData = preload("res://resources/ship_data.gd")
 const WeaponData = preload("res://resources/weapon_data.gd")
 const ShipIconGenerator = preload("res://scripts/ship_icon_generator.gd")
+const PlayerStats = preload("res://resources/player_stats.gd")
 
 const _SCENE_MISSILE: PackedScene = preload("res://scenes/Missile.tscn")
 const _SCENE_CANNON: PackedScene = preload("res://scenes/CannonBullet.tscn")
@@ -25,64 +26,26 @@ const _RACE_ICON_MAP: Dictionary = {
 }
 
 var game_manager: Node2D
+var player_stats: PlayerStats
 
-var move_speed: float = 320.0
-var dodge: float = 0.1
-var crit_rate: float = 0.05
-var crit_mult: float = 1.5
-var lifesteal: float = 0.0
-var shield_max: float = 50.0
-var shield: float = 50.0
-var shield_regen: float = 4.0
-var hp: int = 100
-var splash_radius: float = 0.0
-var splash_count: int = 0
-var mobile_fire_mult: float = 1.0
-var _is_moving: bool = false
-var _stationary_timer: float = 0.0
-var _is_stationary: bool = false
-var silent_hunter_active: bool = false
-var silent_hunter_level: int = 0
 var race_talents: Array = []
 var default_weapon_scene: String = "res://scenes/Missile.tscn"
 
 var active_weapons: Array = []
 var weapon_fire_timers: Dictionary = {}
 
-var missile_speed: float = 600.0
-var missile_range: float = 500.0
-var spread_count: int = 1
 var missile_burst_timers: Dictionary = {}
 var missile_burst_counts: Dictionary = {}
 const MISSILE_BURST_INTERVAL: float = 0.1
 
-var cannon_fire_interval: float = 1.2
-var cannon_damage: float = 25.0
-var cannon_pierce_count: int = 1
-var cannon_explode_chance: float = 0.0
-var cannon_bloodthirst: int = 0
-
-var railgun_damage: float = 30.0
-var railgun_speed: float = 1000.0
-var railgun_range: float = 400.0
-var railgun_fire_interval: float = 0.6
-var railgun_crit_bonus: float = 0.0
-var railgun_multi_count: int = 1
 var railgun_burst_count: int = 0
 var railgun_burst_timer: float = 0.0
 const RAILGUN_BURST_INTERVAL: float = 0.1
 
-var laser_damage: float = 12.0
-var laser_duration: float = 2.0
-var laser_width: float = 16.0
-var laser_fire_interval: float = 2.5
-var laser_shield_mult: float = 1.0
+var _is_moving: bool = false
+var _stationary_timer: float = 0.0
+var _is_stationary: bool = false
 
-var damage: float = 15.0
-
-var injured_timer: float = 0.0
-var injured_duration: float = 2.0
-var is_injured: bool = false
 var _physics_tick_counter: int = 0
 
 var fire_timer: float = 0.0
@@ -213,21 +176,22 @@ func init_weapons() -> void:
 	else:
 		_debug("loaded " + str(active_weapons.size()) + " weapon(s) from shop")
 
-	cannon_fire_interval = 1.2
-	cannon_pierce_count = 1
-	cannon_explode_chance = 0.0
-	cannon_bloodthirst = 0
-	railgun_damage = 30.0
-	railgun_speed = 1000.0
-	railgun_range = 400.0
-	railgun_fire_interval = 0.6
-	railgun_crit_bonus = 0.0
-	railgun_multi_count = 1
-	laser_damage = 12.0
-	laser_duration = 2.0
-	laser_width = 16.0
-	laser_fire_interval = 2.5
-	laser_shield_mult = 1.0
+	if player_stats:
+		player_stats.cannon_fire_interval = 1.2
+		player_stats.cannon_pierce_count = 1
+		player_stats.cannon_explode_chance = 0.0
+		player_stats.cannon_bloodthirst = 0
+		player_stats.railgun_damage = 30.0
+		player_stats.railgun_speed = 1000.0
+		player_stats.railgun_range = 400.0
+		player_stats.railgun_fire_interval = 0.6
+		player_stats.railgun_crit_bonus = 0.0
+		player_stats.railgun_multi_count = 1
+		player_stats.laser_damage = 12.0
+		player_stats.laser_duration = 2.0
+		player_stats.laser_width = 16.0
+		player_stats.laser_fire_interval = 2.5
+		player_stats.laser_shield_mult = 1.0
 
 func _physics_process(delta: float) -> void:
 	_physics_tick_counter += 1
@@ -240,6 +204,9 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 
+	if player_stats:
+		player_stats.is_moving = _is_moving
+		player_stats.is_stationary = _is_stationary
 	_update_injured_state(delta)
 	_update_movement(delta)
 	_update_firing(delta)
@@ -257,10 +224,11 @@ func _get_mouse_world_pos() -> Vector2:
 	return mouse_pos
 
 func _update_injured_state(delta: float) -> void:
-	if is_injured:
-		injured_timer -= delta
-		if injured_timer <= 0.0:
-			is_injured = false
+	if player_stats == null or not player_stats.is_injured:
+		return
+	player_stats.injured_timer -= delta
+	if player_stats.injured_timer <= 0.0:
+		player_stats.is_injured = false
 
 func _update_movement(delta: float) -> void:
 	var input_dir := Vector2.ZERO
@@ -291,18 +259,15 @@ func _update_movement(delta: float) -> void:
 		_is_moving = true
 		_stationary_timer = 0.0
 		_is_stationary = false
-		silent_hunter_active = false
 	else:
 		_is_moving = false
 		_stationary_timer += delta
 		if _stationary_timer >= 0.2 and velocity.length() < 5.0:
 			_is_stationary = true
-			silent_hunter_active = true
 		else:
 			_is_stationary = false
-			silent_hunter_active = false
 
-	velocity = input_dir * move_speed
+	velocity = input_dir * player_stats.move_speed
 	move_and_slide()
 
 	if ship_sprite and ship_sprite.visible:
@@ -363,20 +328,9 @@ func _get_fire_interval(weapon: WeaponData) -> float:
 		WeaponData.WeaponID.MEDIUM_LASER, WeaponData.WeaponID.LARGE_LASER, WeaponData.WeaponID.FLAGSHIP_LASER
 	]
 	if wt in missile_ids:
-		var mult = 1.0
-		if silent_hunter_active:
-			mult = pow(0.85, float(silent_hunter_level))
-		if _is_moving and game_manager and game_manager.cannon_rush_level > 0:
-			mult *= (1.0 - 0.15 * float(game_manager.cannon_rush_level))
-		return base * mult
+		return player_stats.get_fire_interval_missile(base)
 	elif wt in cannon_ids:
-		var interval = weapon.fire_interval
-		if game_manager:
-			if _is_moving and game_manager.cannon_rush_level > 0:
-				interval *= (1.0 - 0.15 * float(game_manager.cannon_rush_level))
-			if is_injured and game_manager.cannon_vengeance_level > 0:
-				interval *= (1.0 - 0.15 * float(game_manager.cannon_vengeance_level))
-		return interval
+		return player_stats.get_fire_interval_cannon(weapon.fire_interval)
 	elif wt in railgun_ids:
 		return weapon.fire_interval
 	elif wt in laser_ids:
@@ -402,7 +356,7 @@ func _update_railgun_firing(delta: float, weapon: WeaponData) -> void:
 			var target_pos = _find_closest_enemy(weapon.range)
 			if target_pos == Vector2.ZERO:
 				target_pos = _get_mouse_world_pos()
-			railgun_burst_count = railgun_multi_count - 1
+			railgun_burst_count = player_stats.railgun_multi_count - 1
 			railgun_burst_timer = 0.0
 			SoundManager.play_sfx("shoot_railgun")
 			_fire_single_railgun(target_pos)
@@ -478,7 +432,7 @@ func _fire_missiles_at(target_pos: Vector2, weapon) -> void:
 
 	_spawn_single_missile(target_pos, bullet_root)
 
-	var total = spread_count
+	var total = player_stats.spread_count
 	var burst_key = WeaponData.WeaponID.MISSILE
 	if weapon and weapon.weapon_id == WeaponData.WeaponID.SMALL_MISSILE:
 		burst_key = WeaponData.WeaponID.SMALL_MISSILE
@@ -519,7 +473,17 @@ func _spawn_single_missile(target_pos: Vector2, bullet_root: Node) -> void:
 	var missile = _SCENE_MISSILE.instantiate()
 	bullet_root.add_child(missile)
 	missile.global_position = global_position
-	missile.setup_target_direction(Vector2.from_angle(base_angle), damage, missile_speed, crit_rate, crit_mult, game_manager, splash_radius, splash_count, missile_range)
+	missile.setup_target_direction(
+		Vector2.from_angle(base_angle),
+		player_stats.damage,
+		player_stats.missile_speed,
+		player_stats.crit_rate,
+		player_stats.crit_mult,
+		game_manager,
+		player_stats.missile_splash_radius,
+		player_stats.missile_splash_count,
+		player_stats.missile_range
+	)
 
 func _fire_cannon_at(target_pos: Vector2, weapon: WeaponData) -> void:
 	SoundManager.play_sfx("shoot_cannon")
@@ -530,7 +494,7 @@ func _fire_cannon_at(target_pos: Vector2, weapon: WeaponData) -> void:
 		return
 
 	var dir = global_position.angle_to_point(target_pos)
-	var bullet_count = 1 + cannon_bloodthirst
+	var bullet_count = 1 + player_stats.cannon_bloodthirst
 	var spacing = 10.0
 	var final_damage = weapon.damage
 	var final_speed = weapon.projectile_speed
@@ -549,12 +513,12 @@ func _fire_cannon_at(target_pos: Vector2, weapon: WeaponData) -> void:
 			final_damage,
 			final_speed,
 			final_range,
-			crit_rate,
-			crit_mult,
+			player_stats.crit_rate,
+			player_stats.crit_mult,
 			game_manager,
-			cannon_pierce_count,
+			player_stats.cannon_pierce_count,
 			0.2,
-			cannon_explode_chance,
+			player_stats.cannon_explode_chance,
 			80.0
 		)
 
@@ -576,7 +540,7 @@ func _fire_single_railgun(target_pos: Vector2) -> void:
 		return
 
 	var base_angle = global_position.angle_to_point(target_pos)
-	var count = railgun_multi_count
+	var count = player_stats.railgun_multi_count
 	var spacing = 10.0
 
 	for i in range(count):
@@ -591,14 +555,14 @@ func _fire_single_railgun(target_pos: Vector2) -> void:
 		bullet_root.add_child(bullet)
 		bullet.global_position = global_position
 
-		var final_crit_rate = crit_rate + railgun_crit_bonus
+		var final_crit_rate = player_stats.crit_rate + player_stats.railgun_crit_bonus
 		bullet.setup(
 			Vector2.from_angle(final_angle),
-			railgun_damage,
-			railgun_speed,
-			railgun_range,
+			player_stats.railgun_damage,
+			player_stats.railgun_speed,
+			player_stats.railgun_range,
 			final_crit_rate,
-			crit_mult,
+			player_stats.crit_mult,
 			game_manager
 		)
 
@@ -627,25 +591,16 @@ func _fire_laser_at(weapon: WeaponData) -> void:
 		weapon.crit_mult,
 		game_manager,
 		weapon.beam_width,
-		laser_shield_mult,
+		player_stats.laser_shield_mult,
 		self,
 		weapon.range
 	)
 
 func apply_race_data(race: RaceData) -> void:
-	hp = int(race.base_hp)
-	shield_max = race.shield_max
-	shield = race.shield_max
-	shield_regen = race.shield_regen
-	move_speed = race.move_speed
-	dodge = race.dodge_rate
-	crit_rate = race.crit_rate
-	crit_mult = race.crit_mult
 	default_weapon_scene = race.base_weapon_scene
 	race_talents = race.talents
 	init_weapons()
 	_apply_race_talents()
-	_apply_armor_bonuses()
 	_debug("Applied race data: " + race.display_name)
 	set_ship_icon()
 
@@ -653,14 +608,14 @@ func _apply_race_talents() -> void:
 	for talent in race_talents:
 		match talent.get("type"):
 			"cannon_fire_rate":
-				cannon_fire_interval *= (1.0 - talent.get("value", 0.0))
+				player_stats.cannon_fire_interval *= (1.0 - talent.get("value", 0.0))
 			"missile_range":
-				missile_range *= (1.0 + talent.get("value", 0.0))
+				player_stats.missile_range *= (1.0 + talent.get("value", 0.0))
 			"railgun_crit":
-				railgun_crit_bonus += talent.get("value", 0.0)
+				player_stats.railgun_crit_bonus += talent.get("value", 0.0)
 			"laser_width_duration":
-				laser_width *= (1.0 + talent.get("value", 0.0))
-				laser_duration *= (1.0 + talent.get("value", 0.0))
+				player_stats.laser_width *= (1.0 + talent.get("value", 0.0))
+				player_stats.laser_duration *= (1.0 + talent.get("value", 0.0))
 			_:
 				pass
 
@@ -673,12 +628,15 @@ func _apply_armor_bonuses() -> void:
 		armor_list = []
 	for armor in armor_list:
 		if armor is Dictionary:
-			shield_max += armor.get("shield_bonus", 0.0)
-			shield_regen += armor.get("shield_regen_bonus", 0.0)
-	shield = shield_max
+			player_stats.shield_max += armor.get("shield_bonus", 0.0)
+			player_stats.shield_regen += armor.get("shield_regen_bonus", 0.0)
+	player_stats.shield = player_stats.shield_max
 
 func set_game_manager(gm: Node2D) -> void:
 	game_manager = gm
+
+func set_player_stats(ps: PlayerStats) -> void:
+	player_stats = ps
 
 func on_player_take_damage(amount: float) -> void:
 	var final_amount = amount
@@ -687,44 +645,12 @@ func on_player_take_damage(amount: float) -> void:
 			final_amount *= (1.0 - talent.get("value", 0.0))
 	if game_manager and is_instance_valid(game_manager) and game_manager.has_method("on_player_take_damage"):
 		game_manager.on_player_take_damage(final_amount)
+	if player_stats:
+		player_stats.is_injured = true
+		player_stats.injured_timer = PlayerStats.INJURED_DURATION
 
-	is_injured = true
-	injured_timer = injured_duration
-
-func sync_from_game_manager(gm: Node2D) -> void:
-	move_speed = gm.player_move_speed
-	damage = gm.player_damage
-	shield_max = gm.player_shield_max
-	shield = gm.player_shield
-	shield_regen = gm.player_shield_regen
-	dodge = gm.player_dodge
-	crit_rate = gm.player_crit_rate
-	crit_mult = gm.player_crit_mult
-	missile_speed = gm.missile_speed
-	missile_range = gm.missile_range
-	spread_count = gm.spread_count
-	lifesteal = gm.player_lifesteal
-	hp = gm.player_hp
-	splash_radius = gm.missile_splash_radius
-	splash_count = gm.missile_splash_count
-	mobile_fire_mult = gm.mobile_fire_mult
-	cannon_fire_interval = gm.cannon_fire_interval
-	cannon_damage = gm.cannon_damage
-	cannon_pierce_count = gm.cannon_pierce_count
-	cannon_explode_chance = gm.cannon_explode_chance
-	cannon_bloodthirst = gm.cannon_bloodthirst
-	silent_hunter_level = gm.silent_hunter_level
-	railgun_damage = gm.railgun_damage
-	railgun_speed = gm.railgun_speed
-	railgun_range = gm.railgun_range
-	railgun_fire_interval = gm.railgun_fire_interval
-	railgun_crit_bonus = gm.railgun_crit_bonus
-	railgun_multi_count = gm.railgun_multi_count
-	laser_damage = gm.laser_damage
-	laser_duration = gm.laser_duration
-	laser_width = gm.laser_width
-	laser_fire_interval = gm.laser_fire_interval
-	laser_shield_mult = gm.laser_shield_mult
+func sync_from_player_stats(ps: PlayerStats) -> void:
+	player_stats = ps
 
 func get_primary_weapon() -> WeaponData:
 	if not active_weapons.is_empty():

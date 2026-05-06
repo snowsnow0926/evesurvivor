@@ -22,7 +22,7 @@ func _ready() -> void:
 	_base_tint = Color(0.5, 0.0, 0.5)
 	_visual_scale = 1.2
 	_icon_id = "boss_void"
-	_tonnage = "battlecruiser"
+	tonnage = "battlecruiser"
 
 	# Boss damage number config (larger, more dramatic)
 	_dmg_number_font_size_normal = 20
