@@ -452,7 +452,7 @@ func _update_rotation(delta: float) -> void:
 	set_icon_rotation(_current_angle)
 
 func _draw() -> void:
-	var tex_size: Vector2 = _icon_tex.get_size() if _icon_tex != null else Vector2(32, 32)
+	var tex_size: Vector2 = _icon_tex.get_size() if _icon_tex != null else Vector2(ShipIconGenerator.ICON_SIZE, ShipIconGenerator.ICON_SIZE)
 	var half_w := tex_size.x * 0.5 * _visual_scale
 	var half_h := tex_size.y * 0.5 * _visual_scale
 

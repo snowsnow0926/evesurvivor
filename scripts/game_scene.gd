@@ -132,7 +132,7 @@ func _show_settlement_screen(reason) -> void:
 		_:
 			GameState.last_run_reason = reason
 			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, false)
-	game_manager.grant_loot_to_player()
+	var earned_loot: Array = game_manager.grant_loot_to_player()
 
 	# 撤离时：不解锁下一关（只有倒计时结束才算通关）
 	if reason == "retreat" and game_manager.current_stage != null:
@@ -206,7 +206,7 @@ func _show_settlement_screen(reason) -> void:
 		earned_minerals_label.text = "+%d" % minerals_gained
 
 	if settlement.has_method("set_settlement_data"):
-		settlement.set_settlement_data(reason, kills, level, coin_gained, minerals_gained, game_manager.get_session_loot())
+		settlement.set_settlement_data(reason, kills, level, coin_gained, minerals_gained, earned_loot)
 
 	var ship_status_label = settlement.get_node_or_null("Panel/VBox/ShipStatusLabel")
 	if ship_status_label:

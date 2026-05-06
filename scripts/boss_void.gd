@@ -33,10 +33,11 @@ func _ready() -> void:
 func setup_icon() -> void:
 	var tex: Texture2D = ShipIconGenerator.get_texture(ShipIconGenerator.Category.SHIP, "npcbattleCruiser")
 	if tex != null:
+		_icon_tex = tex
 		ship_sprite.texture = tex
 		ship_sprite.material = _tint_mat
 		ship_sprite.visible = true
-		ship_sprite.offset = Vector2(-16, -16)
+		ship_sprite.offset = Vector2(-ShipIconGenerator.ICON_SIZE * 0.5, -ShipIconGenerator.ICON_SIZE * 0.5)
 		polygon.visible = false
 		_update_shader_params()
 	else:
@@ -129,10 +130,11 @@ func _setup_tonnage_icon(cid: int) -> void:
 		5: icon_name = "npcdreadnought"
 	var tex: Texture2D = ShipIconGenerator.get_texture(ShipIconGenerator.Category.SHIP, icon_name)
 	if tex != null:
+		_icon_tex = tex
 		ship_sprite.texture = tex
 		ship_sprite.material = _tint_mat
 		ship_sprite.visible = true
-		ship_sprite.offset = Vector2(-16, -16)
+		ship_sprite.offset = Vector2(-ShipIconGenerator.ICON_SIZE * 0.5, -ShipIconGenerator.ICON_SIZE * 0.5)
 		polygon.visible = false
 		_update_shader_params()
 	else:

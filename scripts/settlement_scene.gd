@@ -30,7 +30,7 @@ var session_loot: Array = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	print("[SettlementScene] _ready called, process_mode=", process_mode)
+	print("[SettlementScene] _ready called, process_mode=", process_mode, " Inventory items: ", GameState.equipment_inventory.size())
 	_connect_buttons()
 
 func _connect_buttons() -> void:
