@@ -119,12 +119,14 @@ func _show_settlement_screen(reason) -> void:
 	var kills = game_manager.total_kills
 	var level = game_manager.player_level
 
+	var loot_for_settlement: Array = game_manager.get_session_loot().duplicate(true)
+
 	_record_run_and_loot(reason, kills, level, coin_gained, minerals_gained)
 	_handle_stage_progression(reason)
 
 	get_tree().paused = false
 
-	var settlement = _build_settlement_scene(reason, coin_gained, minerals_gained, kills, level)
+	var settlement = _build_settlement_scene(reason, coin_gained, minerals_gained, kills, level, loot_for_settlement)
 	if settlement == null:
 		return
 
@@ -168,6 +170,9 @@ func _record_run_and_loot(reason: String, kills: int, level: int, coin_gained: i
 			"range": loot_item.get("range", 0.0),
 			"crit_rate": loot_item.get("crit_rate", 0.0),
 			"crit_mult": loot_item.get("crit_mult", 1.5),
+			"shield_bonus": loot_item.get("shield_bonus", 0.0),
+			"shield_regen_bonus": loot_item.get("shield_regen_bonus", 0.0),
+			"star_coin_price": loot_item.get("star_coin_price", 0),
 			"tonnage_tier": loot_item.get("tonnage_tier", 0),
 			"equip_type": loot_item.get("type", "weapon"),
 			"scene_path": loot_item.get("scene_path", ""),
@@ -198,7 +203,7 @@ func _handle_stage_progression(reason: String) -> void:
 			if chapter != null and c_st < chapter.stages.size() + 1:
 				GameState.unlock_stage(c_ch, c_st + 1)
 
-func _build_settlement_scene(reason: String, coin_gained: int, minerals_gained: int, kills: int, level: int) -> Node:
+func _build_settlement_scene(reason: String, coin_gained: int, minerals_gained: int, kills: int, level: int, loot: Array = []) -> Node:
 	var scene_res = load("res://scenes/SettlementScene.tscn")
 	if not scene_res:
 		push_error("[GameScene] failed to load SettlementScene.tscn")
@@ -242,7 +247,7 @@ func _build_settlement_scene(reason: String, coin_gained: int, minerals_gained: 
 		earned_minerals_label.text = "+%d" % minerals_gained
 
 	if settlement.has_method("set_settlement_data"):
-		settlement.set_settlement_data(reason, kills, level, coin_gained, minerals_gained, [])
+		settlement.set_settlement_data(reason, kills, level, coin_gained, minerals_gained, loot)
 
 	var ship_status_label = settlement.get_node_or_null("Panel/VBox/ShipStatusLabel")
 	if ship_status_label:

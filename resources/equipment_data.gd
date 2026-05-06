@@ -78,3 +78,9 @@ static func get_armor_bonus(aid: ArmorID) -> Dictionary:
 		ArmorID.SMALL_SHIELD_OPTIMIZER: return {"shield_bonus": 20.0, "shield_regen_bonus": 0.0}
 		ArmorID.SMALL_SHIELD_REGEN: return {"shield_bonus": 0.0, "shield_regen_bonus": 2.0}
 	return {}
+
+static func get_shop_item_id_for_armor(aid: ArmorID) -> int:
+	match aid:
+		ArmorID.SMALL_SHIELD_OPTIMIZER: return 16  # ShopItemData.ShopItemID.SMALL_SHIELD_OPTIMIZER
+		ArmorID.SMALL_SHIELD_REGEN: return 20       # ShopItemData.ShopItemID.SMALL_SHIELD_REGEN
+	return 16

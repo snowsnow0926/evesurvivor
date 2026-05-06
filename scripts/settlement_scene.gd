@@ -2,6 +2,7 @@ extends Control
 
 const EquipmentData = preload("res://resources/equipment_data.gd")
 const WeaponData = preload("res://resources/weapon_data.gd")
+const ShopItemData = preload("res://resources/shop_data.gd")
 
 var settlement_reason: String = ""
 var session_kills: int = 0
@@ -159,15 +160,18 @@ func _build_loot_list() -> void:
 		
 		# Determine type and name
 		var type_str := "武器" if loot.get("type") == "weapon" else "防具"
-		var name_str: String = loot.get("name", "?")
-		if name_str == "?" or name_str.is_empty():
+		var name_str: String = loot.get("name", "")
+		if name_str.is_empty() or name_str == "?":
 			if loot.get("type") == "weapon":
-				var wid: int = loot.get("weapon_id", 0)
-				var wd := WeaponData.get_weapon(wid)
-				name_str = wd.display_name if wd else "?"
+				var sid: int = loot.get("weapon_id", -1)
+				if sid >= 0:
+					var shop_item = ShopItemData.get_item(sid)
+					name_str = shop_item.display_name if shop_item and not shop_item.display_name.is_empty() else ""
 			else:
-				var aid: int = loot.get("armor_id", 0)
+				var aid: int = loot.get("armor_id", -1)
 				name_str = EquipmentData.get_armor_name(aid)
+		if name_str.is_empty():
+			name_str = "?"
 		
 		# Apply quality color
 		var quality: int = loot.get("quality", 0)

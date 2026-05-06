@@ -13,6 +13,7 @@ const DROP_ARMOR: Array[int] = [0, 1]
 
 const StageData = preload("res://resources/stage_data.gd")
 const WeaponData = preload("res://resources/weapon_data.gd")
+const EquipmentData = preload("res://resources/equipment_data.gd")
 const ShopItemData = preload("res://resources/shop_data.gd")
 
 func _init(gm: Node2D) -> void:
@@ -42,12 +43,27 @@ func try_drop_equipment(enemy: Node2D) -> void:
 			"range": shop_item.range,
 			"crit_rate": shop_item.crit_rate,
 			"crit_mult": shop_item.crit_mult,
+			"star_coin_price": shop_item.sell_price,
 			"tonnage_tier": loot.equipment_tier,
 			"pos": enemy.global_position
 		}
 	else:
 		var aid := DROP_ARMOR[randi() % DROP_ARMOR.size()]
-		loot_data = {"equip_id": "a_%d_%d" % [aid, randi() % 100000], "type": "armor", "armor_id": aid, "quality": quality, "pos": enemy.global_position}
+		var sid := EquipmentData.get_shop_item_id_for_armor(aid)
+		var shop_item = ShopItemData.get_item(sid)
+		loot_data = {
+			"equip_id": "a_%d_%d" % [aid, randi() % 100000],
+			"type": "armor",
+			"armor_id": aid,
+			"scene_path": shop_item.scene_path,
+			"quality": quality,
+			"name": shop_item.display_name,
+			"shield_bonus": shop_item.shield_bonus,
+			"shield_regen_bonus": shop_item.shield_regen_bonus,
+			"star_coin_price": shop_item.sell_price,
+			"tonnage_tier": loot.equipment_tier,
+			"pos": enemy.global_position
+		}
 	add_loot(loot_data)
 	_spawn_loot_effect(enemy.global_position, loot_type)
 
@@ -73,12 +89,27 @@ func spawn_boss_loot(boss_node: Node2D) -> void:
 			"range": shop_item.range,
 			"crit_rate": shop_item.crit_rate,
 			"crit_mult": shop_item.crit_mult,
+			"star_coin_price": shop_item.sell_price,
 			"tonnage_tier": loot.equipment_tier,
 			"pos": boss_node.global_position
 		}
 	else:
 		var aid := DROP_ARMOR[randi() % DROP_ARMOR.size()]
-		loot_data = {"equip_id": "a_%d_%d" % [aid, randi() % 100000], "type": "armor", "armor_id": aid, "quality": quality, "pos": boss_node.global_position}
+		var sid := EquipmentData.get_shop_item_id_for_armor(aid)
+		var shop_item = ShopItemData.get_item(sid)
+		loot_data = {
+			"equip_id": "a_%d_%d" % [aid, randi() % 100000],
+			"type": "armor",
+			"armor_id": aid,
+			"scene_path": shop_item.scene_path,
+			"quality": quality,
+			"name": shop_item.display_name,
+			"shield_bonus": shop_item.shield_bonus,
+			"shield_regen_bonus": shop_item.shield_regen_bonus,
+			"star_coin_price": shop_item.sell_price,
+			"tonnage_tier": loot.equipment_tier,
+			"pos": boss_node.global_position
+		}
 	add_loot(loot_data)
 	_spawn_loot_effect(boss_node.global_position, loot_type)
 
