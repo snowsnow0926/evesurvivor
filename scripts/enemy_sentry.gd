@@ -1,5 +1,7 @@
 extends EnemyBase
 
+const StageData = preload("res://resources/stage_data.gd")
+
 const _SCENE_SENTRY_BULLET: PackedScene = preload("res://scenes/SentryBullet.tscn")
 
 var fire_interval: float = 1.2
@@ -17,56 +19,16 @@ func _ready() -> void:
 	_base_tint = Color(0.5, 0.2, 1.0)
 	super()
 	_icon_id = "enemy_sentry"
+	_chapter_stats_key = "sentry"
 	tonnage = "cruiser"
 	_death_particle_color = Color(0.5, 0.2, 1.0, 1.0)
 
-func _apply_chapter_icon() -> void:
+func _apply_chapter_stats() -> void:
 	var cid: int = _chapter_id_override if _chapter_id_override > 0 else (game_manager.current_chapter_id if game_manager else 0)
 	var sentry_stats := StageData.get_chapter_stats(cid, "sentry")
 	var level_bonus: float = 1.0 + 0.3 * (game_manager.player_level - 1) if game_manager else 1.0
 	var final_strength: float = (game_manager.current_stage.strength_mult * level_bonus) if game_manager and game_manager.current_stage else 1.0
 	bullet_damage = sentry_stats.damage * final_strength
-	match cid:
-		2:
-			var entry: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.ENEMY, "enemy_sentry_cruiser")
-			if entry != null:
-				_icon_tex = entry.get_texture()
-				if ship_sprite:
-					ship_sprite.texture = _icon_tex
-					ship_sprite.material = null
-					ship_sprite.visible = true
-				if polygon:
-					polygon.visible = false
-		3:
-			var entry2: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.ENEMY, "enemy_sentry_battlecruiser")
-			if entry2 != null:
-				_icon_tex = entry2.get_texture()
-				if ship_sprite:
-					ship_sprite.texture = _icon_tex
-					ship_sprite.material = null
-					ship_sprite.visible = true
-				if polygon:
-					polygon.visible = false
-		4:
-			var entry3: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.ENEMY, "enemy_sentry_battleship")
-			if entry3 != null:
-				_icon_tex = entry3.get_texture()
-				if ship_sprite:
-					ship_sprite.texture = _icon_tex
-					ship_sprite.material = null
-					ship_sprite.visible = true
-				if polygon:
-					polygon.visible = false
-		5:
-			var entry4: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.ENEMY, "enemy_sentry_dreadnought")
-			if entry4 != null:
-				_icon_tex = entry4.get_texture()
-				if ship_sprite:
-					ship_sprite.texture = _icon_tex
-					ship_sprite.material = null
-					ship_sprite.visible = true
-				if polygon:
-					polygon.visible = false
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)

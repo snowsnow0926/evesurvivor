@@ -20,6 +20,29 @@ var _chapter_id_override: int = 0
 # === Icon ===
 const ShipIconGenerator = preload("res://scripts/ship_icon_generator.gd")
 const TintShader = preload("res://shaders/ship_tint.gdshader")
+
+const _CHAPTER_ICON_MAP: Dictionary = {
+	"melee": {
+		2: "enemy_melee_cruiser",
+		3: "enemy_melee_battlecruiser",
+		4: "enemy_melee_battleship",
+		5: "enemy_melee_dreadnought",
+	},
+	"sentry": {
+		2: "enemy_sentry_cruiser",
+		3: "enemy_sentry_battlecruiser",
+		4: "enemy_sentry_battleship",
+		5: "enemy_sentry_dreadnought",
+	},
+	"raven": {
+		2: "enemy_raven_cruiser",
+		3: "enemy_raven_battlecruiser",
+		4: "enemy_raven_battleship",
+		5: "enemy_raven_dreadnought",
+	},
+}
+
+var _chapter_stats_key: String = "melee"
 var _icon_id: String = "enemy_melee"
 var _current_angle: float = 0.0
 var _turn_speed: float = 4.0
@@ -159,9 +182,9 @@ func setup_enemy(gm: Node2D, e_hp: float, e_damage: float, e_speed: float, e_shi
 	_chapter_tonnage = chapter_tonnage
 	_chapter_icon_override = chapter_icon
 	_chapter_id_override = chapter_id_override
+	_apply_chapter_stats()
+	_apply_chapter_icon()
 	_apply_stage_visual(visual_level)
-	if not _chapter_icon_override.is_empty():
-		_apply_chapter_icon()
 	if p_is_elite:
 		set_elite(true)
 
@@ -176,10 +199,33 @@ func _apply_stage_visual(level: int) -> void:
 	_death_particle_scale_max = 5.0 + extra * 1.0
 	_update_shader_params()
 
+func _apply_chapter_stats() -> void:
+	pass
+
 func _apply_chapter_icon() -> void:
-	if _chapter_icon_override.is_empty():
+	var cid: int = _chapter_id_override if _chapter_id_override > 0 else (game_manager.current_chapter_id if game_manager else 0)
+
+	# override path — used by subclasses for special icons
+	if not _chapter_icon_override.is_empty():
+		var entry: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.ENEMY, _chapter_icon_override)
+		if entry == null:
+			return
+		_icon_tex = entry.get_texture()
+		if ship_sprite != null:
+			ship_sprite.texture = _icon_tex
+			ship_sprite.material = null
+			ship_sprite.visible = true
+		if polygon != null:
+			polygon.visible = false
 		return
-	var entry: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.ENEMY, _chapter_icon_override)
+
+	# map path — look up icon by chapter and enemy type
+	var icon_map: Dictionary = _CHAPTER_ICON_MAP.get(_chapter_stats_key, {})
+	var icon_id: String = icon_map.get(cid, "")
+	if icon_id.is_empty():
+		return
+
+	var entry: ShipIconGenerator.IconEntry = ShipIconGenerator.get_entry(ShipIconGenerator.Category.ENEMY, icon_id)
 	if entry == null:
 		return
 	_icon_tex = entry.get_texture()
