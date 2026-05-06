@@ -10,6 +10,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 1
+script = ExtResource("1_settlement")
 
 [node name="BG" type="ColorRect" parent="."]
 layout_mode = 1
@@ -19,7 +20,7 @@ anchor_bottom = 1.0
 color = Color(0.03, 0.03, 0.07, 0.98)
 
 [node name="Panel" type="Panel" parent="."]
-layout_mode = 2
+layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -130,16 +131,104 @@ horizontal_alignment = 0
 layout_mode = 2
 text = "获得物品:"
 horizontal_alignment = 1
+visible = false
 
 [node name="LootScroll" type="ScrollContainer" parent="Panel/VBox"]
 layout_mode = 2
+custom_minimum_size = Vector2(0, 120)
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
+visible = false
 
 [node name="LootContainer" type="VBoxContainer" parent="Panel/VBox/LootScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
+
+[node name="LootSlot0" type="HBoxContainer" parent="Panel/VBox/LootScroll/LootContainer"]
+layout_mode = 2
+
+[node name="TypeLabel" type="Label" parent="Panel/VBox/LootScroll/LootContainer/LootSlot0"]
+layout_mode = 2
+size_flags_horizontal = 2
+text = "[武器]"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="NameLabel" type="Label" parent="Panel/VBox/LootScroll/LootContainer/LootSlot0"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "---"
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="LootSlot1" type="HBoxContainer" parent="Panel/VBox/LootScroll/LootContainer"]
+layout_mode = 2
+
+[node name="TypeLabel" type="Label" parent="Panel/VBox/LootScroll/LootContainer/LootSlot1"]
+layout_mode = 2
+size_flags_horizontal = 2
+text = "[武器]"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="NameLabel" type="Label" parent="Panel/VBox/LootScroll/LootContainer/LootSlot1"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "---"
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="LootSlot2" type="HBoxContainer" parent="Panel/VBox/LootScroll/LootContainer"]
+layout_mode = 2
+
+[node name="TypeLabel" type="Label" parent="Panel/VBox/LootScroll/LootContainer/LootSlot2"]
+layout_mode = 2
+size_flags_horizontal = 2
+text = "[武器]"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="NameLabel" type="Label" parent="Panel/VBox/LootScroll/LootContainer/LootSlot2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "---"
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="LootSlot3" type="HBoxContainer" parent="Panel/VBox/LootScroll/LootContainer"]
+layout_mode = 2
+
+[node name="TypeLabel" type="Label" parent="Panel/VBox/LootScroll/LootContainer/LootSlot3"]
+layout_mode = 2
+size_flags_horizontal = 2
+text = "[武器]"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="NameLabel" type="Label" parent="Panel/VBox/LootScroll/LootContainer/LootSlot3"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "---"
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="LootSlot4" type="HBoxContainer" parent="Panel/VBox/LootScroll/LootContainer"]
+layout_mode = 2
+
+[node name="TypeLabel" type="Label" parent="Panel/VBox/LootScroll/LootContainer/LootSlot4"]
+layout_mode = 2
+size_flags_horizontal = 2
+text = "[武器]"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="NameLabel" type="Label" parent="Panel/VBox/LootScroll/LootContainer/LootSlot4"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "---"
+horizontal_alignment = 0
+vertical_alignment = 1
 
 [node name="ShipStatusLabel" type="Label" parent="Panel/VBox"]
 layout_mode = 2

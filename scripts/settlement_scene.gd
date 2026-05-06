@@ -11,6 +11,7 @@ var session_level: int = 1
 var earned_coin: int = 0
 var earned_minerals: int = 0
 var session_loot: Array = []
+var _data_ready: bool = false
 
 @onready var result_label: Label = $Panel/VBox/ResultLabel
 @onready var result_desc: Label = $Panel/VBox/ResultDesc
@@ -24,14 +25,40 @@ var session_loot: Array = []
 @onready var retry_btn: Button = $Panel/VBox/ButtonsHBox/RetryBtn
 @onready var base_btn: Button = $Panel/VBox/ButtonsHBox/BaseBtn
 @onready var menu_btn: Button = $Panel/VBox/ButtonsHBox/MenuBtn
+@onready var loot_section_label: Label = $Panel/VBox/LootSectionLabel
 @onready var loot_scroll: ScrollContainer = $Panel/VBox/LootScroll
 @onready var loot_container: VBoxContainer = $Panel/VBox/LootScroll/LootContainer
-@onready var loot_section_label: Label = $Panel/VBox/LootSectionLabel
+var loot_slots: Array[HBoxContainer] = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	print("[SettlementScene] _ready called, process_mode=", process_mode, " Inventory items: ", GameState.equipment_inventory.size())
 	_connect_buttons()
+
+	# Initialize loot_slots if not yet done
+	if loot_slots.is_empty():
+		for i: int in range(5):
+			var slot_path := "Panel/VBox/LootScroll/LootContainer/LootSlot%d" % i
+			var slot: Node = get_node_or_null(slot_path)
+			if slot != null:
+				loot_slots.append(slot)
+				slot.visible = false
+
+	# Build loot display once slots are ready
+	if _data_ready and session_loot.size() > 0:
+		_update_display()
+		_build_loot_list()
+
+func _init_loot_slots() -> void:
+	loot_slots.clear()
+	for i: int in range(5):
+		var slot_path := "Panel/VBox/LootScroll/LootContainer/LootSlot%d" % i
+		var slot: HBoxContainer = get_node_or_null(slot_path)
+		if slot != null:
+			loot_slots.append(slot)
+			slot.visible = false
+		else:
+			print("[SettlementScene] WARNING: loot slot ", i, " not found at ", slot_path)
+	print("[SettlementScene] loot_slots initialized: size=", loot_slots.size())
 
 func _connect_buttons() -> void:
 	if retry_btn:
@@ -45,7 +72,10 @@ func _connect_buttons() -> void:
 		menu_btn.pressed.connect(_on_menu_pressed)
 
 func set_settlement_data(reason: String, kills: int, level: int, coin: int, minerals: int, loot: Array = []) -> void:
-	print("[SettlementScene] set_settlement_data: reason=", reason, " kills=", kills, " level=", level, " coin=", coin, " minerals=", minerals, " loot=", loot.size())
+	print("[SettlementScene] set_settlement_data ENTRY: loot.size()=", loot.size(), " loot_slots.size()=", loot_slots.size())
+	for i: int in range(loot.size()):
+		var item: Dictionary = loot[i]
+		print("  loot[", i, "]: type=", item.get("type"), " name=", item.get("name"), " weapon_id=", item.get("weapon_id"), " armor_id=", item.get("armor_id"), " quality=", item.get("quality"))
 	settlement_reason = reason
 	session_kills = kills
 	session_level = level
@@ -56,11 +86,16 @@ func set_settlement_data(reason: String, kills: int, level: int, coin: int, mine
 	earned_minerals = minerals
 
 	session_loot = loot.duplicate(true)
+	print("[SettlementScene] After duplicate: session_loot.size()=", session_loot.size())
 
 	GameState.last_run_reason = reason
 
 	_update_display()
-	_build_loot_list()
+	_data_ready = true
+
+	# Only build loot list if slots are already initialized, otherwise _ready() will call it
+	if loot_slots.size() > 0:
+		_build_loot_list()
 
 func _gui_input(event: InputEvent) -> void:
 	print("[SettlementScene] _gui_input: ", event.as_text())
@@ -124,19 +159,32 @@ func _update_display() -> void:
 			retry_btn.disabled = GameState.ship_damaged
 
 func _build_loot_list() -> void:
+	print("[SettlementScene] _build_loot_list: session_loot.size()=", session_loot.size())
+	
+	# Hide/show section label and scroll container based on loot count
 	if loot_section_label:
 		loot_section_label.visible = session_loot.size() > 0
 	if loot_scroll:
 		loot_scroll.visible = session_loot.size() > 0
-	if not loot_container:
-		return
-	for child in loot_container.get_children():
-		child.queue_free()
-	for loot: Dictionary in session_loot:
-		var row := HBoxContainer.new()
+	
+	# First, hide all slots
+	for slot in loot_slots:
+		slot.visible = false
+	
+	# Populate slots with loot data
+	for i: int in range(mini(session_loot.size(), loot_slots.size())):
+		var loot: Dictionary = session_loot[i]
+		var slot: HBoxContainer = loot_slots[i]
+		var type_label: Label = slot.get_node_or_null("TypeLabel")
+		var name_label: Label = slot.get_node_or_null("NameLabel")
+		
+		if type_label == null or name_label == null:
+			print("[SettlementScene] WARNING: Slot ", i, " missing labels!")
+			continue
+		
+		# Determine type and name
 		var type_str := "武器" if loot.get("type") == "weapon" else "防具"
 		var name_str: String = loot.get("name", "?")
-		var quality: int = loot.get("quality", 0)
 		if name_str == "?" or name_str.is_empty():
 			if loot.get("type") == "weapon":
 				var wid: int = loot.get("weapon_id", 0)
@@ -145,12 +193,17 @@ func _build_loot_list() -> void:
 			else:
 				var aid: int = loot.get("armor_id", 0)
 				name_str = EquipmentData.get_armor_name(aid)
+		
+		# Apply quality color
+		var quality: int = loot.get("quality", 0)
 		var quality_color := EquipmentData.get_quality_color(quality)
-		var name_label := Label.new()
-		name_label.text = "[%s] %s" % [type_str, name_str]
+		
+		# Update labels
+		type_label.text = "[%s]" % type_str
+		name_label.text = name_str
 		name_label.add_theme_color_override("font_color", quality_color)
-		row.add_child(name_label)
-		loot_container.add_child(row)
+		slot.visible = true
+		print("  Slot ", i, ": type=", type_str, " name=", name_str)
 
 func set_reason(reason: String) -> void:
 	settlement_reason = reason

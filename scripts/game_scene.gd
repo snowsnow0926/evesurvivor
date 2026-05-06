@@ -133,7 +133,10 @@ func _show_settlement_screen(reason) -> void:
 			GameState.last_run_reason = reason
 			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, false)
 	var earned_loot: Array = []
-	for loot_item: Dictionary in game_manager.get_session_loot():
+	var raw_loot: Array = game_manager.get_session_loot()
+	print("[GameScene] earned_loot: raw_loot.size()=", raw_loot.size())
+	for loot_item: Dictionary in raw_loot:
+		print("  raw: equip_id=", loot_item.get("equip_id"), " type=", loot_item.get("type"), " name=", loot_item.get("name"))
 		var item_dict := {
 			"equip_id": loot_item.get("equip_id", ""),
 			"type": loot_item.get("type", "weapon"),
@@ -153,6 +156,7 @@ func _show_settlement_screen(reason) -> void:
 		}
 		earned_loot.append(item_dict)
 		GameState.equipment_inventory.append(item_dict)
+	print("[GameScene] earned_loot built: size=", earned_loot.size(), " equipment_inventory.size()=", GameState.equipment_inventory.size())
 	game_manager.get_session_loot().clear()
 
 	# 撤离时：不解锁下一关（只有倒计时结束才算通关）
@@ -227,7 +231,9 @@ func _show_settlement_screen(reason) -> void:
 		earned_minerals_label.text = "+%d" % minerals_gained
 
 	if settlement.has_method("set_settlement_data"):
+		print("[GameScene] Calling set_settlement_data with earned_loot.size()=", earned_loot.size())
 		settlement.set_settlement_data(reason, kills, level, coin_gained, minerals_gained, earned_loot)
+		print("[GameScene] set_settlement_data returned")
 
 	var ship_status_label = settlement.get_node_or_null("Panel/VBox/ShipStatusLabel")
 	if ship_status_label:
@@ -277,21 +283,21 @@ func _on_settlement_retry() -> void:
 	if GameState.ship_damaged:
 		if GameState.star_coin >= GameState.get_repair_cost():
 			GameState.repair_ship()
-	get_tree().change_scene_to_file("res://scenes/GameScene.tscn")
+	get_tree().root.change_scene_to_file("res://scenes/GameScene.tscn")
 
 func _on_settlement_base() -> void:
 	SoundManager.play_sfx("button_click")
 	print("[GameScene] settlement base")
-	get_tree().change_scene_to_file("res://scenes/BaseScene.tscn")
+	get_tree().root.change_scene_to_file("res://scenes/BaseScene.tscn")
 
 func _on_settlement_menu() -> void:
 	SoundManager.play_sfx("button_click")
 	print("[GameScene] settlement menu")
-	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
+	get_tree().root.change_scene_to_file("res://scenes/MainMenu.tscn")
 
 func _game_over_to_base() -> void:
 	await get_tree().create_timer(0.1).timeout
-	get_tree().change_scene_to_file("res://scenes/BaseScene.tscn")
+	get_tree().root.change_scene_to_file("res://scenes/BaseScene.tscn")
 
 func trigger_screen_shake(intensity: float = 8.0, duration: float = 0.2) -> void:
 	shake_intensity = intensity
