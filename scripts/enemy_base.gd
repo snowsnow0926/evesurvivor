@@ -197,6 +197,7 @@ func setup_enemy(gm: Node2D, e_hp: float, e_damage: float, e_speed: float, e_shi
 	_apply_stage_visual(visual_level)
 	if p_is_elite:
 		set_elite(true)
+	_update_hp_bar()
 
 func _apply_stage_visual(level: int) -> void:
 	_stage_visual_level = level
@@ -333,8 +334,6 @@ func set_icon_rotation(angle: float) -> void:
 
 func take_damage(amount: float, is_crit: bool = false) -> void:
 	if hp <= 0:
-		return
-	if _lock_state != LockState.LOCKED:
 		return
 	SoundManager.play_sfx("hit")
 	hp -= amount

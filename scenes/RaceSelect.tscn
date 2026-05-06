@@ -1,8 +1,8 @@
-[gd_scene format=3 uid="uid://du7llc373axqm"]
+[gd_scene format=3 uid="uid://cykymcty07hjx"]
 
 [ext_resource type="Script" path="res://scripts/race_select.gd" id="1_race_select"]
 
-[node name="RaceSelect" type="Control"]
+[node name="RaceSelect" type="Control" unique_id=1696568658]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,14 +11,16 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_race_select")
 
-[node name="BG" type="ColorRect" parent="."]
+[node name="BG" type="ColorRect" parent="." unique_id=1291381409]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 color = Color(0.04, 0.04, 0.08, 0.95)
 
-[node name="Title" type="Label" parent="."]
+[node name="Title" type="Label" parent="." unique_id=1433608963]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
@@ -30,7 +32,7 @@ text = "选择种族"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="HSplit" type="HSplitContainer" parent="."]
+[node name="HSplit" type="HSplitContainer" parent="." unique_id=1971959950]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -39,15 +41,15 @@ offset_top = 90.0
 offset_bottom = -80.0
 grow_horizontal = 2
 grow_vertical = 2
-min_size = Vector2(700, 400)
+split_offsets = PackedInt32Array(220)
 split_offset = 220
 
-[node name="LeftPanel" type="Panel" parent="HSplit"]
+[node name="LeftPanel" type="Panel" parent="HSplit" unique_id=1243887364]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 
-[node name="VBox" type="VBoxContainer" parent="HSplit/LeftPanel"]
+[node name="VBox" type="VBoxContainer" parent="HSplit/LeftPanel" unique_id=1719161090]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -56,24 +58,26 @@ offset_left = 12.0
 offset_top = 12.0
 offset_right = -12.0
 offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 8
 
-[node name="Header" type="Label" parent="HSplit/LeftPanel/VBox"]
+[node name="Header" type="Label" parent="HSplit/LeftPanel/VBox" unique_id=372843203]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.8, 1.0, 1.0)
+theme_override_colors/font_color = Color(0.7, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 20
 text = "种族列表"
 horizontal_alignment = 1
 
-[node name="RaceList" type="VBoxContainer" parent="HSplit/LeftPanel/VBox"]
+[node name="RaceList" type="VBoxContainer" parent="HSplit/LeftPanel/VBox" unique_id=1829529756]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="RightPanel" type="Panel" parent="HSplit"]
-layout_mode = 3
+[node name="RightPanel" type="Panel" parent="HSplit" unique_id=1446924946]
+layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ScrollContainer" type="ScrollContainer" parent="HSplit/RightPanel"]
+[node name="ScrollContainer" type="ScrollContainer" parent="HSplit/RightPanel" unique_id=1491404460]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -82,80 +86,82 @@ offset_left = 16.0
 offset_top = 16.0
 offset_right = -16.0
 offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
 horizontal_scroll_mode = 0
 
-[node name="DetailVBox" type="VBoxContainer" parent="HSplit/RightPanel/ScrollContainer"]
+[node name="DetailVBox" type="VBoxContainer" parent="HSplit/RightPanel/ScrollContainer" unique_id=602817328]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
-[node name="RaceName" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox"]
+[node name="RaceName" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox" unique_id=838691467]
 layout_mode = 2
-theme_override_colors/font_color = Color(1.0, 0.85, 0.3, 1.0)
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
 theme_override_font_sizes/font_size = 32
 text = "种族名"
 
-[node name="RaceDesc" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox"]
+[node name="RaceDesc" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox" unique_id=361731030]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.85, 0.95, 1.0)
+theme_override_colors/font_color = Color(0.8, 0.85, 0.95, 1)
 theme_override_font_sizes/font_size = 18
 text = "种族描述"
 autowrap_mode = 2
 
-[node name="AttrsSection" type="VBoxContainer" parent="HSplit/RightPanel/ScrollContainer/DetailVBox"]
+[node name="AttrsSection" type="VBoxContainer" parent="HSplit/RightPanel/ScrollContainer/DetailVBox" unique_id=1308573192]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="AttrHP" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox/AttrsSection"]
+[node name="AttrHP" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox/AttrsSection" unique_id=341116107]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.4, 0.9, 0.5, 1.0)
+theme_override_colors/font_color = Color(0.4, 0.9, 0.5, 1)
 theme_override_font_sizes/font_size = 18
 text = "HP: 0"
 
-[node name="AttrShield" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox/AttrsSection"]
+[node name="AttrShield" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox/AttrsSection" unique_id=1921646008]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.4, 0.8, 1.0, 1.0)
+theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 18
 text = "护盾: 0"
 
-[node name="AttrRegen" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox/AttrsSection"]
+[node name="AttrRegen" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox/AttrsSection" unique_id=711231330]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 0.8, 1.0, 1.0)
+theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 18
 text = "回充: 0/s"
 
-[node name="AttrSpeed" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox/AttrsSection"]
+[node name="AttrSpeed" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox/AttrsSection" unique_id=1766847719]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.9, 0.5, 1.0)
+theme_override_colors/font_color = Color(0.9, 0.9, 0.5, 1)
 theme_override_font_sizes/font_size = 18
 text = "移速: 0"
 
-[node name="AttrDodge" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox/AttrsSection"]
+[node name="AttrDodge" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox/AttrsSection" unique_id=998107987]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.6, 1.0, 1.0)
+theme_override_colors/font_color = Color(0.8, 0.6, 1, 1)
 theme_override_font_sizes/font_size = 18
 text = "闪避: 0%"
 
-[node name="AttrCrit" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox/AttrsSection"]
+[node name="AttrCrit" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox/AttrsSection" unique_id=208358659]
 layout_mode = 2
-theme_override_colors/font_color = Color(1.0, 0.5, 0.5, 1.0)
+theme_override_colors/font_color = Color(1, 0.5, 0.5, 1)
 theme_override_font_sizes/font_size = 18
 text = "暴击: 0%"
 
-[node name="DefaultWeapon" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox"]
+[node name="DefaultWeapon" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox" unique_id=83392048]
 layout_mode = 2
-theme_override_colors/font_color = Color(1.0, 0.7, 0.2, 1.0)
+theme_override_colors/font_color = Color(1, 0.7, 0.2, 1)
 theme_override_font_sizes/font_size = 20
 text = "默认武器: 导弹"
 
-[node name="Talents" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox"]
+[node name="Talents" type="Label" parent="HSplit/RightPanel/ScrollContainer/DetailVBox" unique_id=1021967553]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.3, 1.0, 0.5, 1.0)
+theme_override_colors/font_color = Color(0.3, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 18
 text = "无种族天赋"
 autowrap_mode = 2
 
-[node name="BottomBar" type="HBoxContainer" parent="."]
+[node name="BottomBar" type="HBoxContainer" parent="." unique_id=172059697]
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -164,14 +170,14 @@ anchor_bottom = 1.0
 offset_top = -64.0
 grow_horizontal = 2
 grow_vertical = 0
-alignment = 2
 theme_override_constants/separation = 16
+alignment = 2
 
-[node name="BackBtn" type="Button" parent="BottomBar"]
+[node name="BackBtn" type="Button" parent="BottomBar" unique_id=720461503]
 layout_mode = 2
 text = "返回主菜单"
 
-[node name="ConfirmBtn" type="Button" parent="BottomBar"]
+[node name="ConfirmBtn" type="Button" parent="BottomBar" unique_id=1888001429]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.2, 1.0, 0.3, 1.0)
+theme_override_colors/font_color = Color(0.2, 1, 0.3, 1)
 text = "确认选择"

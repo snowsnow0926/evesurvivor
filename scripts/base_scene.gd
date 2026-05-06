@@ -1,16 +1,10 @@
 extends Control
 
-@onready var repair_btn: Button = $NavPanel/VBox/RepairBtn
-@onready var crafting_btn: Button = $NavPanel/VBox/CraftingBtn
-@onready var research_btn: Button = $NavPanel/VBox/ResearchBtn
-@onready var shop_btn: Button = $NavPanel/VBox/ShopBtn
-@onready var warehouse_btn: Button = $NavPanel/VBox/WarehouseBtn
-@onready var shipyard_btn: Button = $NavPanel/VBox/ShipyardBtn
-@onready var storage_btn: Button = $NavPanel/VBox/StorageBtn
-@onready var start_battle_btn: Button = $NavPanel/VBox/StartBattleBtn
+@onready var start_battle_btn: Button = $BottomPanel/StartBattleBtn
 @onready var coin_label: Label = $Header/HBox/CurrencyBar/CoinLabel
 @onready var minerals_label: Label = $Header/HBox/CurrencyBar/MineralsLabel
 @onready var no_weapon_warning: Label = $NoWeaponWarning
+@onready var building_grid: GridContainer = $BuildingGrid
 
 @onready var repair_panel: Control = $RepairPanel
 @onready var crafting_panel: Control = $CraftingPanel
@@ -33,14 +27,140 @@ const _PANEL_SCENES := {
 	"research": "res://scenes/ResearchCenterUI.tscn",
 }
 
+const BUILDING_DATA: Array[Dictionary] = [
+	{
+		"id": "repair",
+		"name": "维修站",
+		"desc": "修复战斗中受损的舰船，恢复全部耐久度",
+		"icon": "res://assets/base/icons/icon_repair.png",
+		"method": "_show_repair",
+	},
+	{
+		"id": "crafting",
+		"name": "装备合成",
+		"desc": "将两件相同品质的装备合成为更高品质",
+		"icon": "res://assets/base/icons/icon_crafting.png",
+		"method": "_show_crafting",
+	},
+	{
+		"id": "research",
+		"name": "科研中心",
+		"desc": "解锁并升级各类型武器的科技",
+		"icon": "res://assets/base/icons/icon_research.png",
+		"method": "_show_research",
+	},
+	{
+		"id": "shop",
+		"name": "武器商店",
+		"desc": "购买或出售武器与装甲",
+		"icon": "res://assets/base/icons/icon_shop.png",
+		"method": "_show_shop",
+	},
+	{
+		"id": "warehouse",
+		"name": "物品仓库",
+		"desc": "管理仓库中的所有装备",
+		"icon": "res://assets/base/icons/icon_warehouse.png",
+		"method": "_show_warehouse",
+	},
+	{
+		"id": "shipyard",
+		"name": "造船厂",
+		"desc": "解锁新战舰，扩展武器与装甲槽位",
+		"icon": "res://assets/base/icons/icon_shipyard.png",
+		"method": "_show_shipyard",
+	},
+	{
+		"id": "storage",
+		"name": "星港",
+		"desc": "选择本次出战的主力舰船",
+		"icon": "res://assets/base/icons/icon_storage.png",
+		"method": "_show_storage",
+	},
+]
+
 func _ready() -> void:
 	SoundManager.play_music("base")
+	_build_building_cards()
+	building_grid.add_theme_constant_override("h_separation", 32)
+	building_grid.add_theme_constant_override("v_separation", 32)
 	_bind_buttons()
 	_update_currency_display()
 	base_pause_menu = find_child("BasePauseMenu", true, false)
 	_connect_save_ui_signals()
 	if GameState.player_name.is_empty() or GameState.first_run:
 		get_tree().change_scene_to_file("res://scenes/CharacterCreate.tscn")
+
+func _build_building_cards() -> void:
+	for data in BUILDING_DATA:
+		var card := _create_building_card(data)
+		building_grid.add_child(card)
+
+func _create_building_card(data: Dictionary) -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(0, 192)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 48)
+	panel.add_child(hbox)
+
+	var icon_tex := load(data["icon"])
+	var icon: Control
+	if icon_tex:
+		icon = TextureRect.new()
+		icon.texture = icon_tex
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.custom_minimum_size = Vector2(128, 128)
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	else:
+		icon = _create_placeholder_icon()
+	hbox.add_child(icon)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	hbox.add_child(vbox)
+
+	var name_lbl := Label.new()
+	name_lbl.text = data["name"]
+	name_lbl.add_theme_font_size_override("font_size", 36)
+	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	vbox.add_child(name_lbl)
+
+	var desc_lbl := Label.new()
+	desc_lbl.text = data["desc"]
+	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_lbl.add_theme_font_size_override("font_size", 26)
+	desc_lbl.custom_minimum_size = Vector2(480, 0)
+	desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	vbox.add_child(desc_lbl)
+
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(spacer)
+
+	var arrow := Label.new()
+	arrow.text = ">"
+	arrow.add_theme_font_size_override("font_size", 44)
+	arrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	arrow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hbox.add_child(arrow)
+
+	panel.gui_input.connect(_make_card_input_handler(data["method"]))
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	return panel
+
+func _create_placeholder_icon() -> Control:
+	var rect := ColorRect.new()
+	rect.custom_minimum_size = Vector2(128, 128)
+	rect.color = Color(0.15, 0.2, 0.35, 1.0)
+	return rect
+
+func _make_card_input_handler(method_name: String) -> Callable:
+	return func(event: InputEvent) -> void:
+		if event is InputEventMouseButton:
+			if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+				call(method_name)
 
 func _connect_save_ui_signals() -> void:
 	if save_ui and save_ui.has_signal("save_completed"):
@@ -49,7 +169,7 @@ func _connect_save_ui_signals() -> void:
 		save_ui.back_requested.connect(_on_save_ui_back)
 
 func _on_save_completed(slot_idx: int) -> void:
-	var popup = AcceptDialog.new()
+	var popup := AcceptDialog.new()
 	popup.dialog_text = "存档已保存到位置 %d" % (slot_idx + 1)
 	get_tree().current_scene.add_child(popup)
 	popup.popup_centered()
@@ -58,20 +178,6 @@ func _on_save_ui_back() -> void:
 	pass
 
 func _bind_buttons() -> void:
-	if repair_btn:
-		repair_btn.pressed.connect(_show_repair)
-	if crafting_btn:
-		crafting_btn.pressed.connect(_show_crafting)
-	if research_btn:
-		research_btn.pressed.connect(_show_research)
-	if shop_btn:
-		shop_btn.pressed.connect(_show_shop)
-	if warehouse_btn:
-		warehouse_btn.pressed.connect(_show_warehouse)
-	if shipyard_btn:
-		shipyard_btn.pressed.connect(_show_shipyard)
-	if storage_btn:
-		storage_btn.pressed.connect(_show_storage)
 	if start_battle_btn:
 		start_battle_btn.pressed.connect(_on_start_battle)
 
@@ -138,47 +244,27 @@ func _show_repair() -> void:
 	_switch_panel(repair_panel)
 
 func _show_crafting() -> void:
-	if current_panel and is_instance_valid(current_panel):
-		current_panel.visible = false
-	if crafting_panel and is_instance_valid(crafting_panel):
-		crafting_panel.visible = true
-		current_panel = crafting_panel
-		if crafting_panel.has_method("_build_inventory"):
-			crafting_panel._build_inventory()
+	_switch_panel(crafting_panel)
+	if crafting_panel.has_method("_build_inventory"):
+		crafting_panel._build_inventory()
 
 func _show_warehouse() -> void:
-	if current_panel and is_instance_valid(current_panel):
-		current_panel.visible = false
 	var panel := _get_or_create_panel(&"warehouse") as Control
-	if panel and is_instance_valid(panel):
-		panel.visible = true
-		current_panel = panel
-		if panel.has_method("_build_all"):
-			panel._build_all()
+	_switch_panel(panel)
+	if panel and panel.has_method("_build_all"):
+		panel._build_all()
 
 func _show_research() -> void:
-	if current_panel and is_instance_valid(current_panel):
-		current_panel.visible = false
 	var panel := _get_or_create_panel(&"research") as Control
-	if panel and is_instance_valid(panel):
-		panel.visible = true
-		current_panel = panel
+	_switch_panel(panel)
 
 func _show_shop() -> void:
-	if current_panel and is_instance_valid(current_panel):
-		current_panel.visible = false
 	var panel := _get_or_create_panel(&"shop") as Control
-	if panel and is_instance_valid(panel):
-		panel.visible = true
-		current_panel = panel
+	_switch_panel(panel)
 
 func _show_shipyard() -> void:
-	if current_panel and is_instance_valid(current_panel):
-		current_panel.visible = false
 	var panel := _get_or_create_panel(&"shipyard") as Control
-	if panel and is_instance_valid(panel):
-		panel.visible = true
-		current_panel = panel
+	_switch_panel(panel)
 
 func _show_storage() -> void:
 	_switch_panel(storage_panel)
@@ -186,25 +272,43 @@ func _show_storage() -> void:
 func _switch_panel(panel: Control) -> void:
 	if current_panel and is_instance_valid(current_panel):
 		current_panel.visible = false
+		_set_panel_opaque(current_panel, false)
 	if panel and is_instance_valid(panel):
 		panel.visible = true
+		_set_panel_opaque(panel, true)
 		current_panel = panel
+
+func _set_panel_opaque(panel: Control, opaque: bool) -> void:
+	var p: Panel = panel.find_child("Panel", false, false) as Panel
+	if p:
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(0.05, 0.05, 0.1, 0.97) if opaque else Color(0, 0, 0, 0)
+		style.set_border_width_all(2)
+		style.border_color = Color(0.2, 0.3, 0.5, 1.0)
+		style.set_corner_radius_all(8)
+		p.add_theme_stylebox_override("panel", style)
 
 func close_all_panels() -> void:
 	if current_panel and is_instance_valid(current_panel):
 		current_panel.visible = false
+		_set_panel_opaque(current_panel, false)
 		current_panel = null
 	for p in [repair_panel, crafting_panel, storage_panel]:
 		if p:
 			p.visible = false
+			_set_panel_opaque(p, false)
 	if _shop_panel:
 		_shop_panel.visible = false
+		_set_panel_opaque(_shop_panel, false)
 	if _warehouse_panel:
 		_warehouse_panel.visible = false
+		_set_panel_opaque(_warehouse_panel, false)
 	if _shipyard_panel:
 		_shipyard_panel.visible = false
+		_set_panel_opaque(_shipyard_panel, false)
 	if _research_panel:
 		_research_panel.visible = false
+		_set_panel_opaque(_research_panel, false)
 
 func _on_start_battle() -> void:
 	var ship = ShipData.get_ship(GameState.selected_ship_id)
@@ -212,7 +316,7 @@ func _on_start_battle() -> void:
 		ship = ShipData.get_ship(ShipData.ShipID.FRIGATE)
 	var ship_id = int(ship.ship_id)
 	var equipped = GameState.equipped_weapons.get(ship_id)
-	var has_weapon = false
+	var has_weapon := false
 	if equipped is Array:
 		has_weapon = not equipped.is_empty()
 	elif equipped is Dictionary:

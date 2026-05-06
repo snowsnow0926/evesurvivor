@@ -29,15 +29,16 @@ color = Color(0.04, 0.04, 0.08, 1)
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 60.0
+offset_bottom = 120.0
 grow_horizontal = 2
 
 [node name="HBox" type="HBoxContainer" parent="Header" unique_id=543094276]
 layout_mode = 2
-theme_override_constants/separation = 24
+theme_override_constants/separation = 32
 
 [node name="Title" type="Label" parent="Header/HBox" unique_id=870987588]
 layout_mode = 2
+theme_override_font_sizes/font_size = 36
 text = "星际基地"
 vertical_alignment = 1
 
@@ -47,74 +48,53 @@ size_flags_horizontal = 3
 
 [node name="CurrencyBar" type="HBoxContainer" parent="Header/HBox" unique_id=741415814]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 24
 
 [node name="CoinLabel" type="Label" parent="Header/HBox/CurrencyBar" unique_id=2086427646]
 layout_mode = 2
+theme_override_font_sizes/font_size = 28
 text = "星币: 0"
 vertical_alignment = 1
 
 [node name="MineralsLabel" type="Label" parent="Header/HBox/CurrencyBar" unique_id=583170831]
 layout_mode = 2
+theme_override_font_sizes/font_size = 28
 text = "矿物: 0低/0中/0高"
 vertical_alignment = 1
 
-[node name="NavPanel" type="PanelContainer" parent="." unique_id=721438803]
+[node name="BuildingGrid" type="GridContainer" parent="." unique_id=900000001]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 60.0
+offset_left = 24.0
+offset_top = 140.0
+offset_right = -280.0
+offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 2
+columns = 2
+theme_override_constants/h_separation = 32
+theme_override_constants/v_separation = 32
 
-[node name="VBox" type="VBoxContainer" parent="NavPanel" unique_id=1542811522]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 12
+[node name="BottomPanel" type="PanelContainer" parent="." unique_id=900000002]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -256.0
+offset_top = -176.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 0
+grow_vertical = 0
 
-[node name="RepairBtn" type="Button" parent="NavPanel/VBox" unique_id=34986621]
+[node name="StartBattleBtn" type="Button" parent="BottomPanel" unique_id=600264913]
 layout_mode = 2
-size_flags_vertical = 0
-text = "维修站"
-
-[node name="CraftingBtn" type="Button" parent="NavPanel/VBox" unique_id=1996341455]
-layout_mode = 2
-size_flags_vertical = 0
-text = "装备合成"
-
-[node name="ResearchBtn" type="Button" parent="NavPanel/VBox" unique_id=1820480814]
-layout_mode = 2
-size_flags_vertical = 0
-text = "科研中心"
-
-[node name="ShopBtn" type="Button" parent="NavPanel/VBox" unique_id=277412111]
-layout_mode = 2
-size_flags_vertical = 0
-text = "武器商店"
-
-[node name="WarehouseBtn" type="Button" parent="NavPanel/VBox" unique_id=1825773304]
-layout_mode = 2
-size_flags_vertical = 0
-text = "物品仓库"
-
-[node name="ShipyardBtn" type="Button" parent="NavPanel/VBox" unique_id=1282250719]
-layout_mode = 2
-size_flags_vertical = 0
-text = "造船厂"
-
-[node name="StorageBtn" type="Button" parent="NavPanel/VBox" unique_id=47948238]
-layout_mode = 2
-size_flags_vertical = 0
-text = "星港"
-
-[node name="Spacer2" type="Control" parent="NavPanel/VBox" unique_id=1786000624]
-layout_mode = 2
-size_flags_vertical = 0
-
-[node name="StartBattleBtn" type="Button" parent="NavPanel/VBox" unique_id=600264913]
-layout_mode = 2
-size_flags_vertical = 0
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 28
 text = "出发战斗"
 
 [node name="NoWeaponWarning" type="Label" parent="." unique_id=1126992432]
