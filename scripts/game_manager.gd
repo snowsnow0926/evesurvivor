@@ -16,8 +16,21 @@ signal minerals_changed(minerals: int)
 const ENEMY_MELEE_PATH = "res://scenes/EnemyMelee.tscn"
 const ENEMY_SENTRY_PATH = "res://scenes/EnemySentry.tscn"
 const ENEMY_RAVEN_PATH = "res://scenes/EnemyRaven.tscn"
-const EXP_ORB_SCENE_PATH = "res://scenes/ExpOrb.tscn"
 const BOSS_SCENE_PATH = "res://scenes/BossVoid.tscn"
+
+const _SCENE_PLAYER: PackedScene = preload("res://scenes/Player.tscn")
+const _SCENE_MELEE: PackedScene = preload("res://scenes/EnemyMelee.tscn")
+const _SCENE_SENTRY: PackedScene = preload("res://scenes/EnemySentry.tscn")
+const _SCENE_RAVEN: PackedScene = preload("res://scenes/EnemyRaven.tscn")
+const _SCENE_BOSS: PackedScene = preload("res://scenes/BossVoid.tscn")
+const _SCENE_EXP_ORB: PackedScene = preload("res://scenes/ExpOrb.tscn")
+const _SCENE_DAMAGE_NUMBER: PackedScene = preload("res://scenes/DamageNumber.tscn")
+
+const _ENEMY_SCENE_MAP: Dictionary = {
+	ENEMY_MELEE_PATH: _SCENE_MELEE,
+	ENEMY_SENTRY_PATH: _SCENE_SENTRY,
+	ENEMY_RAVEN_PATH: _SCENE_RAVEN,
+}
 const ShipData = preload("res://resources/ship_data.gd")
 const StageData = preload("res://resources/stage_data.gd")
 const WeaponData = preload("res://resources/weapon_data.gd")
@@ -468,11 +481,7 @@ func _apply_upgrade_effect(upgrade_id: String) -> void:
 func _spawn_player() -> void:
 	if player != null and is_instance_valid(player):
 		return
-	var player_scene_path = "res://scenes/Player.tscn"
-	if not ResourceLoader.exists(player_scene_path):
-		push_error("[GameManager] Player.tscn NOT FOUND!")
-		return
-	var ps = load(player_scene_path)
+	var ps = _SCENE_PLAYER
 	if ps:
 		var p = ps.instantiate()
 		p.name = "Player"
@@ -596,11 +605,11 @@ func _spawn_enemy() -> void:
 	var spawn_distance := randf_range(600.0, 900.0)
 	var spawn_angle := randf_range(0, TAU)
 
-	if not ResourceLoader.exists(enemy_path):
-		push_error("[GameManager] Enemy scene not found: " + enemy_path)
+	if not _ENEMY_SCENE_MAP.has(enemy_path):
+		push_error("[GameManager] Enemy scene not in preload map: " + enemy_path)
 		return
 
-	var enemy_scene = load(enemy_path)
+	var enemy_scene: PackedScene = _ENEMY_SCENE_MAP[enemy_path]
 	var enemy = enemy_scene.instantiate()
 	enemy_root.add_child(enemy)
 	enemy.global_position = player.global_position + Vector2.from_angle(spawn_angle) * spawn_distance
@@ -673,9 +682,6 @@ func _check_boss_warning() -> void:
 func _spawn_boss() -> void:
 	SoundManager.play_sfx("boss_appear")
 	SoundManager.play_music("battle_boss")
-	if not ResourceLoader.exists(BOSS_SCENE_PATH):
-		push_error("[GameManager] BossVoid.tscn NOT FOUND!")
-		return
 	if not player or not is_instance_valid(player):
 		return
 
@@ -696,7 +702,7 @@ func _spawn_boss() -> void:
 		t.tween_property(overlay, "modulate:a", 0.0, 0.3)
 		t.tween_callback(overlay.queue_free)
 
-	var boss_scene = load(BOSS_SCENE_PATH)
+	var boss_scene = _SCENE_BOSS
 	var boss = boss_scene.instantiate()
 	enemy_root.add_child(boss)
 
@@ -817,10 +823,7 @@ func on_enemy_killed(enemy: Node2D, enemy_type: String) -> void:
 		_difficulty_scale()
 
 func _spawn_exp_orb(pos: Vector2) -> void:
-	if not ResourceLoader.exists(EXP_ORB_SCENE_PATH):
-		return
-	var orb_scene = load(EXP_ORB_SCENE_PATH)
-	var orb = orb_scene.instantiate()
+	var orb = _SCENE_EXP_ORB.instantiate()
 	orb.set_game_manager(self)
 	orb.global_position = pos
 	exp_orb_root.call_deferred("add_child", orb)
@@ -957,10 +960,7 @@ func on_player_take_damage(damage: float) -> void:
 func _spawn_damage_number(world_pos: Vector2, amount: float, is_crit: bool, enemy_dmg: bool) -> void:
 	if not damage_root or not is_instance_valid(damage_root):
 		return
-	if not ResourceLoader.exists("res://scenes/DamageNumber.tscn"):
-		return
-	var scene = load("res://scenes/DamageNumber.tscn")
-	var node = scene.instantiate()
+	var node = _SCENE_DAMAGE_NUMBER.instantiate()
 	damage_root.add_child(node)
 	node.setup(world_pos, amount, is_crit, enemy_dmg)
 

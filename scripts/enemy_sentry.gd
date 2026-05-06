@@ -1,5 +1,7 @@
 extends EnemyBase
 
+const _SCENE_SENTRY_BULLET: PackedScene = preload("res://scenes/SentryBullet.tscn")
+
 var fire_interval: float = 1.2
 var fire_timer: float = 0.0
 var bullet_speed: float = 400.0
@@ -130,12 +132,7 @@ func _fire_at_player() -> void:
 	if not bullet_root or not is_instance_valid(bullet_root):
 		return
 
-	var bullet_path = "res://scenes/SentryBullet.tscn"
-	if not ResourceLoader.exists(bullet_path):
-		return
-
-	var bullet_scene = load(bullet_path)
-	var bullet = bullet_scene.instantiate()
+	var bullet = _SCENE_SENTRY_BULLET.instantiate()
 	bullet_root.add_child(bullet)
 	bullet.global_position = global_position
 

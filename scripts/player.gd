@@ -11,6 +11,11 @@ const ShipData = preload("res://resources/ship_data.gd")
 const WeaponData = preload("res://resources/weapon_data.gd")
 const ShipIconGenerator = preload("res://scripts/ship_icon_generator.gd")
 
+const _SCENE_MISSILE: PackedScene = preload("res://scenes/Missile.tscn")
+const _SCENE_CANNON: PackedScene = preload("res://scenes/CannonBullet.tscn")
+const _SCENE_RAILGUN: PackedScene = preload("res://scenes/RailgunBullet.tscn")
+const _SCENE_LASER: PackedScene = preload("res://scenes/LaserBeam.tscn")
+
 const _RACE_ICON_MAP: Dictionary = {
 	RaceData.RaceID.HUMAN:   "player_human",
 	RaceData.RaceID.ORC:     "player_orc",
@@ -527,11 +532,8 @@ func _fire_missiles_at(target_pos: Vector2, weapon) -> void:
 	var bullet_root = game_manager.get("bullet_root")
 	if not bullet_root or not is_instance_valid(bullet_root):
 		return
-	var missile_scene_path = "res://scenes/Missile.tscn"
-	if not ResourceLoader.exists(missile_scene_path):
-		return
 
-	_spawn_single_missile(target_pos, missile_scene_path, bullet_root)
+	_spawn_single_missile(target_pos, bullet_root)
 
 	var total = spread_count
 	var burst_key = WeaponData.WeaponID.MISSILE
@@ -567,13 +569,11 @@ func _fire_single_missile_for_burst(weapon) -> void:
 	var bullet_root = game_manager.get("bullet_root")
 	if not bullet_root or not is_instance_valid(bullet_root):
 		return
-	var missile_scene_path = "res://scenes/Missile.tscn"
-	_spawn_single_missile(target_pos, missile_scene_path, bullet_root)
+	_spawn_single_missile(target_pos, bullet_root)
 
-func _spawn_single_missile(target_pos: Vector2, missile_scene_path: String, bullet_root: Node) -> void:
+func _spawn_single_missile(target_pos: Vector2, bullet_root: Node) -> void:
 	var base_angle = global_position.angle_to_point(target_pos)
-	var missile_scene = load(missile_scene_path)
-	var missile = missile_scene.instantiate()
+	var missile = _SCENE_MISSILE.instantiate()
 	bullet_root.add_child(missile)
 	missile.global_position = global_position
 	missile.setup_target_direction(Vector2.from_angle(base_angle), damage, missile_speed, crit_rate, crit_mult, game_manager, splash_radius, splash_count, missile_range)
@@ -584,9 +584,6 @@ func _fire_cannon_at(target_pos: Vector2, weapon: WeaponData) -> void:
 		return
 	var bullet_root = game_manager.get("bullet_root")
 	if not bullet_root or not is_instance_valid(bullet_root):
-		return
-	var cannon_scene_path = "res://scenes/CannonBullet.tscn"
-	if not ResourceLoader.exists(cannon_scene_path):
 		return
 
 	var dir = global_position.angle_to_point(target_pos)
@@ -600,8 +597,7 @@ func _fire_cannon_at(target_pos: Vector2, weapon: WeaponData) -> void:
 		var offset_x = (i - (bullet_count - 1) * 0.5) * spacing
 		var spawn_pos = global_position + Vector2.from_angle(dir).rotated(PI / 2) * offset_x
 
-		var cannon_scene = load(cannon_scene_path)
-		var bullet = cannon_scene.instantiate()
+		var bullet = _SCENE_CANNON.instantiate()
 		bullet_root.add_child(bullet)
 		bullet.global_position = spawn_pos
 
@@ -626,9 +622,6 @@ func _fire_railgun_at(target_pos: Vector2) -> void:
 	var bullet_root = game_manager.get("bullet_root")
 	if not bullet_root or not is_instance_valid(bullet_root):
 		return
-	var railgun_scene_path = "res://scenes/RailgunBullet.tscn"
-	if not ResourceLoader.exists(railgun_scene_path):
-		return
 
 	_fire_single_railgun(target_pos)
 
@@ -637,9 +630,6 @@ func _fire_single_railgun(target_pos: Vector2) -> void:
 		return
 	var bullet_root = game_manager.get("bullet_root")
 	if not bullet_root or not is_instance_valid(bullet_root):
-		return
-	var railgun_scene_path = "res://scenes/RailgunBullet.tscn"
-	if not ResourceLoader.exists(railgun_scene_path):
 		return
 
 	var base_angle = global_position.angle_to_point(target_pos)
@@ -654,8 +644,7 @@ func _fire_single_railgun(target_pos: Vector2) -> void:
 		else:
 			final_angle = base_angle
 
-		var railgun_scene = load(railgun_scene_path)
-		var bullet = railgun_scene.instantiate()
+		var bullet = _SCENE_RAILGUN.instantiate()
 		bullet_root.add_child(bullet)
 		bullet.global_position = global_position
 
@@ -677,12 +666,8 @@ func _fire_laser_at(weapon: WeaponData) -> void:
 	var bullet_root = game_manager.get("bullet_root")
 	if not bullet_root or not is_instance_valid(bullet_root):
 		return
-	var laser_scene_path = "res://scenes/LaserBeam.tscn"
-	if not ResourceLoader.exists(laser_scene_path):
-		return
 
-	var laser_scene = load(laser_scene_path)
-	var laser = laser_scene.instantiate()
+	var laser = _SCENE_LASER.instantiate()
 	bullet_root.add_child(laser)
 	laser.global_position = global_position
 

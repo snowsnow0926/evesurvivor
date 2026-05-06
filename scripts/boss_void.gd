@@ -1,5 +1,8 @@
 extends EnemyBase
 
+const _SCENE_BOSS_BULLET: PackedScene = preload("res://scenes/BossBullet.tscn")
+const _SCENE_EXP_ORB: PackedScene = preload("res://scenes/ExpOrb.tscn")
+
 var _loot_tonnage_chapter: int = 1
 var base_move_speed: float = 80.0
 var collision_damage: float = 15.0
@@ -77,10 +80,6 @@ func _fire_spread() -> void:
 	if not bullet_root or not is_instance_valid(bullet_root):
 		return
 
-	var bullet_path = "res://scenes/BossBullet.tscn"
-	if not ResourceLoader.exists(bullet_path):
-		return
-
 	var base_angle = global_position.angle_to_point(player.global_position)
 	var bullet_count = 5 if is_rage else 3
 	var angle_step = deg_to_rad(12.0) if is_rage else deg_to_rad(15.0)
@@ -90,8 +89,7 @@ func _fire_spread() -> void:
 		var angle = base_angle - total_spread / 2.0 + angle_step * i
 		var dir = Vector2.from_angle(angle)
 
-		var bullet_scene = load(bullet_path)
-		var bullet = bullet_scene.instantiate()
+		var bullet = _SCENE_BOSS_BULLET.instantiate()
 		bullet_root.add_child(bullet)
 		bullet.global_position = global_position
 		bullet.setup(dir, bullet_damage, bullet_speed, game_manager, player)
@@ -205,12 +203,10 @@ func _spawn_rewards() -> void:
 	if parent:
 		for i in range(10):
 			var angle = TAU * i / 10.0
-			var orb_scene = load("res://scenes/ExpOrb.tscn")
-			if orb_scene:
-				var orb = orb_scene.instantiate()
-				orb.set_game_manager(game_manager)
-				orb.global_position = global_position + Vector2.from_angle(angle) * 60.0
-				parent.call_deferred("add_child", orb)
+			var orb = _SCENE_EXP_ORB.instantiate()
+			orb.set_game_manager(game_manager)
+			orb.global_position = global_position + Vector2.from_angle(angle) * 60.0
+			parent.call_deferred("add_child", orb)
 
 func _die() -> void:
 	SoundManager.play_sfx("boss_death")
