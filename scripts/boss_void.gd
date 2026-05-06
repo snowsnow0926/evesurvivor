@@ -18,16 +18,10 @@ var hp_bar_bg: ColorRect
 func _ready() -> void:
 	_base_tint = Color(0.5, 0.0, 0.5)
 	super._ready()
-	polygon = $Polygon2D
-	ship_sprite = $ShipSprite
-	hp_bar = $HPBar
 	hp_bar_bg = $HPBarBg
-	if polygon:
-		polygon.rotation = PI / 2
 	_visual_scale = 1.2
 	_update_shader_params()
 	_death_particle_color = Color(0.5, 0.0, 0.5, 1.0)
-	_init_lock()
 	setup_icon()
 
 func setup_icon() -> void:
