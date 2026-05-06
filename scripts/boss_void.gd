@@ -26,9 +26,9 @@ func _ready() -> void:
 		polygon.rotation = PI / 2
 	scale = Vector2(3.0, 3.0)
 	_update_shader_params()
-	setup_icon()
 	_death_particle_color = Color(0.5, 0.0, 0.5, 1.0)
 	_init_lock()
+	setup_icon()
 
 func setup_icon() -> void:
 	var tex: Texture2D = ShipIconGenerator.get_texture(ShipIconGenerator.Category.SHIP, "npcbattleCruiser")

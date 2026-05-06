@@ -55,6 +55,8 @@ func set_settlement_data(reason: String, kills: int, level: int, coin: int, mine
 	earned_coin = coin
 	earned_minerals = minerals
 
+	session_loot = loot.duplicate(true)
+
 	GameState.last_run_reason = reason
 
 	_update_display()
@@ -133,17 +135,17 @@ func _build_loot_list() -> void:
 	for loot: Dictionary in session_loot:
 		var row := HBoxContainer.new()
 		var type_str := "武器" if loot.get("type") == "weapon" else "防具"
-		var name_str := ""
-		var quality_color := Color.WHITE
-		if loot.get("type") == "weapon":
-			var wid: int = loot.get("weapon_id", 0)
-			var wd := WeaponData.get_weapon(wid)
-			name_str = wd.display_name if wd else "?"
-			quality_color = EquipmentData.get_quality_color(loot.get("quality", 0))
-		else:
-			var aid: int = loot.get("armor_id", 0)
-			name_str = EquipmentData.get_armor_name(aid)
-			quality_color = EquipmentData.get_quality_color(loot.get("quality", 0))
+		var name_str: String = loot.get("name", "?")
+		var quality: int = loot.get("quality", 0)
+		if name_str == "?" or name_str.is_empty():
+			if loot.get("type") == "weapon":
+				var wid: int = loot.get("weapon_id", 0)
+				var wd := WeaponData.get_weapon(wid)
+				name_str = wd.display_name if wd else "?"
+			else:
+				var aid: int = loot.get("armor_id", 0)
+				name_str = EquipmentData.get_armor_name(aid)
+		var quality_color := EquipmentData.get_quality_color(quality)
 		var name_label := Label.new()
 		name_label.text = "[%s] %s" % [type_str, name_str]
 		name_label.add_theme_color_override("font_color", quality_color)

@@ -980,6 +980,15 @@ func grant_loot_to_player() -> Array:
 			"weapon_id": loot.get("weapon_id", 0),
 			"armor_id": loot.get("armor_id", 0),
 			"quality": loot.get("quality", 0),
+			"name": loot.get("name", "?"),
+			"base_damage": loot.get("base_damage", 0.0),
+			"fire_interval": loot.get("fire_interval", 1.0),
+			"range": loot.get("range", 0.0),
+			"crit_rate": loot.get("crit_rate", 0.0),
+			"crit_mult": loot.get("crit_mult", 1.5),
+			"tonnage_tier": loot.get("tonnage_tier", 0),
+			"equip_type": loot.get("type", "weapon"),
+			"scene_path": loot.get("scene_path", ""),
 			"is_new": true,
 		}
 		granted.append(item_dict)

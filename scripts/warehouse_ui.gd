@@ -252,8 +252,10 @@ func _make_item_btn(item: Dictionary, is_equipped: bool, is_armor: bool) -> Butt
 
 	var quality = item.get("quality", 0)
 	var color = EquipmentData.get_quality_color(quality)
-	var name_short = item.get("name", "?")
-	if name_short.length() > 6:
+	var name_short: String = item.get("name", "?")
+	if name_short == "?" or name_short.is_empty():
+		name_short = "?"
+	elif name_short.length() > 6:
 		name_short = name_short.substr(0, 6)
 	var prefix = "[装]" if is_equipped else "[仓]"
 	btn.text = "%s\n%s" % [prefix, name_short]
@@ -353,7 +355,10 @@ func _on_equip() -> void:
 	var equip_type_val = selected_item.get("equip_type", "")
 	var is_armor = false
 	if typeof(equip_type_val) == TYPE_STRING:
-		is_armor = equip_type_val.to_upper() == "ARMOR"
+		if not equip_type_val.is_empty():
+			is_armor = equip_type_val.to_upper() == "ARMOR"
+		else:
+			is_armor = selected_item.get("type", "").to_upper() == "ARMOR"
 
 	var inventory_item: Dictionary = {}
 	for item in GameState.equipment_inventory:
@@ -413,7 +418,10 @@ func _on_unequip() -> void:
 	var equip_type_val = selected_item.get("equip_type", "")
 	var is_armor = false
 	if typeof(equip_type_val) == TYPE_STRING:
-		is_armor = equip_type_val.to_upper() == "ARMOR"
+		if not equip_type_val.is_empty():
+			is_armor = equip_type_val.to_upper() == "ARMOR"
+		else:
+			is_armor = selected_item.get("type", "").to_upper() == "ARMOR"
 
 	if is_armor:
 		var armor_list: Array = GameState.equipped_armor.get(ship_id, [])
@@ -469,7 +477,10 @@ func _update_detail_panel() -> void:
 	var equip_type_val = selected_item.get("equip_type", "")
 	var is_armor = false
 	if typeof(equip_type_val) == TYPE_STRING:
-		is_armor = equip_type_val.to_upper() == "ARMOR"
+		if not equip_type_val.is_empty():
+			is_armor = equip_type_val.to_upper() == "ARMOR"
+		else:
+			is_armor = selected_item.get("type", "").to_upper() == "ARMOR"
 
 	var icon = "[W]" if not is_armor else "[A]"
 	if detail_icon:
