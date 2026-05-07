@@ -4,9 +4,17 @@ extends Control
 @onready var load_game_btn: Button = $Panel/VBox/LoadGameBtn
 @onready var quit_btn: Button = $Panel/VBox/QuitBtn
 @onready var save_ui: Control = $SaveUI
+@onready var star_container: Node2D = $BG/StarContainer
+
+var _star_sprites: Array[Sprite2D] = []
+var _time: float = 0.0
+var _fade_tween: Tween = null
 
 func _ready() -> void:
 	SoundManager.play_music("menu")
+	_generate_stars()
+	_fade_in()
+
 	if start_btn:
 		start_btn.pressed.connect(_on_start_pressed)
 	if load_game_btn:
@@ -17,10 +25,75 @@ func _ready() -> void:
 	save_ui.new_game_requested.connect(_on_new_game_requested)
 	save_ui.save_completed.connect(_on_save_completed)
 
+func _generate_stars() -> void:
+	var rng := RandomNumberGenerator.new()
+	var viewport_size := get_viewport_rect().size
+
+	for i in 80:
+		var star := Sprite2D.new()
+		var size: float = rng.randf_range(1.0, 3.0)
+		star.texture = _make_star_texture(size)
+		star.position = Vector2(rng.randf_range(0, viewport_size.x), rng.randf_range(0, viewport_size.y))
+		var brightness: float = rng.randf_range(0.4, 1.0)
+		var hue: float = rng.randf_range(-0.05, 0.1)
+		star.modulate = Color.from_hsv(hue, 0.2, brightness, brightness)
+		star.z_index = -1
+		star_container.add_child(star)
+		_star_sprites.append(star)
+
+	for i in 20:
+		var sparkle := Sprite2D.new()
+		var size: float = rng.randf_range(2.0, 4.0)
+		sparkle.texture = _make_sparkle_texture(size)
+		sparkle.position = Vector2(rng.randf_range(0, viewport_size.x), rng.randf_range(0, viewport_size.y))
+		sparkle.modulate = Color(0.7, 0.85, 1.0, rng.randf_range(0.3, 0.7))
+		sparkle.z_index = -1
+		star_container.add_child(sparkle)
+		_star_sprites.append(sparkle)
+
+func _make_star_texture(radius: float) -> ImageTexture:
+	var size := int(radius * 2.0 + 2.0)
+	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0, 0, 0, 0))
+	var center := Vector2i(size / 2, size / 2)
+	for y in range(size):
+		for x in range(size):
+			var dist := Vector2i(x, y).distance_to(center)
+			if dist <= radius:
+				var alpha: float = 1.0 - (dist / radius) * 0.5
+				image.set_pixel(x, y, Color(1, 1, 1, alpha))
+	var tex := ImageTexture.create_from_image(image)
+	return tex
+
+func _make_sparkle_texture(size: float) -> ImageTexture:
+	var s := int(size * 2.0 + 4.0)
+	var image := Image.create(s, s, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0, 0, 0, 0))
+	var c := Vector2i(s / 2, s / 2)
+	var cross_len := int(size)
+	for i in range(-cross_len, cross_len + 1):
+		var alpha: float = 1.0 - abs(i) / float(cross_len) * 0.5
+		image.set_pixel(c.x + i, c.y, Color(1, 1, 1, alpha))
+		image.set_pixel(c.x, c.y + i, Color(1, 1, 1, alpha))
+	var tex := ImageTexture.create_from_image(image)
+	return tex
+
+func _process(delta: float) -> void:
+	_time += delta
+	for star in _star_sprites:
+		var flicker: float = 0.75 + sin(_time * 1.5 + star.position.x * 0.01 + star.position.y * 0.007) * 0.25
+		var base_alpha := star.modulate.a
+		star.modulate.a = flicker * base_alpha
+
+func _fade_in() -> void:
+	modulate.a = 0.0
+	_fade_tween = create_tween()
+	_fade_tween.tween_property(self, "modulate:a", 1.0, 0.5).set_ease(Tween.EASE_OUT)
+	_fade_tween.play()
+
 func _on_start_pressed() -> void:
 	SoundManager.play_sfx("button_click")
-	GameState.reset_all_data()
-	get_tree().change_scene_to_file("res://scenes/CharacterCreate.tscn")
+	_fade_out(func(): get_tree().change_scene_to_file("res://scenes/CharacterCreate.tscn"))
 
 func _on_load_game_pressed() -> void:
 	SoundManager.play_sfx("button_click")
@@ -29,7 +102,7 @@ func _on_load_game_pressed() -> void:
 func _on_save_loaded(_slot_idx: int) -> void:
 	save_ui.visible = false
 
-func _on_save_completed(slot_idx: int) -> void:
+func _on_save_completed(_slot_idx: int) -> void:
 	save_ui.visible = false
 
 func _on_new_game_requested() -> void:
@@ -38,3 +111,11 @@ func _on_new_game_requested() -> void:
 func _on_quit_pressed() -> void:
 	SoundManager.play_sfx("button_click")
 	get_tree().quit()
+
+func _fade_out(on_complete: Callable) -> void:
+	if _fade_tween != null:
+		_fade_tween.kill()
+	_fade_tween = create_tween()
+	_fade_tween.tween_property(self, "modulate:a", 0.0, 0.2).set_ease(Tween.EASE_IN)
+	_fade_tween.tween_callback(on_complete)
+	_fade_tween.play()
