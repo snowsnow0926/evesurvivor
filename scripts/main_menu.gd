@@ -5,15 +5,19 @@ extends Control
 @onready var quit_btn: Button = $Panel/VBox/QuitBtn
 @onready var save_ui: Control = $SaveUI
 @onready var star_container: Node2D = $BG/StarContainer
+@onready var bg: TextureRect = $BG
+@onready var video_player: VideoStreamPlayer = %VideoPlayer
 
 var _star_sprites: Array[Sprite2D] = []
 var _time: float = 0.0
 var _fade_tween: Tween = null
+var _is_playing_video: bool = false
 
 func _ready() -> void:
 	SoundManager.play_music("menu")
 	_generate_stars()
 	_fade_in()
+	_setup_bg()
 
 	var buttons := [start_btn, load_game_btn, quit_btn]
 	for btn in buttons:
@@ -25,6 +29,11 @@ func _ready() -> void:
 	save_ui.save_loaded.connect(_on_save_loaded)
 	save_ui.new_game_requested.connect(_on_new_game_requested)
 	save_ui.save_completed.connect(_on_save_completed)
+
+	video_player.finished.connect(_on_video_finished)
+
+func _setup_bg() -> void:
+	bg.texture = load("res://assets/base/menu/menu_bg.png")
 
 func _generate_stars() -> void:
 	var rng := RandomNumberGenerator.new()
@@ -94,7 +103,8 @@ func _fade_in() -> void:
 
 func _on_start_pressed() -> void:
 	SoundManager.play_sfx("button_click")
-	_fade_out(func(): get_tree().change_scene_to_file("res://scenes/CharacterCreate.tscn"))
+	_is_playing_video = true
+	_play_intro_video()
 
 func _on_load_game_pressed() -> void:
 	SoundManager.play_sfx("button_click")
@@ -113,10 +123,13 @@ func _on_quit_pressed() -> void:
 	SoundManager.play_sfx("button_click")
 	get_tree().quit()
 
-func _fade_out(on_complete: Callable) -> void:
-	if _fade_tween != null:
-		_fade_tween.kill()
-	_fade_tween = create_tween()
-	_fade_tween.tween_property(self, "modulate:a", 0.0, 0.2).set_ease(Tween.EASE_IN)
-	_fade_tween.tween_callback(on_complete)
-	_fade_tween.play()
+func _play_intro_video() -> void:
+	modulate.a = 1.0
+	bg.visible = false
+	star_container.visible = false
+	$Panel.visible = false
+	video_player.visible = true
+	video_player.play()
+
+func _on_video_finished() -> void:
+	get_tree().change_scene_to_file("res://scenes/CharacterCreate.tscn")

@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://ship_select_ui_001"]
+[gd_scene format=3 uid="uid://b48j0x0svg617"]
 
-[ext_resource type="Script" path="res://scripts/ship_select_ui.gd" id="1_ss"]
+[ext_resource type="Script" uid="uid://cp0n4wmds2n6j" path="res://scripts/ship_select_ui.gd" id="1_ss"]
 
-[node name="ShipSelectUI" type="Control"]
+[node name="ShipSelectUI" type="Control" unique_id=1046552845]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,14 +11,16 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_ss")
 
-[node name="BG" type="ColorRect" parent="."]
+[node name="BG" type="ColorRect" parent="." unique_id=1848132203]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 color = Color(0.04, 0.04, 0.08, 1)
 
-[node name="Panel" type="PanelContainer" parent="."]
+[node name="Panel" type="PanelContainer" parent="." unique_id=1777367525]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -32,28 +34,28 @@ offset_bottom = 260.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="Panel"]
+[node name="VBox" type="VBoxContainer" parent="Panel" unique_id=1829354433]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="Panel/VBox"]
+[node name="Title" type="Label" parent="Panel/VBox" unique_id=49445510]
 layout_mode = 2
 text = "选择出战舰船"
 horizontal_alignment = 1
 
-[node name="ShipList" type="ScrollContainer" parent="Panel/VBox"]
+[node name="ShipList" type="ScrollContainer" parent="Panel/VBox" unique_id=1180840100]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="VBox" type="VBoxContainer" parent="Panel/VBox/ShipList"]
+[node name="VBox" type="VBoxContainer" parent="Panel/VBox/ShipList" unique_id=1229779893]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="BtnRow" type="HBoxContainer" parent="Panel/VBox"]
+[node name="BtnRow" type="HBoxContainer" parent="Panel/VBox" unique_id=731072401]
 layout_mode = 2
 alignment = 2
 
-[node name="CancelBtn" type="Button" parent="Panel/VBox/BtnRow"]
+[node name="CancelBtn" type="Button" parent="Panel/VBox/BtnRow" unique_id=887084136]
 layout_mode = 2
 text = "取消"

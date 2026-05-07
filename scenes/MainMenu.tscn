@@ -3,10 +3,10 @@
 [ext_resource type="Script" uid="uid://dy66y0kpwkqt0" path="res://scripts/main_menu.gd" id="1_menu"]
 [ext_resource type="PackedScene" uid="uid://csaveui001" path="res://scenes/SaveUI.tscn" id="2_save"]
 [ext_resource type="Theme" path="res://resources/themes/main_menu_theme.tres" id="3_theme"]
-[ext_resource type="Texture2D" uid="uid://bfq8gnk0n63wm" path="res://assets/base/menu/main_menu_bg.png" id="4_bg"]
 [ext_resource type="Texture2D" uid="uid://cypcbcd6o5mv5" path="res://assets/base/menu/title_decoration.png" id="5_deco"]
+[ext_resource type="VideoStream" path="res://assets/base/menu/序列 01.ogv" id="6_video"]
 
-[node name="MainMenu" type="Control" unique_id=1526578608]
+[node name="MainMenu" type="Control" unique_name_strict=true]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -16,19 +16,28 @@ grow_vertical = 2
 theme = ExtResource("3_theme")
 script = ExtResource("1_menu")
 
-[node name="BG" type="TextureRect" parent="." unique_id=426983072]
+[node name="BG" type="TextureRect" parent="." groups=["menu_bg"]]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = ExtResource("4_bg")
 stretch_mode = 5
 
-[node name="StarContainer" type="Node2D" parent="BG" unique_id=384780950]
+[node name="StarContainer" type="Node2D" parent="BG"]
 
-[node name="Panel" type="Panel" parent="." unique_id=1808557107]
+[node name="VideoPlayer" type="VideoStreamPlayer" parent="."]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stream = ExtResource("6_video")
+expand = true
+
+[node name="Panel" type="Panel" parent="."]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -42,7 +51,7 @@ offset_bottom = 310.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="Panel" unique_id=1312969569]
+[node name="VBox" type="VBoxContainer" parent="Panel"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -58,55 +67,55 @@ grow_vertical = 2
 scale = Vector2(0.8337315, 0.8337315)
 theme_override_constants/separation = 8
 
-[node name="DecoTop" type="TextureRect" parent="Panel/VBox" unique_id=1612706260]
+[node name="DecoTop" type="TextureRect" parent="Panel/VBox"]
 custom_minimum_size = Vector2(0, 2)
 layout_mode = 2
 texture = ExtResource("5_deco")
 stretch_mode = 1
 
-[node name="SpacerTop" type="Control" parent="Panel/VBox" unique_id=622664371]
+[node name="SpacerTop" type="Control" parent="Panel/VBox"]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 
-[node name="Title" type="Label" parent="Panel/VBox" unique_id=2046787421]
+[node name="Title" type="Label" parent="Panel/VBox"]
 layout_mode = 2
 theme_type_variation = &"LabelTitle"
 text = "EVE SURVIVOR"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Subtitle" type="Label" parent="Panel/VBox" unique_id=1393912202]
+[node name="Subtitle" type="Label" parent="Panel/VBox"]
 layout_mode = 2
 theme_type_variation = &"LabelSubtitle"
 text = "类幸存者 · EVE同人"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SpacerMid" type="Control" parent="Panel/VBox" unique_id=386667318]
+[node name="SpacerMid" type="Control" parent="Panel/VBox"]
 custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 
-[node name="StartBtn" type="Button" parent="Panel/VBox" unique_id=613523137]
+[node name="StartBtn" type="Button" parent="Panel/VBox"]
 layout_mode = 2
 text = "开始新游戏"
 
-[node name="LoadGameBtn" type="Button" parent="Panel/VBox" unique_id=1669937627]
+[node name="LoadGameBtn" type="Button" parent="Panel/VBox"]
 layout_mode = 2
 text = "读取游戏"
 
-[node name="QuitBtn" type="Button" parent="Panel/VBox" unique_id=900958801]
+[node name="QuitBtn" type="Button" parent="Panel/VBox"]
 layout_mode = 2
 text = "结束游戏"
 
-[node name="SpacerBot" type="Control" parent="Panel/VBox" unique_id=1218062435]
+[node name="SpacerBot" type="Control" parent="Panel/VBox"]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 
-[node name="DecoBot" type="TextureRect" parent="Panel/VBox" unique_id=1155083433]
+[node name="DecoBot" type="TextureRect" parent="Panel/VBox"]
 custom_minimum_size = Vector2(0, 2)
 layout_mode = 2
 texture = ExtResource("5_deco")
 stretch_mode = 1
 
-[node name="SaveUI" parent="." unique_id=1715643886 instance=ExtResource("2_save")]
+[node name="SaveUI" parent="." instance=ExtResource("2_save")]
 layout_mode = 1
