@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://xprevx0000002"]
-
-[ext_resource type="Script" uid="uid://xprevx0000001" path="res://scripts/ship_icon_preview.gd" id="1_preview"]
-
-[node name="ShipIconPreview" type="Node2D" unique_id=886852186]
-script = ExtResource("1_preview")

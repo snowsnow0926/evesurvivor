@@ -15,12 +15,13 @@ func _ready() -> void:
 	_generate_stars()
 	_fade_in()
 
-	if start_btn:
-		start_btn.pressed.connect(_on_start_pressed)
-	if load_game_btn:
-		load_game_btn.pressed.connect(_on_load_game_pressed)
-	if quit_btn:
-		quit_btn.pressed.connect(_on_quit_pressed)
+	var buttons := [start_btn, load_game_btn, quit_btn]
+	for btn in buttons:
+		if btn:
+			btn.pressed.connect(_on_start_pressed if btn == start_btn
+					else _on_load_game_pressed if btn == load_game_btn
+					else _on_quit_pressed)
+
 	save_ui.save_loaded.connect(_on_save_loaded)
 	save_ui.new_game_requested.connect(_on_new_game_requested)
 	save_ui.save_completed.connect(_on_save_completed)

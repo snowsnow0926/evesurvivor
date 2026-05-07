@@ -115,6 +115,7 @@ func _show_settlement_screen(reason) -> void:
 	SoundManager.play_music("settlement")
 
 	var coin_gained = game_manager.session_star_coin
+	game_manager.session_star_coin = 0
 	var minerals_gained = game_manager.session_minerals
 	var kills = game_manager.total_kills
 	var level = game_manager.player_level

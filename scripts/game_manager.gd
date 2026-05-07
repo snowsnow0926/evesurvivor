@@ -315,6 +315,7 @@ func on_enemy_killed(enemy: Node2D, enemy_type: String) -> void:
 		elites_killed_this_run += 1
 
 	var reward_coin = loot_system.on_enemy_killed(enemy, enemy_type)
+	GameState.star_coin += reward_coin
 	spawn_manager.spawn_exp_orb(enemy.global_position)
 	loot_system.try_drop_equipment(enemy)
 
@@ -323,7 +324,9 @@ func on_enemy_killed(enemy: Node2D, enemy_type: String) -> void:
 
 func _on_boss_killed(boss_node: Node2D) -> void:
 	loot_system.spawn_boss_loot(boss_node)
+	var prev = loot_system.session_star_coin
 	loot_system.on_boss_killed(boss_node)
+	GameState.star_coin += loot_system.session_star_coin - prev
 
 	if spawn_manager.is_boss_phase:
 		if spawn_manager.boss_remaining <= 0:
@@ -340,7 +343,7 @@ func _notify_hud_update() -> void:
 		hud.update_display(
 			player_stats.hp, player_stats.max_hp, player_stats.shield, player_stats.shield_max,
 			GameState.star_coin, GameState.minerals_low + GameState.minerals_mid + GameState.minerals_high,
-			kill_count, current_xp, xp_to_next_level, player_level
+			kill_count, current_xp, xp_to_next_level, player_level, combo_count
 		)
 
 func _show_settlement(reason: String) -> void:

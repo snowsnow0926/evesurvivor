@@ -36,6 +36,8 @@ func _debug(msg: String) -> void:
 @onready var xp_bar: ProgressBar = $BottomCenterAnchor/MainPanel/VBox/XPRow/XPBar
 @onready var xp_label: Label = $BottomCenterAnchor/MainPanel/VBox/XPRow/XPLabel
 @onready var info_label: Label = $BottomCenterAnchor/MainPanel/VBox/InfoLabel
+@onready var coin_gain_label: Label = $BottomCenterAnchor/MainPanel/VBox/CoinGainHBox/CoinGainLabel
+@onready var combo_label: Label = $BottomCenterAnchor/MainPanel/VBox/ComboLabel
 
 @onready var ship_panel: PanelContainer = $ShipInfoPanel
 @onready var ship_title: Label = $ShipInfoPanel/ShipInfoVBox/ShipTitle
@@ -62,7 +64,11 @@ func _debug(msg: String) -> void:
 @onready var top_slot5_name: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot5/WeaponSlot5VBox/Name
 @onready var top_slot6: PanelContainer = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot6
 @onready var top_slot6_name: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot6/WeaponSlot6VBox/Name
-@onready var top_defense_name: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot/DefenseSlotVBox/Name
+@onready var top_defense1: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot1/DefenseSlot1VBox/Name
+@onready var top_defense2: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot2/DefenseSlot2VBox/Name
+@onready var top_defense3: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot3/DefenseSlot3VBox/Name
+@onready var top_defense4: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot4/DefenseSlot4VBox/Name
+@onready var top_defense5: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot5/DefenseSlot5VBox/Name
 
 @onready var upgrade_list_vbox: VBoxContainer = $BottomRightAnchor/UpgradeListPanel/UpgradeListVBox
 
@@ -70,6 +76,12 @@ func _debug(msg: String) -> void:
 
 var game_scene: Node2D
 var _vbox_warned: bool = false
+var _prev_coin_display: int = -1
+var _coin_floating_timer: float = 0.0
+var _coin_floating_amount: int = 0
+var _coin_gain_to_show: int = 0
+var _coin_gain_timer: float = 0.0
+const _COIN_GAIN_SHOW_DURATION := 2.0
 
 func _ready() -> void:
 	MobileInput.register_joystick($VirtualJoystick)
@@ -120,7 +132,9 @@ func _ready() -> void:
 			"TopWeaponHBox/WeaponSlot1", "TopWeaponHBox/WeaponSlot2",
 			"TopWeaponHBox/WeaponSlot3", "TopWeaponHBox/WeaponSlot4",
 			"TopWeaponHBox/WeaponSlot5", "TopWeaponHBox/WeaponSlot6",
-			"TopWeaponHBox/DefenseSlot"
+			"TopWeaponHBox/DefenseSlot1", "TopWeaponHBox/DefenseSlot2",
+			"TopWeaponHBox/DefenseSlot3", "TopWeaponHBox/DefenseSlot4",
+			"TopWeaponHBox/DefenseSlot5"
 		]:
 			var slot = top_weapon_panel.get_node_or_null(slot_path)
 			if slot:
@@ -142,11 +156,16 @@ func _ready() -> void:
 	if upgrade_list_vbox:
 		upgrade_list_vbox.custom_minimum_size.y = 30
 
-func setup(gs: Node2D) -> void:
-	game_scene = gs
-	update_display(100, 100, 50.0, 50.0, 0, 0, 0, 0.0, 10.0, 1)
-
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	if _coin_floating_timer > 0.0:
+		_coin_floating_timer -= delta
+		if _coin_floating_timer <= 0.0:
+			_coin_floating_timer = 0.0
+	if _coin_gain_timer > 0.0:
+		_coin_gain_timer -= delta
+		if _coin_gain_timer <= 0.0:
+			_coin_gain_timer = 0.0
+			_coin_gain_to_show = 0
 	if not game_scene or not game_scene.game_manager:
 		return
 	var gm = game_scene.game_manager
@@ -165,23 +184,20 @@ func _process(_delta: float) -> void:
 							"quality": w.quality,
 						})
 
-	var defense_name = "空槽位"
-	var defense_level = 0
-	var defense_quality: int = 0
+	var defense_list: Array = []
 	var ship_id = int(GameState.selected_ship_id)
 	if ship_id == 0:
 		ship_id = ShipData.ShipID.FRIGATE
 	var armor_list: Array = GameState.equipped_armor.get(ship_id, [])
 	if not (armor_list is Array):
 		armor_list = []
-	if not armor_list.is_empty():
-		var first_armor = armor_list[0]
-		if first_armor is Dictionary:
-			defense_name = first_armor.get("name", "防御装")
-			defense_level = first_armor.get("level", 1)
-			defense_quality = first_armor.get("quality", 0)
-			if armor_list.size() > 1:
-				defense_name = "%s 等+%d" % [defense_name, armor_list.size() - 1]
+	for armor in armor_list:
+		if armor is Dictionary:
+			defense_list.append({
+				"name": armor.get("name", "防御装"),
+				"level": armor.get("level", 1),
+				"quality": armor.get("quality", 0),
+			})
 
 	update_display(
 		gm.player_stats.hp,
@@ -197,7 +213,7 @@ func _process(_delta: float) -> void:
 		gm.combo_count
 	)
 	_update_timer_display(gm)
-	_update_top_weapon_display(all_weapon_data, defense_name, defense_level, defense_quality)
+	_update_top_weapon_display(all_weapon_data, defense_list)
 	_update_race_and_ship_display()
 	_update_upgrade_list_display(gm)
 	if ship_hp_label:
@@ -261,7 +277,7 @@ func _get_upgrade_ids_for_weapon(wid) -> Array:
 		return ["laser_duration", "laser_width", "laser_shield"]
 	return []
 
-func _update_top_weapon_display(all_weapon_data: Array, defense: String, defense_lv: int, defense_q: int) -> void:
+func _update_top_weapon_display(all_weapon_data: Array, defense_list: Array) -> void:
 	var slot_nodes = [
 		{"panel": null, "name_label": top_slot1_name},
 		{"panel": null, "name_label": top_slot2_name},
@@ -286,18 +302,32 @@ func _update_top_weapon_display(all_weapon_data: Array, defense: String, defense
 		if i < all_weapon_data.size():
 			var wd = all_weapon_data[i]
 			panel.visible = true
-			name_lbl.text = "%s Lv.%d" % [wd.get("name", "?"), wd.get("level", 0)]
+			name_lbl.text = "%s" % wd.get("name", "?")
 			name_lbl.add_theme_color_override("font_color", EquipmentData.get_quality_color(wd.get("quality", 0)))
 		else:
 			panel.visible = false
 
-	if top_defense_name:
-		if defense == "空槽位":
-			top_defense_name.text = "空槽位"
-			top_defense_name.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+	var defense_slots = [top_defense1, top_defense2, top_defense3, top_defense4, top_defense5]
+	for idx in range(defense_slots.size()):
+		var name_lbl: Label = defense_slots[idx]
+		if not name_lbl:
+			continue
+		var slot_panel: Node = null
+		match idx:
+			0: slot_panel = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot1
+			1: slot_panel = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot2
+			2: slot_panel = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot3
+			3: slot_panel = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot4
+			4: slot_panel = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot5
+		if slot_panel:
+			slot_panel.visible = (idx < defense_list.size())
+		if idx < defense_list.size():
+			var armor = defense_list[idx]
+			name_lbl.text = "%s" % armor.get("name", "防御装")
+			name_lbl.add_theme_color_override("font_color", EquipmentData.get_quality_color(armor.get("quality", 0)))
 		else:
-			top_defense_name.text = "%s Lv.%d" % [defense, defense_lv]
-			top_defense_name.add_theme_color_override("font_color", EquipmentData.get_quality_color(defense_q))
+			name_lbl.text = "空槽位"
+			name_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
 
 func _update_upgrade_list_display(gm) -> void:
 	if not upgrade_list_vbox:
@@ -365,14 +395,41 @@ func update_display(p_hp: int, p_max_hp: int, p_shield: float, p_shield_max: flo
 		xp_label.text = "XP: %.0f / %.0f" % [p_xp, p_xp_max]
 
 	if info_label:
-		var combo_text = " | x%d COMBO!" % p_combo if p_combo >= 3 else ""
-		info_label.text = "Level: %d | Kills: %d | Coin: %d%s" % [p_level, p_kills, p_coin, combo_text]
-		if p_combo >= 10:
-			info_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.0))
-		elif p_combo >= 5:
-			info_label.add_theme_color_override("font_color", Color(1.0, 1.0, 0.6))
+		info_label.text = "Level: %d | Kills: %d | 星币: %d" % [p_level, p_kills, p_coin]
+		info_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
+
+	if _prev_coin_display >= 0 and p_coin > _prev_coin_display:
+		_coin_floating_amount += (p_coin - _prev_coin_display)
+		if _coin_floating_timer <= 0.0:
+			_coin_floating_timer = 0.6
+			_coin_gain_to_show = _coin_floating_amount
+			_coin_gain_timer = _COIN_GAIN_SHOW_DURATION
+			_spawn_coin_floating_text(_coin_floating_amount)
+			_coin_floating_amount = 0
+	_prev_coin_display = p_coin
+
+	if coin_gain_label:
+		if _coin_gain_to_show > 0 and _coin_gain_timer > 0.0:
+			coin_gain_label.text = "+%d" % _coin_gain_to_show
+			coin_gain_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.4))
+			coin_gain_label.add_theme_font_size_override("font_size", 16)
 		else:
-			info_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
+			coin_gain_label.text = ""
+
+	if combo_label:
+		if p_combo >= 3:
+			combo_label.text = "x%d COMBO!" % p_combo
+			if p_combo >= 10:
+				combo_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.0))
+				combo_label.add_theme_font_size_override("font_size", 18)
+			elif p_combo >= 5:
+				combo_label.add_theme_color_override("font_color", Color(1.0, 1.0, 0.6))
+				combo_label.add_theme_font_size_override("font_size", 16)
+			else:
+				combo_label.add_theme_color_override("font_color", Color(0.7, 1.0, 0.7))
+				combo_label.add_theme_font_size_override("font_size", 14)
+		else:
+			combo_label.text = ""
 
 func _update_race_and_ship_display() -> void:
 	if not game_scene or not game_scene.game_manager:
@@ -418,6 +475,15 @@ func _update_race_and_ship_display() -> void:
 		else:
 			ship_slots_label.text = "武:0/? | 防:0/?"
 
+func setup(gs: Node2D) -> void:
+	game_scene = gs
+	_prev_coin_display = -1
+	_coin_floating_timer = 0.0
+	_coin_floating_amount = 0
+	_coin_gain_to_show = 0
+	_coin_gain_timer = 0.0
+	update_display(100, 100, 50.0, 50.0, 0, 0, 0, 0.0, 10.0, 1)
+
 func _update_timer_display(gm) -> void:
 	if not timer_label:
 		return
@@ -447,3 +513,30 @@ func _update_timer_display(gm) -> void:
 			timer_label.add_theme_color_override("font_color", Color(0.8, 0.8, 1.0))
 	else:
 		timer_label.visible = false
+
+func _spawn_coin_floating_text(amount: int) -> void:
+	if not info_label:
+		return
+	var label = Label.new()
+	label.text = "+%d" % amount
+	label.add_theme_font_size_override("font_size", 14)
+	label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.4))
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	label.offset_top = info_label.global_position.y - 20.0
+	label.offset_left = info_label.global_position.x + 60.0
+	label.offset_right = label.offset_left + 200.0
+	label.offset_bottom = label.offset_top + 30.0
+	add_child(label)
+
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(label, "offset_top", label.offset_top - 30.0, 0.6)
+	tween.tween_property(label, "modulate:a", 0.0, 0.6)
+
+	var timer = Timer.new()
+	timer.one_shot = true
+	timer.wait_time = 0.7
+	timer.timeout.connect(label.queue_free)
+	add_child(timer)
+	timer.start()

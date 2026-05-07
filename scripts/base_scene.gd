@@ -279,13 +279,17 @@ func _switch_panel(panel: Control) -> void:
 		current_panel = panel
 
 func _set_panel_opaque(panel: Control, opaque: bool) -> void:
-	var p: Panel = panel.find_child("Panel", false, false) as Panel
-	if p:
-		var style := StyleBoxFlat.new()
-		style.bg_color = Color(0.05, 0.05, 0.1, 0.97) if opaque else Color(0, 0, 0, 0)
-		style.set_border_width_all(2)
-		style.border_color = Color(0.2, 0.3, 0.5, 1.0)
-		style.set_corner_radius_all(8)
+	var p = panel.find_child("Panel", false, false)
+	if p == null:
+		return
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.05, 0.1, 0.97) if opaque else Color(0, 0, 0, 0)
+	style.set_border_width_all(2)
+	style.border_color = Color(0.2, 0.3, 0.5, 1.0)
+	style.set_corner_radius_all(8)
+	if p is PanelContainer:
+		p.add_theme_stylebox_override("panel", style)
+	elif p is Panel:
 		p.add_theme_stylebox_override("panel", style)
 
 func close_all_panels() -> void:

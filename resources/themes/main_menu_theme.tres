@@ -1,55 +1,42 @@
-[gd_resource type="Theme" load_steps=9 format=3]
+[gd_resource type="Theme" format=3 uid="uid://buhwc4p6k7hik"]
 
-[ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://1xyehfcldp7s" path="res://assets/base/menu/button_hover.png" id="2_hover"]
+[ext_resource type="Texture2D" uid="uid://dbusg206tlqmd" path="res://assets/base/menu/main_menu_panel_bg.png" id="3_panel"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0.03, 0.06, 0.14, 0.92)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.15, 0.45, 0.9, 0.6)
-shadow_color = Color(0.1, 0.3, 0.7, 0.3)
-shadow_size = 8
-shadow_offset = Vector2(0, 4)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
-bg_color = Color(0.06, 0.12, 0.24, 0.85)
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_btn_normal"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+texture = ExtResource("2_hover")
+region_rect = Rect2(0, 0, 300, 50)
+modulate = Color(1, 1, 1, 0.6)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.2, 0.5, 0.9, 0.4)
-content_margin_left = 20.0
-content_margin_top = 12.0
-content_margin_right = 20.0
-content_margin_bottom = 12.0
+axis_stretch_horizontal = 0
+axis_stretch_vertical = 0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_hover"]
-bg_color = Color(0.1, 0.2, 0.4, 0.9)
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_btn_hover"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+texture = ExtResource("2_hover")
+region_rect = Rect2(0, 0, 300, 50)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.3, 0.65, 1.0, 0.8)
-content_margin_left = 20.0
-content_margin_top = 12.0
-content_margin_right = 20.0
-content_margin_bottom = 12.0
+axis_stretch_horizontal = 0
+axis_stretch_vertical = 0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_pressed"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
 bg_color = Color(0.04, 0.08, 0.16, 0.95)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
@@ -59,14 +46,14 @@ border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.4, 0.75, 1.0, 1.0)
-content_margin_left = 20.0
-content_margin_top = 12.0
-content_margin_right = 20.0
-content_margin_bottom = 12.0
+border_color = Color(0.4, 0.75, 1, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_disabled"]
-bg_color = Color(0.03, 0.06, 0.1, 0.6)
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.03, 0.06, 0.1, 0.4)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
@@ -76,28 +63,34 @@ border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.15, 0.25, 0.4, 0.3)
-content_margin_left = 20.0
-content_margin_top = 12.0
-content_margin_right = 20.0
-content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_panel"]
+texture = ExtResource("3_panel")
+region_rect = Rect2(0, 0, 600, 560)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
 
 [resource]
 default_font_size = 18
-LabelTitle/constants/outline_size = 3
-LabelTitle/font_sizes/font_size = 40
-LabelSubtitle/constants/outline_size = 2
-LabelSubtitle/font_sizes/font_size = 22
-Panel/styles/panel = SubResource("StyleBoxFlat_panel")
-Button/colors/font_color = Color(0.75, 0.85, 1.0, 1.0)
-Button/colors/font_hover_color = Color(0.9, 0.95, 1.0, 1.0)
-Button/colors/font_pressed_color = Color(0.4, 0.75, 1.0, 1.0)
+Button/colors/font_color = Color(0.75, 0.85, 1, 1)
 Button/colors/font_disabled_color = Color(0.4, 0.5, 0.6, 0.5)
+Button/colors/font_hover_color = Color(0.9, 0.95, 1, 1)
+Button/colors/font_pressed_color = Color(0.4, 0.75, 1, 1)
 Button/font_sizes/font_size = 20
-Button/styles/normal = SubResource("StyleBoxFlat_btn_normal")
-Button/styles/hover = SubResource("StyleBoxFlat_btn_hover")
+Button/styles/normal = SubResource("StyleBoxTexture_btn_normal")
+Button/styles/hover = SubResource("StyleBoxTexture_btn_hover")
 Button/styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
 Button/styles/disabled = SubResource("StyleBoxFlat_btn_disabled")
-Label/colors/font_color = Color(0.8, 0.9, 1.0, 1.0)
+Label/colors/font_color = Color(0.8, 0.9, 1, 1)
 Label/colors/font_outline_color = Color(0.1, 0.3, 0.6, 0.5)
 Label/constants/outline_size = 2
 Label/font_sizes/font_size = 28
+LabelSubtitle/constants/outline_size = 2
+LabelSubtitle/font_sizes/font_size = 22
+LabelTitle/constants/outline_size = 3
+LabelTitle/font_sizes/font_size = 40
+Panel/styles/panel = SubResource("StyleBoxTexture_panel")

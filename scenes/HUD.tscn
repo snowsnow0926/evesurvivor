@@ -238,22 +238,106 @@ text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="DefenseSlot" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+[node name="DefenseSlot1" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 1.0
 
-[node name="DefenseSlotVBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot"]
+[node name="DefenseSlot1VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot1"]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot/DefenseSlotVBox"]
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot1/DefenseSlot1VBox"]
 layout_mode = 2
 text = "[防御]"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot/DefenseSlotVBox"]
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot1/DefenseSlot1VBox"]
+layout_mode = 2
+text = "空槽位"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DefenseSlot2" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.0
+
+[node name="DefenseSlot2VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot2"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot2/DefenseSlot2VBox"]
+layout_mode = 2
+text = "[防御]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot2/DefenseSlot2VBox"]
+layout_mode = 2
+text = "空槽位"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DefenseSlot3" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.0
+
+[node name="DefenseSlot3VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot3"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot3/DefenseSlot3VBox"]
+layout_mode = 2
+text = "[防御]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot3/DefenseSlot3VBox"]
+layout_mode = 2
+text = "空槽位"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DefenseSlot4" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.0
+
+[node name="DefenseSlot4VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot4"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot4/DefenseSlot4VBox"]
+layout_mode = 2
+text = "[防御]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot4/DefenseSlot4VBox"]
+layout_mode = 2
+text = "空槽位"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DefenseSlot5" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.0
+
+[node name="DefenseSlot5VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot5"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot5/DefenseSlot5VBox"]
+layout_mode = 2
+text = "[防御]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot5/DefenseSlot5VBox"]
 layout_mode = 2
 text = "空槽位"
 horizontal_alignment = 1
@@ -310,9 +394,23 @@ min_value = 0.0
 max_value = 10.0
 value = 0.0
 
+[node name="CoinGainHBox" type="HBoxContainer" parent="BottomCenterAnchor/MainPanel/VBox"]
+layout_mode = 2
+
+[node name="CoinGainLabel" type="Label" parent="BottomCenterAnchor/MainPanel/VBox/CoinGainHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = ""
+horizontal_alignment = 1
+
 [node name="InfoLabel" type="Label" parent="BottomCenterAnchor/MainPanel/VBox"]
 layout_mode = 2
 text = "Level: 1 | Kills: 0"
+horizontal_alignment = 1
+
+[node name="ComboLabel" type="Label" parent="BottomCenterAnchor/MainPanel/VBox"]
+layout_mode = 2
+text = ""
 horizontal_alignment = 1
 
 [node name="TopRightAnchor" type="Control" parent="."]
