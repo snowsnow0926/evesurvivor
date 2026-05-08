@@ -118,6 +118,8 @@ func _on_save_completed(_slot_idx: int) -> void:
 
 func _on_new_game_requested() -> void:
 	save_ui.visible = false
+	_is_playing_video = true
+	_play_intro_video()
 
 func _on_quit_pressed() -> void:
 	SoundManager.play_sfx("button_click")

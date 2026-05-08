@@ -1,9 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://cf8hud001"]
+[gd_scene format=3 uid="uid://cf8hud001"]
 
-[ext_resource type="Script" path="res://scripts/hud.gd" id="1_hud"]
+[ext_resource type="Script" uid="uid://3m1gbo447wuf" path="res://scripts/hud.gd" id="1_hud"]
 [ext_resource type="PackedScene" uid="uid://vjoystick01" path="res://scenes/VirtualJoystick.tscn" id="2_vj"]
 
-[node name="HUD" type="Control"]
+[node name="HUD" type="Control" unique_id=1367154235]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,436 +12,425 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_hud")
 
-[node name="ShipInfoPanel" type="PanelContainer" parent="."]
+[node name="ShipInfoPanel" type="PanelContainer" parent="." unique_id=917070552]
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 10.0
-offset_top = -270.0
-offset_right = 260.0
-offset_bottom = -10.0
+offset_top = -147.0
+offset_right = 250.0
 grow_vertical = 0
 
-[node name="ShipInfoVBox" type="VBoxContainer" parent="ShipInfoPanel"]
+[node name="ShipInfoVBox" type="VBoxContainer" parent="ShipInfoPanel" unique_id=1399372718]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="ShipTitle" type="Label" parent="ShipInfoPanel/ShipInfoVBox"]
+[node name="ShipTitle" type="Label" parent="ShipInfoPanel/ShipInfoVBox" unique_id=1803040687]
 layout_mode = 2
 text = "NOVA STRIKER"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="HPLabel" type="Label" parent="ShipInfoPanel/ShipInfoVBox"]
+[node name="HPRow" type="HBoxContainer" parent="ShipInfoPanel/ShipInfoVBox" unique_id=1057988433]
 layout_mode = 2
-text = "HP: 100 / 100"
+
+[node name="HPLabel" type="Label" parent="ShipInfoPanel/ShipInfoVBox/HPRow" unique_id=783340437]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "HP"
 vertical_alignment = 1
 
-[node name="ShieldLabel" type="Label" parent="ShipInfoPanel/ShipInfoVBox"]
+[node name="HPIcon" type="TextureRect" parent="ShipInfoPanel/ShipInfoVBox/HPRow" unique_id=775881757]
+custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
-text = "护盾: 50 / 50"
+size_flags_horizontal = 0
+stretch_mode = 1
+
+[node name="HPBar" type="ProgressBar" parent="ShipInfoPanel/ShipInfoVBox/HPRow" unique_id=798860429]
+layout_mode = 2
+size_flags_horizontal = 3
+value = 100.0
+show_percentage = false
+
+[node name="ShieldRow" type="HBoxContainer" parent="ShipInfoPanel/ShipInfoVBox" unique_id=106225449]
+layout_mode = 2
+
+[node name="ShieldLabel" type="Label" parent="ShipInfoPanel/ShipInfoVBox/ShieldRow" unique_id=1504172934]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "护盾"
 vertical_alignment = 1
 
-[node name="AtkLabel" type="Label" parent="ShipInfoPanel/ShipInfoVBox"]
+[node name="ShieldIcon" type="TextureRect" parent="ShipInfoPanel/ShipInfoVBox/ShieldRow" unique_id=566762179]
+custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
-text = "攻击: 15"
-vertical_alignment = 1
+size_flags_horizontal = 0
+stretch_mode = 1
 
-[node name="FireRateLabel" type="Label" parent="ShipInfoPanel/ShipInfoVBox"]
+[node name="ShieldBar" type="ProgressBar" parent="ShipInfoPanel/ShipInfoVBox/ShieldRow" unique_id=1919794347]
 layout_mode = 2
-text = "射速: 0.80s"
-vertical_alignment = 1
+size_flags_horizontal = 3
+value = 100.0
+show_percentage = false
 
-[node name="SpeedLabel" type="Label" parent="ShipInfoPanel/ShipInfoVBox"]
-layout_mode = 2
-text = "移速: 320"
-vertical_alignment = 1
-
-[node name="CritLabel" type="Label" parent="ShipInfoPanel/ShipInfoVBox"]
-layout_mode = 2
-text = "暴击: 5%"
-vertical_alignment = 1
-
-[node name="DodgeLabel" type="Label" parent="ShipInfoPanel/ShipInfoVBox"]
-layout_mode = 2
-text = "闪避: 10%"
-vertical_alignment = 1
-
-[node name="Divider" type="HSeparator" parent="ShipInfoPanel/ShipInfoVBox"]
+[node name="Divider" type="HSeparator" parent="ShipInfoPanel/ShipInfoVBox" unique_id=2059821375]
 layout_mode = 2
 
-[node name="RaceInfoLabel" type="Label" parent="ShipInfoPanel/ShipInfoVBox"]
+[node name="RaceInfoLabel" type="Label" parent="ShipInfoPanel/ShipInfoVBox" unique_id=1515333554]
 layout_mode = 2
 text = "种族: 人类"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="RaceBonusLabel" type="Label" parent="ShipInfoPanel/ShipInfoVBox"]
-layout_mode = 2
-text = "天赋: -"
-horizontal_alignment = 1
-autowrap_mode = 1
-
-[node name="ShipSlotsLabel" type="Label" parent="ShipInfoPanel/ShipInfoVBox"]
+[node name="ShipSlotsLabel" type="Label" parent="ShipInfoPanel/ShipInfoVBox" unique_id=253647700]
 layout_mode = 2
 text = "武:0/2 | 防:0/1"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="TopCenterAnchor" type="Control" parent="."]
+[node name="TopCenterAnchor" type="Control" parent="." unique_id=1794777644]
 layout_mode = 1
-anchors_preset = 8
+anchors_preset = 5
 anchor_left = 0.5
-anchor_top = 0.0
 anchor_right = 0.5
-anchor_bottom = 0.0
 offset_left = -360.0
-offset_top = 10.0
 offset_right = 360.0
-offset_bottom = 80.0
+offset_bottom = 70.0
 grow_horizontal = 2
 
-[node name="TopWeaponPanel" type="PanelContainer" parent="TopCenterAnchor"]
-layout_mode = 2
+[node name="TopWeaponPanel" type="PanelContainer" parent="TopCenterAnchor" unique_id=1518040436]
+layout_mode = 0
 size_flags_horizontal = 4
 size_flags_vertical = 4
 
-[node name="TopWeaponHBox" type="HBoxContainer" parent="TopCenterAnchor/TopWeaponPanel"]
+[node name="TopWeaponHBox" type="HBoxContainer" parent="TopCenterAnchor/TopWeaponPanel" unique_id=942145752]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="WeaponSlot1" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+[node name="WeaponSlot1" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=1217218636]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
 
-[node name="WeaponSlot1VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot1"]
+[node name="WeaponSlot1VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot1" unique_id=1067056499]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot1/WeaponSlot1VBox"]
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot1/WeaponSlot1VBox" unique_id=1266614136]
 layout_mode = 2
 text = "[武器]"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot1/WeaponSlot1VBox"]
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot1/WeaponSlot1VBox" unique_id=1347465675]
 layout_mode = 2
 text = "导弹"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="WeaponSlot2" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+[node name="WeaponSlot2" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=106615609]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
 
-[node name="WeaponSlot2VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot2"]
+[node name="WeaponSlot2VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot2" unique_id=765790421]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot2/WeaponSlot2VBox"]
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot2/WeaponSlot2VBox" unique_id=336863045]
 layout_mode = 2
 text = "[武器]"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot2/WeaponSlot2VBox"]
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot2/WeaponSlot2VBox" unique_id=1365694691]
 layout_mode = 2
-text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="WeaponSlot3" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+[node name="WeaponSlot3" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=2016155334]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
 
-[node name="WeaponSlot3VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot3"]
+[node name="WeaponSlot3VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot3" unique_id=92939507]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot3/WeaponSlot3VBox"]
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot3/WeaponSlot3VBox" unique_id=41972544]
 layout_mode = 2
 text = "[武器]"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot3/WeaponSlot3VBox"]
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot3/WeaponSlot3VBox" unique_id=1751071692]
 layout_mode = 2
-text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="WeaponSlot4" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+[node name="WeaponSlot4" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=1115908097]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
 
-[node name="WeaponSlot4VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot4"]
+[node name="WeaponSlot4VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot4" unique_id=352019245]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot4/WeaponSlot4VBox"]
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot4/WeaponSlot4VBox" unique_id=1500590406]
 layout_mode = 2
 text = "[武器]"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot4/WeaponSlot4VBox"]
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot4/WeaponSlot4VBox" unique_id=369367307]
 layout_mode = 2
-text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="WeaponSlot5" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+[node name="WeaponSlot5" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=739253288]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
 
-[node name="WeaponSlot5VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot5"]
+[node name="WeaponSlot5VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot5" unique_id=1216017822]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot5/WeaponSlot5VBox"]
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot5/WeaponSlot5VBox" unique_id=1086171267]
 layout_mode = 2
 text = "[武器]"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot5/WeaponSlot5VBox"]
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot5/WeaponSlot5VBox" unique_id=82904742]
 layout_mode = 2
-text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="WeaponSlot6" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+[node name="WeaponSlot6" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=810942700]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
 
-[node name="WeaponSlot6VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot6"]
+[node name="WeaponSlot6VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot6" unique_id=1266818335]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot6/WeaponSlot6VBox"]
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot6/WeaponSlot6VBox" unique_id=433172790]
 layout_mode = 2
 text = "[武器]"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot6/WeaponSlot6VBox"]
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot6/WeaponSlot6VBox" unique_id=2058023679]
 layout_mode = 2
-text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="DefenseSlot1" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+[node name="DefenseSlot1" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=2006504666]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
 
-[node name="DefenseSlot1VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot1"]
+[node name="DefenseSlot1VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot1" unique_id=37725257]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot1/DefenseSlot1VBox"]
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot1/DefenseSlot1VBox" unique_id=464934584]
 layout_mode = 2
 text = "[防御]"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot1/DefenseSlot1VBox"]
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot1/DefenseSlot1VBox" unique_id=1888268836]
 layout_mode = 2
 text = "空槽位"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="DefenseSlot2" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+[node name="DefenseSlot2" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=757791639]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
 
-[node name="DefenseSlot2VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot2"]
+[node name="DefenseSlot2VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot2" unique_id=427354556]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot2/DefenseSlot2VBox"]
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot2/DefenseSlot2VBox" unique_id=1133677302]
 layout_mode = 2
 text = "[防御]"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot2/DefenseSlot2VBox"]
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot2/DefenseSlot2VBox" unique_id=1072825252]
 layout_mode = 2
 text = "空槽位"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="DefenseSlot3" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+[node name="DefenseSlot3" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=18832650]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
 
-[node name="DefenseSlot3VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot3"]
+[node name="DefenseSlot3VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot3" unique_id=1098356432]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot3/DefenseSlot3VBox"]
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot3/DefenseSlot3VBox" unique_id=1234843922]
 layout_mode = 2
 text = "[防御]"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot3/DefenseSlot3VBox"]
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot3/DefenseSlot3VBox" unique_id=1065296]
 layout_mode = 2
 text = "空槽位"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="DefenseSlot4" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+[node name="DefenseSlot4" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=1406037310]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
 
-[node name="DefenseSlot4VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot4"]
+[node name="DefenseSlot4VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot4" unique_id=579187006]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot4/DefenseSlot4VBox"]
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot4/DefenseSlot4VBox" unique_id=152464655]
 layout_mode = 2
 text = "[防御]"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot4/DefenseSlot4VBox"]
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot4/DefenseSlot4VBox" unique_id=323293671]
 layout_mode = 2
 text = "空槽位"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="DefenseSlot5" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox"]
+[node name="DefenseSlot5" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=563394965]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
 
-[node name="DefenseSlot5VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot5"]
+[node name="DefenseSlot5VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot5" unique_id=1047107987]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot5/DefenseSlot5VBox"]
+[node name="TypeLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot5/DefenseSlot5VBox" unique_id=377746547]
 layout_mode = 2
 text = "[防御]"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot5/DefenseSlot5VBox"]
+[node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot5/DefenseSlot5VBox" unique_id=1820217220]
 layout_mode = 2
 text = "空槽位"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="BottomCenterAnchor" type="Control" parent="."]
+[node name="BottomCenterAnchor" type="Control" parent="." unique_id=622606891]
 layout_mode = 1
-anchors_preset = 8
+anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -160.0
-offset_top = -150.0
+offset_top = -70.0
 offset_right = 160.0
 offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="MainPanel" type="PanelContainer" parent="BottomCenterAnchor"]
+[node name="MainPanel" type="PanelContainer" parent="BottomCenterAnchor" unique_id=135940357]
 layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -332.0
+offset_top = -62.0
+offset_right = 408.5
+offset_bottom = -39.0
+grow_horizontal = 2
+grow_vertical = 0
 size_flags_horizontal = 4
 size_flags_vertical = 4
 
-[node name="VBox" type="VBoxContainer" parent="BottomCenterAnchor/MainPanel"]
+[node name="VBox" type="VBoxContainer" parent="BottomCenterAnchor/MainPanel" unique_id=1839102445]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="HPRow" type="HBoxContainer" parent="BottomCenterAnchor/MainPanel/VBox"]
+[node name="XPRow" type="HBoxContainer" parent="BottomCenterAnchor/MainPanel/VBox" unique_id=1722422227]
 layout_mode = 2
 
-[node name="HPLabel" type="Label" parent="BottomCenterAnchor/MainPanel/VBox/HPRow"]
+[node name="XPLabel" type="Label" parent="BottomCenterAnchor/MainPanel/VBox/XPRow" unique_id=1902191953]
 layout_mode = 2
-text = "HP:"
+size_flags_horizontal = 0
+text = "XP"
 
-[node name="HPBar" type="ProgressBar" parent="BottomCenterAnchor/MainPanel/VBox/HPRow"]
+[node name="XPIcon" type="TextureRect" parent="BottomCenterAnchor/MainPanel/VBox/XPRow" unique_id=251900785]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_horizontal = 0
+stretch_mode = 1
+
+[node name="XPBar" type="ProgressBar" parent="BottomCenterAnchor/MainPanel/VBox/XPRow" unique_id=1274124316]
 layout_mode = 2
 size_flags_horizontal = 3
-min_value = 0.0
-max_value = 100.0
-value = 100.0
-
-[node name="XPRow" type="HBoxContainer" parent="BottomCenterAnchor/MainPanel/VBox"]
-layout_mode = 2
-
-[node name="XPLabel" type="Label" parent="BottomCenterAnchor/MainPanel/VBox/XPRow"]
-layout_mode = 2
-text = "XP:"
-
-[node name="XPBar" type="ProgressBar" parent="BottomCenterAnchor/MainPanel/VBox/XPRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-min_value = 0.0
 max_value = 10.0
-value = 0.0
+show_percentage = false
 
-[node name="CoinGainHBox" type="HBoxContainer" parent="BottomCenterAnchor/MainPanel/VBox"]
+[node name="LevelLabel" type="Label" parent="BottomCenterAnchor/MainPanel/VBox/XPRow" unique_id=588238533]
 layout_mode = 2
+size_flags_horizontal = 0
+text = "Lv.1"
+vertical_alignment = 1
 
-[node name="CoinGainLabel" type="Label" parent="BottomCenterAnchor/MainPanel/VBox/CoinGainHBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = ""
-horizontal_alignment = 1
-
-[node name="InfoLabel" type="Label" parent="BottomCenterAnchor/MainPanel/VBox"]
-layout_mode = 2
-text = "Level: 1 | Kills: 0"
-horizontal_alignment = 1
-
-[node name="ComboLabel" type="Label" parent="BottomCenterAnchor/MainPanel/VBox"]
-layout_mode = 2
-text = ""
-horizontal_alignment = 1
-
-[node name="TopRightAnchor" type="Control" parent="."]
+[node name="TopRightAnchor" type="Control" parent="." unique_id=1376695590]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -160.0
+offset_left = -180.0
 offset_top = 10.0
 offset_right = -10.0
-offset_bottom = 40.0
+offset_bottom = -10.0
 grow_horizontal = 0
 
-[node name="TimerLabel" type="Label" parent="TopRightAnchor"]
+[node name="StatusVBox" type="VBoxContainer" parent="TopRightAnchor" unique_id=1835109429]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -150.0
-offset_top = 0.0
-offset_right = -10.0
-offset_bottom = 30.0
+offset_left = -170.0
+offset_bottom = 200.0
 grow_horizontal = 0
+theme_override_constants/separation = 4
+
+[node name="TimerLabel" type="Label" parent="TopRightAnchor/StatusVBox" unique_id=1712032423]
+layout_mode = 2
 text = "05:00"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="BottomRightAnchor" type="Control" parent="."]
+[node name="CoinGainLabel" type="Label" parent="TopRightAnchor/StatusVBox" unique_id=832301768]
+layout_mode = 2
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="InfoLabel" type="Label" parent="TopRightAnchor/StatusVBox" unique_id=2057944841]
+layout_mode = 2
+text = "Level: 1 | Kills: 0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="ComboLabel" type="Label" parent="TopRightAnchor/StatusVBox" unique_id=2098931720]
+layout_mode = 2
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="BottomRightAnchor" type="Control" parent="." unique_id=247144736]
 layout_mode = 1
-anchors_preset = 12
+anchors_preset = 3
 anchor_left = 1.0
+anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -320.0
@@ -451,34 +440,34 @@ offset_bottom = -10.0
 grow_horizontal = 0
 grow_vertical = 0
 
-[node name="UpgradeListPanel" type="PanelContainer" parent="BottomRightAnchor"]
+[node name="UpgradeListPanel" type="PanelContainer" parent="BottomRightAnchor" unique_id=701905772]
+custom_minimum_size = Vector2(300, 30)
 layout_mode = 1
 size_flags_horizontal = 4
 size_flags_vertical = 2
-custom_minimum_size = Vector2(300, 30)
 
-[node name="UpgradeListVBox" type="VBoxContainer" parent="BottomRightAnchor/UpgradeListPanel"]
+[node name="UpgradeListVBox" type="VBoxContainer" parent="BottomRightAnchor/UpgradeListPanel" unique_id=952446150]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="TitleLabel" type="Label" parent="BottomRightAnchor/UpgradeListPanel/UpgradeListVBox"]
+[node name="TitleLabel" type="Label" parent="BottomRightAnchor/UpgradeListPanel/UpgradeListVBox" unique_id=481047660]
 layout_mode = 2
 text = "已获升级"
 horizontal_alignment = 1
 
-[node name="Divider" type="HSeparator" parent="BottomRightAnchor/UpgradeListPanel/UpgradeListVBox"]
+[node name="Divider" type="HSeparator" parent="BottomRightAnchor/UpgradeListPanel/UpgradeListVBox" unique_id=382674375]
 layout_mode = 2
 
-[node name="VirtualJoystick" parent="." instance=ExtResource("2_vj")]
-anchors_preset = 1
+[node name="VirtualJoystick" parent="." unique_id=1740148187 instance=ExtResource("2_vj")]
+layout_mode = 1
+anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -130.0
-offset_top = -270.0
-offset_right = 30.0
-offset_bottom = -70.0
+offset_left = 64.0
+offset_top = -200.0
+offset_right = 224.0
+offset_bottom = 0.0
 grow_horizontal = 0
 grow_vertical = 0
-auto_hide_on_mouse = true

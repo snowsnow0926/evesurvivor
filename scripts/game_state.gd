@@ -5,6 +5,7 @@ const SAVE_SLOTS := 3
 const DEBUG := false
 
 var current_save_slot: int = 0
+var pending_new_game_slot: int = -1
 
 var selected_race_id: int = 0
 var player_name: String = ""

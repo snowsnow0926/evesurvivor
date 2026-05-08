@@ -23,26 +23,24 @@ GameScene (CanvasLayer: UIRoot)
 
 ---
 
-### 1.1 左下角 — 飞船属性面板 (`ShipInfoPanel`)
+### 1.1 左下角 — 玩家状态面板 (`ShipInfoPanel`)
 
 路径: `HUD / ShipInfoPanel / ShipInfoVBox`
 
-显示玩家飞船的基础属性信息。
+显示玩家飞船的生命值、护盾、种族和装备槽位信息。
 
 | 节点名 | 类型 | 说明 |
 |---|---|---|
 | `ShipTitle` | Label | 飞船名称 (如 "NOVA STRIKER") |
-| `HPLabel` | Label | 当前生命值 (如 "HP: 100 / 100") |
-| `ShieldLabel` | Label | 当前护盾值 (如 "护盾: 50 / 50") |
-| `AtkLabel` | Label | 攻击力数值 |
-| `FireRateLabel` | Label | 攻击间隔 (如 "射速: 0.80s") |
-| `SpeedLabel` | Label | 移动速度数值 |
-| `CritLabel` | Label | 暴击率 (如 "暴击: 5%") |
-| `DodgeLabel` | Label | 闪避率 (如 "闪避: 10%") |
+| `HPRow` | HBoxContainer | HP 行 |
+| `├── HPLabel` | Label | 显示 "HP" |
+| `└── HPBar` | ProgressBar | HP 进度条 (0~max) |
+| `ShieldRow` | HBoxContainer | 护盾行 |
+| `├── ShieldLabel` | Label | 显示护盾数值 |
+| `└── ShieldBar` | ProgressBar | 护盾进度条 (0~max) |
 | `Divider` | HSeparator | 分隔线 |
 | `RaceInfoLabel` | Label | 种族信息 (如 "种族: 人类") |
-| `RaceBonusLabel` | Label | 种族天赋描述 |
-| `ShipSlotsLabel` | Label | 装备槽位占用情况 (如 "武:0/2 | 防:0/1") |
+| `ShipSlotsLabel` | Label | 装备槽位占用情况 (如 "武:0/2 \| 防:0/1") |
 
 ---
 
@@ -89,34 +87,33 @@ DefenseSlotX / DefenseSlotXVBox
 
 ---
 
-### 1.3 底部居中 — 角色状态面板 (`MainPanel`)
+### 1.3 底部居中 — XP 面板 (`MainPanel`)
 
 路径: `HUD / BottomCenterAnchor / MainPanel / VBox`
 
-显示玩家核心状态条和游戏信息。
+显示玩家经验值和等级。
 
 | 节点名 | 类型 | 说明 |
 |---|---|---|
-| `HPRow` | HBoxContainer | HP 行 |
-| `├── HPLabel` | Label | "HP:" 标签 |
-| `└── HPBar` | ProgressBar | HP 进度条 (0~max) |
 | `XPRow` | HBoxContainer | XP 行 |
-| `├── XPLabel` | Label | "XP:" 标签 |
-| `└── XPBar` | ProgressBar | XP 进度条 (0~max) |
-| `CoinGainHBox` | HBoxContainer | 金币获取提示行 |
-| `└── CoinGainLabel` | Label | 击杀金币获取提示文字 |
-| `InfoLabel` | Label | 综合信息 (如 "Level: 1 | Kills: 0") |
-| `ComboLabel` | Label | 连击数提示 (战斗连击时显示) |
+| `├── XPLabel` | Label | 显示 "XP" |
+| `├── XPBar` | ProgressBar | XP 进度条 (0~max) |
+| `└── LevelLabel` | Label | 显示 "Lv.X" |
 
 ---
 
-### 1.4 右上角 — 计时器 (`TimerLabel`)
+### 1.4 右上角 — 状态信息面板 (`TopRightAnchor`)
 
-路径: `HUD / TopRightAnchor / TimerLabel`
+路径: `HUD / TopRightAnchor / StatusVBox`
+
+显示计时器、金币获取提示、综合信息和连击数。
 
 | 节点名 | 类型 | 说明 |
 |---|---|---|
-| `TimerLabel` | Label | 游戏倒计时 (格式如 "05:00") |
+| `TimerLabel` | Label | 游戏倒计时/已用时间 (格式如 "05:00" 或 "+01:23") |
+| `CoinGainLabel` | Label | 击杀金币获取提示 (如 "+10") |
+| `InfoLabel` | Label | 综合信息 (如 "Level: 1 \| Kills: 0 \| 星币: 0") |
+| `ComboLabel` | Label | 连击数提示 (战斗连击 >= 3 时显示，如 "x5 COMBO!") |
 
 ---
 
@@ -198,11 +195,11 @@ Boss 出现前的警告提示。
 
 | 面板名 | 锚点位置 | 区域 |
 |---|---|---|
-| `ShipInfoPanel` | 左下 | 左下角 |
-| `TopWeaponPanel` | 顶部居中 | 顶部中央 |
-| `MainPanel` | 底部居中 | 底部中央 |
-| `TimerLabel` | 右上 | 右上角 |
-| `UpgradeListPanel` | 右下 | 右下角 |
+| `ShipInfoPanel` | 左下 | 左下角 — HP/护盾条 + 种族 + 槽位 |
+| `TopWeaponPanel` | 顶部居中 | 顶部中央 — 武器/防御槽 |
+| `MainPanel` | 底部居中 | 底部中央 — XP 条 + 等级 |
+| `StatusVBox` | 右上 | 右上角 — 计时器 + 金币 + 信息 + 连击 |
+| `UpgradeListPanel` | 右下 | 右下角 — 已获升级列表 |
 | `VirtualJoystick` | 左下 | 左下角 (摇杆) |
 | `UpgradeMenu` | 全屏居中 | 覆盖层 |
 | `PauseMenu` | 全屏居中 | 覆盖层 |

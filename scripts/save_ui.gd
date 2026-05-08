@@ -162,6 +162,7 @@ func _on_confirm_pressed() -> void:
 func _on_new_game() -> void:
 	SoundManager.play_sfx("button_click")
 	GameState.reset_for_new_run()
+	GameState.pending_new_game_slot = _selected_slot
 	emit_signal("new_game_requested")
 	get_tree().change_scene_to_file("res://scenes/CharacterCreate.tscn")
 
