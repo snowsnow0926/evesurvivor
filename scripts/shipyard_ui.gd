@@ -188,7 +188,7 @@ func _on_upgrade() -> void:
 			1: GameState.minerals_mid -= selected_ship.unlock_mineral_count
 			2: GameState.minerals_high -= selected_ship.unlock_mineral_count
 		GameState.unlocked_ships.append(int(selected_ship.ship_id))
-		GameState.save(GameState.current_save_slot)
+		GameState.auto_save()
 	elif not is_upgraded:
 		if not _can_afford_upgrade(selected_ship):
 			return
@@ -200,7 +200,7 @@ func _on_upgrade() -> void:
 		GameState.upgraded_ships[int(selected_ship.ship_id)] = true
 
 	_build_ship_list()
-	GameState.save(GameState.current_save_slot)
+	GameState.auto_save()
 	_update_preview_panel()
 	_update_currency_display()
 

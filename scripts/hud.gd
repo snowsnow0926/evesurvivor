@@ -5,6 +5,8 @@ const ShipData = preload("res://resources/ship_data.gd")
 const WeaponData = preload("res://resources/weapon_data.gd")
 const EquipmentData = preload("res://resources/equipment_data.gd")
 
+signal speed_changed(speed: float)
+
 const UPGRADE_NAME_MAP: Dictionary = {
 	"damage": "伤害强化",
 	"shield_max": "临时护盾",
@@ -193,6 +195,12 @@ class CustomProgressBar extends Control:
 @onready var info_label: Label = $TopRightAnchor/StatusVBox/InfoLabel
 @onready var combo_label: Label = $TopRightAnchor/StatusVBox/ComboLabel
 
+@onready var speed_panel: PanelContainer = $SpeedControlPanel
+@onready var pause_btn: Button = $SpeedControlPanel/SpeedControlHBox/PauseBtn
+@onready var speed1_btn: Button = $SpeedControlPanel/SpeedControlHBox/Speed1Btn
+@onready var speed2_btn: Button = $SpeedControlPanel/SpeedControlHBox/Speed2Btn
+@onready var speed3_btn: Button = $SpeedControlPanel/SpeedControlHBox/Speed3Btn
+
 var game_scene: Node2D
 var _vbox_warned: bool = false
 var _prev_coin_display: int = -1
@@ -200,6 +208,9 @@ var _coin_floating_timer: float = 0.0
 var _coin_floating_amount: int = 0
 var _coin_gain_to_show: int = 0
 var _coin_gain_timer: float = 0.0
+
+var _current_speed: float = 1.0
+var _is_paused: bool = false
 
 # ---- 进度条引用 ----
 var hp_bar: CustomProgressBar
@@ -228,6 +239,7 @@ func _ready() -> void:
 	_apply_bar_textures()
 	_apply_bar_icons()
 	_connect_slot_signals()
+	_connect_speed_signals()
 	# 角标装饰放最后，不影响主流程
 	_load_corner_textures()
 	if not _corner_tex.is_empty():
@@ -288,6 +300,14 @@ func _apply_all_styles() -> void:
 	var upgrade_panel = $BottomRightAnchor/UpgradeListPanel
 	if upgrade_panel:
 		_apply_glow_panel(upgrade_panel, Color(0.04, 0.04, 0.13, 0.90), Color(0.35, 0.55, 0.90), Color(0.15, 0.30, 0.70))
+
+	if speed_panel:
+		var sp = StyleBoxFlat.new()
+		sp.bg_color = Color(0.04, 0.06, 0.18, 0.92)
+		sp.set_border_width_all(2)
+		sp.border_color = Color(0.40, 0.40, 0.80)
+		sp.set_corner_radius_all(6)
+		speed_panel.add_theme_stylebox_override("panel", sp)
 
 	# 进度条初始样式
 	if hp_bar:
@@ -485,6 +505,68 @@ func _connect_slot_signals() -> void:
 			slot.mouse_entered.connect(_on_slot_mouse_enter.bind(slot))
 			slot.mouse_exited.connect(_on_slot_mouse_exit.bind(slot))
 
+func _connect_speed_signals() -> void:
+	if pause_btn:
+		pause_btn.pressed.connect(_on_pause_pressed)
+	if speed1_btn:
+		speed1_btn.pressed.connect(_on_speed1_pressed)
+	if speed2_btn:
+		speed2_btn.pressed.connect(_on_speed2_pressed)
+	if speed3_btn:
+		speed3_btn.pressed.connect(_on_speed3_pressed)
+	_update_speed_buttons()
+
+func _on_pause_pressed() -> void:
+	if pause_btn and pause_btn.button_pressed:
+		_is_paused = true
+		_current_speed = 0.0
+		speed_changed.emit(0.0)
+	else:
+		_is_paused = false
+		_current_speed = 1.0
+		speed_changed.emit(1.0)
+	_update_speed_buttons()
+
+func _on_speed1_pressed() -> void:
+	_is_paused = false
+	_current_speed = 1.0
+	if pause_btn:
+		pause_btn.set_pressed_no_signal(false)
+	speed_changed.emit(1.0)
+	_update_speed_buttons()
+
+func _on_speed2_pressed() -> void:
+	_is_paused = false
+	_current_speed = 2.0
+	if pause_btn:
+		pause_btn.set_pressed_no_signal(false)
+	speed_changed.emit(2.0)
+	_update_speed_buttons()
+
+func _on_speed3_pressed() -> void:
+	_is_paused = false
+	_current_speed = 3.0
+	if pause_btn:
+		pause_btn.set_pressed_no_signal(false)
+	speed_changed.emit(3.0)
+	_update_speed_buttons()
+
+func _update_speed_buttons() -> void:
+	var active_color = Color(0.30, 1.00, 0.40)
+	var inactive_color = Color(0.45, 0.45, 0.60)
+	var all_btns = [pause_btn, speed1_btn, speed2_btn, speed3_btn]
+	for btn in all_btns:
+		if btn == null:
+			continue
+		if btn == pause_btn:
+			btn.add_theme_color_override("font_color", active_color if _is_paused else inactive_color)
+		elif btn == speed1_btn:
+			btn.add_theme_color_override("font_color", active_color if _current_speed == 1.0 and not _is_paused else inactive_color)
+		elif btn == speed2_btn:
+			btn.add_theme_color_override("font_color", active_color if _current_speed == 2.0 else inactive_color)
+		elif btn == speed3_btn:
+			btn.add_theme_color_override("font_color", active_color if _current_speed == 3.0 else inactive_color)
+
 func _on_slot_mouse_enter(slot: PanelContainer) -> void:
 	var s = slot.get_theme_stylebox("panel")
 	if s is StyleBoxFlat:
@@ -555,6 +637,7 @@ func _process(delta: float) -> void:
 	_update_timer_display(gm)
 	_update_top_weapon_display(all_weapon_data, defense_list)
 	_update_race_and_ship_display()
+	_update_upgrade_list_display(gm)
 
 func _get_weapon_upgrade_level(weapon_id) -> int:
 	var upgrade_ids = _get_upgrade_ids_for_weapon(weapon_id)
@@ -912,6 +995,17 @@ func _update_race_and_ship_display() -> void:
 		else:
 			ship_slots_label.text = "武:0/? | 防:0/?"
 
+func set_paused_state(paused: bool) -> void:
+	if paused and not _is_paused:
+		_is_paused = true
+		if pause_btn:
+			pause_btn.set_pressed_no_signal(true)
+	elif not paused and _is_paused:
+		_is_paused = false
+		if pause_btn:
+			pause_btn.set_pressed_no_signal(false)
+	_update_speed_buttons()
+
 func setup(gs: Node2D) -> void:
 	game_scene = gs
 	_prev_coin_display = -1
@@ -921,6 +1015,11 @@ func setup(gs: Node2D) -> void:
 	_coin_gain_timer = 0.0
 	_was_low_hp = false
 	_is_max_level = false
+	_current_speed = 1.0
+	_is_paused = false
+	if pause_btn:
+		pause_btn.set_pressed_no_signal(false)
+	_update_speed_buttons()
 	update_display(100, 100, 50.0, 50.0, 0, 0, 0, 0.0, 10.0, 1)
 
 func _update_timer_display(gm) -> void:

@@ -268,6 +268,8 @@ func _show_shipyard() -> void:
 
 func _show_storage() -> void:
 	_switch_panel(storage_panel)
+	if storage_panel and storage_panel.has_method("_build_ship_list"):
+		storage_panel._build_ship_list()
 
 func _switch_panel(panel: Control) -> void:
 	if current_panel and is_instance_valid(current_panel):

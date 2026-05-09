@@ -53,6 +53,7 @@ var elites_killed_this_run: int = 0
 var is_game_over: bool = false
 var is_paused: bool = false
 var is_upgrading: bool = false
+var game_speed: float = 1.0
 
 var current_xp: float = 0.0
 var xp_to_next_level: float = 10.0
@@ -65,6 +66,8 @@ var run_time_elapsed: float = 0.0
 var is_boss_infinite: bool = false
 var _timer_expired_once: bool = false
 const FIRST_RUN_DURATION: float = 300.0
+var _unlimited_start_real_time: int = 0
+var _timer_start_real_time: int = 0
 
 var current_stage: StageData.StageInfo
 var current_chapter_id: int = 1
@@ -229,8 +232,10 @@ func setup_for_stage(chapter_id: int, stage_id: int) -> void:
 		if is_unlimited_mode:
 			time_remaining = 0.0
 			run_time_elapsed = 0.0
+			_unlimited_start_real_time = Time.get_ticks_msec()
 		else:
 			time_remaining = FIRST_RUN_DURATION
+			_timer_start_real_time = Time.get_ticks_msec()
 	else:
 		has_timer = false
 		is_unlimited_mode = false
@@ -245,8 +250,10 @@ func start_run_timer() -> void:
 		if is_unlimited_mode:
 			time_remaining = 0.0
 			run_time_elapsed = 0.0
+			_unlimited_start_real_time = Time.get_ticks_msec()
 		else:
 			time_remaining = FIRST_RUN_DURATION
+			_timer_start_real_time = Time.get_ticks_msec()
 		elites_killed_this_run = 0
 		_timer_expired_once = false
 		is_boss_infinite = false
@@ -259,9 +266,9 @@ func start_run_timer() -> void:
 		is_boss_infinite = false
 
 func _process(delta: float) -> void:
-	if is_game_over or is_paused or is_upgrading:
+	if is_game_over or is_upgrading:
 		return
-
+	# time_scale handles delta scaling for all child nodes automatically
 	_update_timer(delta)
 	spawn_manager.update_spawning(delta, current_stage, current_chapter_id, player_level)
 	player_stats.update_regen(delta)
@@ -272,16 +279,18 @@ func _update_timer(delta: float) -> void:
 	if not has_timer:
 		return
 	if is_unlimited_mode:
-		run_time_elapsed += delta
+		run_time_elapsed = float(Time.get_ticks_msec() - _unlimited_start_real_time) / 1000.0
 		_notify_hud_update()
 		return
 	if time_remaining <= 0.0:
 		return
-	time_remaining -= delta
-	if time_remaining <= 0.0:
-		time_remaining = 0.0
-		_notify_hud_update()
-		_on_timer_expired()
+	var elapsed_real = float(Time.get_ticks_msec() - _timer_start_real_time) / 1000.0
+	var new_remaining = FIRST_RUN_DURATION - elapsed_real
+	if new_remaining != time_remaining:
+		time_remaining = maxf(new_remaining, 0.0)
+		if time_remaining <= 0.0:
+			_notify_hud_update()
+			_on_timer_expired()
 
 func _on_timer_expired() -> void:
 	if spawn_manager.is_boss_phase and not _timer_expired_once:
@@ -437,6 +446,11 @@ func trigger_pause() -> void:
 	get_tree().paused = is_paused
 	game_paused.emit(is_paused)
 
+func set_game_speed(speed: float) -> void:
+	game_speed = speed
+	Engine.time_scale = game_speed
+	game_paused.emit(is_paused)
+
 func on_retreat() -> void:
 	is_game_over = true
 	get_tree().paused = true
@@ -463,6 +477,7 @@ func reset_for_new_run() -> void:
 	is_game_over = false
 	is_paused = false
 	is_upgrading = false
+	game_speed = 1.0
 	kill_count = 0
 	total_kills = 0
 	elites_killed_this_run = 0
@@ -504,4 +519,6 @@ func reset_for_new_run() -> void:
 
 	start_run_timer()
 	get_tree().paused = false
+	Engine.time_scale = 1.0
+	game_speed = 1.0
 	_notify_hud_update()

@@ -23,6 +23,8 @@ enum WeaponID {
 @export var beam_width: float = 0.0
 @export var duration: float = 0.0
 
+const EquipmentData = preload("res://resources/equipment_data.gd")
+
 static var _base_cache: Dictionary = {}
 
 static func _ensure_base_cache() -> void:
@@ -55,6 +57,9 @@ static func get_weapon(weapon_id: int, weapon_quality: int = 0) -> WeaponData:
 		base = _base_cache[WeaponID.MISSILE]
 	var copy = base.duplicate()
 	copy.quality = weapon_quality
+	var mult: float = EquipmentData.get_quality_mult(weapon_quality)
+	copy.damage = base.damage * mult
+	copy.range = base.range * mult
 	return copy
 
 static func _missile_data() -> WeaponData:

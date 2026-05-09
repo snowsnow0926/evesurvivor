@@ -175,7 +175,7 @@ func _on_research_clicked(research_id: String) -> void:
 	_deduct_mineral(cost["tier"], cost["mineral"])
 	GameState.research_progress[research_id] = current_level + 1
 
-	GameState.save(GameState.current_save_slot)
+	GameState.auto_save()
 	_update_currency_display()
 	_build_research_list()
 

@@ -410,7 +410,7 @@ func _on_equip() -> void:
 	selected_item = {}
 	_selected_equip_id = ""
 	_build_all()
-	GameState.save(GameState.current_save_slot)
+	GameState.auto_save()
 
 func _show_tonnage_warning() -> void:
 	var tonnage = _get_ship_tonnage()
@@ -472,7 +472,7 @@ func _on_unequip() -> void:
 	selected_item = {}
 	_selected_equip_id = ""
 	_build_all()
-	GameState.save(GameState.current_save_slot)
+	GameState.auto_save()
 
 func _update_detail_panel() -> void:
 	if selected_item.is_empty():
@@ -575,7 +575,7 @@ func _on_sell() -> void:
 	_selected_equip_id = ""
 	_update_detail_panel()
 	_build_all()
-	GameState.save(GameState.current_save_slot)
+	GameState.auto_save()
 
 func _on_back() -> void:
 	get_parent().close_all_panels()

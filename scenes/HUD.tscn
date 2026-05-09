@@ -471,3 +471,50 @@ offset_right = 224.0
 offset_bottom = 0.0
 grow_horizontal = 0
 grow_vertical = 0
+
+[node name="SpeedControlPanel" type="PanelContainer" parent="." unique_id=1360000001]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -230.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 70.0
+grow_horizontal = 0
+
+[node name="SpeedControlHBox" type="HBoxContainer" parent="SpeedControlPanel" unique_id=1360000002]
+layout_mode = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="PauseBtn" type="Button" parent="SpeedControlPanel/SpeedControlHBox" unique_id=1360000003]
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "暂停"
+font_color = Color(1, 0.5, 0.5, 1)
+
+[node name="Speed1Btn" type="Button" parent="SpeedControlPanel/SpeedControlHBox" unique_id=1360000004]
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+button_pressed = true
+text = "1x"
+font_color = Color(0.5, 1, 0.5, 1)
+
+[node name="Speed2Btn" type="Button" parent="SpeedControlPanel/SpeedControlHBox" unique_id=1360000005]
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "2x"
+font_color = Color(0.5, 1, 0.5, 1)
+
+[node name="Speed3Btn" type="Button" parent="SpeedControlPanel/SpeedControlHBox" unique_id=1360000006]
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "3x"
+font_color = Color(0.5, 1, 0.5, 1)

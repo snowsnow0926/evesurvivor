@@ -2,6 +2,7 @@ extends Node
 
 const SAVE_VERSION := 2
 const SAVE_SLOTS := 3
+const SLOT_AUTO := 3
 const DEBUG := false
 
 var current_save_slot: int = 0
@@ -180,6 +181,7 @@ func _migrate_armor_data(raw) -> Dictionary:
 	return {}
 
 func save(slot: int = -1) -> bool:
+	var target_slot = slot if slot >= 0 else SLOT_AUTO
 	var cfg = ConfigFile.new()
 	var save_data = _collect_save_data()
 
@@ -206,21 +208,22 @@ func save(slot: int = -1) -> bool:
 	for key in equipment:
 		cfg.set_value("equipment", key, equipment[key])
 
-	var path = _resolve_path(slot)
+	var path = _resolve_path(target_slot)
 	var err = cfg.save(path)
 	if err != OK:
-		push_error("[GameState] Save failed (slot %d): error %d" % [slot, err])
+		push_error("[GameState] Save failed (slot %d): error %d" % [target_slot, err])
 		return false
-	print("[GameState] Saved to slot %d: %s" % [slot if slot >= 0 else -1, path])
+	print("[GameState] Saved to slot %d: %s" % [target_slot, path])
 	return true
 
 func _do_load(slot: int = -1) -> bool:
-	var path = _resolve_path(slot)
+	var target_slot = slot if slot >= 0 else SLOT_AUTO
+	var path = _resolve_path(target_slot)
 	if not FileAccess.file_exists(path):
 		if slot < 0:
 			print("[GameState] No save file found, starting fresh")
 			return false
-		print("[GameState] No save file for slot %d, trying legacy path" % slot)
+		print("[GameState] No save file for slot %d, trying legacy path" % target_slot)
 		return _do_load(-1)
 
 	var cfg = ConfigFile.new()
@@ -252,14 +255,20 @@ func _do_load(slot: int = -1) -> bool:
 		raw_data["equipment"][key] = cfg.get_value("equipment", key)
 
 	_apply_save_data(raw_data)
-	print("[GameState] Loaded from slot %d: %s" % [slot if slot >= 0 else -1, path])
+	print("[GameState] Loaded from slot %d: %s" % [target_slot, path])
 	return true
 
 func save_game() -> bool:
 	return save(current_save_slot)
 
 func load_game() -> bool:
-	return _do_load(current_save_slot)
+	return _do_load(SLOT_AUTO)
+
+func auto_save() -> bool:
+	return save(SLOT_AUTO)
+
+func load_auto_save() -> bool:
+	return _do_load(SLOT_AUTO)
 
 func load_save_slot(slot_idx: int) -> bool:
 	current_save_slot = slot_idx
@@ -301,6 +310,11 @@ func reset_all_data() -> void:
 	equipped_armor = {}
 	upgraded_ships = {}
 	research_progress = {}
+	current_save_slot = SLOT_AUTO
+	var auto_path = _resolve_path(SLOT_AUTO)
+	if FileAccess.file_exists(auto_path):
+		DirAccess.remove_absolute(auto_path)
+		print("[GameState] Auto save file deleted: ", auto_path)
 
 func get_repair_cost() -> int:
 	var ship = ShipData.get_ship(selected_ship_id)
@@ -321,7 +335,7 @@ func repair_ship() -> bool:
 		return false
 	star_coin -= get_repair_cost()
 	ship_damaged = false
-	save(current_save_slot)
+	auto_save()
 	return true
 
 func add_rewards(coin: int, minrl: int) -> void:
@@ -332,7 +346,7 @@ func add_rewards(coin: int, minrl: int) -> void:
 	minerals_low += low
 	minerals_mid += mid
 	minerals_high += high
-	save(current_save_slot)
+	auto_save()
 
 func on_run_started() -> void:
 	if first_run:
@@ -365,7 +379,7 @@ func unlock_chapter(chapter_id: int) -> void:
 	if not unlocked_chapters.has(chapter_id):
 		unlocked_chapters.append(chapter_id)
 		print("[GameState] Chapter %d unlocked!" % chapter_id)
-		save(current_save_slot)
+		auto_save()
 
 func is_stage_unlocked(chapter_id: int, stage_id: int) -> bool:
 	if not unlocked_chapters.has(chapter_id):
@@ -381,7 +395,7 @@ func unlock_stage(chapter_id: int, stage_id: int) -> bool:
 		if not unlocked_stages[chapter_id].has(stage_id):
 			unlocked_stages[chapter_id].append(stage_id)
 			print("[GameState] Stage %d-%d unlocked!" % [chapter_id, stage_id])
-			save(current_save_slot)
+			auto_save()
 			return true
 	return false
 
@@ -395,7 +409,7 @@ func clear_stage(chapter_id: int, stage_id: int) -> bool:
 		if not cleared_stages[chapter_id].has(stage_id):
 			cleared_stages[chapter_id].append(stage_id)
 			print("[GameState] Stage %d-%d cleared (first clear)!" % [chapter_id, stage_id])
-			save(current_save_slot)
+			auto_save()
 			return true
 	return false
 
@@ -420,4 +434,4 @@ func reset_progress() -> void:
 	equipped_weapons = {}
 	equipped_armor = {}
 	upgraded_ships = {}
-	save(current_save_slot)
+	auto_save()

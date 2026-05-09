@@ -27,6 +27,7 @@ func try_drop_equipment(enemy: Node2D) -> void:
 	var quality := _roll_equipment_quality(loot.quality_weights)
 	var loot_type: String = "weapon" if randf() < 0.7 else "armor"
 	var loot_data: Dictionary = {}
+	var mult: float = EquipmentData.get_quality_mult(quality)
 	if loot_type == "weapon":
 		var wid := _get_random_weapon_id(loot.equipment_tier)
 		var sid := _weapon_id_to_shop_id(wid)
@@ -38,9 +39,9 @@ func try_drop_equipment(enemy: Node2D) -> void:
 			"scene_path": shop_item.scene_path,
 			"quality": quality,
 			"name": shop_item.display_name,
-			"base_damage": shop_item.base_damage,
+			"base_damage": shop_item.base_damage * mult,
 			"fire_interval": shop_item.fire_interval,
-			"range": shop_item.range,
+			"range": shop_item.range * mult,
 			"crit_rate": shop_item.crit_rate,
 			"crit_mult": shop_item.crit_mult,
 			"star_coin_price": shop_item.sell_price,
@@ -58,8 +59,8 @@ func try_drop_equipment(enemy: Node2D) -> void:
 			"scene_path": shop_item.scene_path,
 			"quality": quality,
 			"name": shop_item.display_name,
-			"shield_bonus": shop_item.shield_bonus,
-			"shield_regen_bonus": shop_item.shield_regen_bonus,
+			"shield_bonus": shop_item.shield_bonus * mult,
+			"shield_regen_bonus": shop_item.shield_regen_bonus * mult,
 			"star_coin_price": shop_item.sell_price,
 			"tonnage_tier": loot.equipment_tier,
 			"pos": enemy.global_position
@@ -73,6 +74,7 @@ func spawn_boss_loot(boss_node: Node2D) -> void:
 	var quality := _roll_equipment_quality(loot.quality_weights)
 	var loot_type: String = "weapon" if randf() < 0.7 else "armor"
 	var loot_data: Dictionary = {}
+	var mult: float = EquipmentData.get_quality_mult(quality)
 	if loot_type == "weapon":
 		var wid := _get_random_weapon_id(loot.equipment_tier)
 		var sid := _weapon_id_to_shop_id(wid)
@@ -84,9 +86,9 @@ func spawn_boss_loot(boss_node: Node2D) -> void:
 			"scene_path": shop_item.scene_path,
 			"quality": quality,
 			"name": shop_item.display_name,
-			"base_damage": shop_item.base_damage,
+			"base_damage": shop_item.base_damage * mult,
 			"fire_interval": shop_item.fire_interval,
-			"range": shop_item.range,
+			"range": shop_item.range * mult,
 			"crit_rate": shop_item.crit_rate,
 			"crit_mult": shop_item.crit_mult,
 			"star_coin_price": shop_item.sell_price,
@@ -104,8 +106,8 @@ func spawn_boss_loot(boss_node: Node2D) -> void:
 			"scene_path": shop_item.scene_path,
 			"quality": quality,
 			"name": shop_item.display_name,
-			"shield_bonus": shop_item.shield_bonus,
-			"shield_regen_bonus": shop_item.shield_regen_bonus,
+			"shield_bonus": shop_item.shield_bonus * mult,
+			"shield_regen_bonus": shop_item.shield_regen_bonus * mult,
 			"star_coin_price": shop_item.sell_price,
 			"tonnage_tier": loot.equipment_tier,
 			"pos": boss_node.global_position

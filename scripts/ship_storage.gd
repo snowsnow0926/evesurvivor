@@ -11,7 +11,12 @@ func _ready() -> void:
 		back_btn.pressed.connect(_on_back)
 	_build_ship_list()
 
+func _enter_tree() -> void:
+	_build_ship_list()
+
 func _build_ship_list() -> void:
+	if not ship_list:
+		return
 	for child in ship_list.get_children():
 		child.queue_free()
 
@@ -33,6 +38,10 @@ func _build_ship_list() -> void:
 		if is_current:
 			btn.text = "装备配置"
 			btn.pressed.connect(_select_ship.bind(ship))
+		elif not (ship.is_unlocked or GameState.unlocked_ships.has(int(ship.ship_id))):
+			btn.text = "未解锁"
+			btn.disabled = true
+			btn.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
 		else:
 			btn.text = "选择"
 			btn.pressed.connect(_select_ship.bind(ship))
@@ -43,6 +52,8 @@ func _is_current_ship(ship: ShipData) -> bool:
 	return GameState.selected_ship_id == ship.ship_id
 
 func _select_ship(ship: ShipData) -> void:
+	if not (ship.is_unlocked or GameState.unlocked_ships.has(int(ship.ship_id))):
+		return
 	current_ship = ship
 	GameState.selected_ship_id = ship.ship_id
 	var equipped_list = GameState.equipped_weapons.get(int(current_ship.ship_id))

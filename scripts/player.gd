@@ -11,6 +11,7 @@ const ShipData = preload("res://resources/ship_data.gd")
 const WeaponData = preload("res://resources/weapon_data.gd")
 const ShipIconGenerator = preload("res://scripts/ship_icon_generator.gd")
 const PlayerStats = preload("res://resources/player_stats.gd")
+const EquipmentData = preload("res://resources/equipment_data.gd")
 
 const _SCENE_MISSILE: PackedScene = preload("res://scenes/Missile.tscn")
 const _SCENE_CANNON: PackedScene = preload("res://scenes/CannonBullet.tscn")
@@ -351,7 +352,7 @@ func _update_railgun_firing(delta: float, weapon: WeaponData) -> void:
 			if target_pos == Vector2.ZERO:
 				target_pos = _get_mouse_world_pos()
 			SoundManager.play_sfx("shoot_railgun")
-			_fire_single_railgun(target_pos)
+			_fire_single_railgun(target_pos, weapon)
 	else:
 		var interval = _get_fire_interval(weapon)
 		if weapon_fire_timers[wt] >= interval:
@@ -362,7 +363,7 @@ func _update_railgun_firing(delta: float, weapon: WeaponData) -> void:
 			railgun_burst_count = player_stats.railgun_multi_count - 1
 			railgun_burst_timer = 0.0
 			SoundManager.play_sfx("shoot_railgun")
-			_fire_single_railgun(target_pos)
+			_fire_single_railgun(target_pos, weapon)
 
 func _fire_weapon(weapon: WeaponData) -> void:
 	if not game_manager or not is_instance_valid(game_manager):
@@ -379,7 +380,7 @@ func _fire_weapon(weapon: WeaponData) -> void:
 	elif weapon.weapon_id in [WeaponData.WeaponID.CANNON, WeaponData.WeaponID.SMALL_CANNON, WeaponData.WeaponID.MEDIUM_CANNON, WeaponData.WeaponID.LARGE_CANNON, WeaponData.WeaponID.FLAGSHIP_CANNON]:
 		_fire_cannon_at(target_pos, weapon)
 	elif weapon.weapon_id in [WeaponData.WeaponID.RAILGUN, WeaponData.WeaponID.SMALL_RAILGUN, WeaponData.WeaponID.MEDIUM_RAILGUN, WeaponData.WeaponID.LARGE_RAILGUN, WeaponData.WeaponID.FLAGSHIP_RAILGUN]:
-		_fire_railgun_at(target_pos)
+		_fire_railgun_at(target_pos, weapon)
 	elif weapon.weapon_id in [WeaponData.WeaponID.LASER, WeaponData.WeaponID.SMALL_LASER, WeaponData.WeaponID.MEDIUM_LASER, WeaponData.WeaponID.LARGE_LASER, WeaponData.WeaponID.FLAGSHIP_LASER]:
 		_fire_laser_at(weapon)
 
@@ -427,7 +428,7 @@ func _fire_missiles_at(target_pos: Vector2, weapon) -> void:
 	if not bullet_root or not is_instance_valid(bullet_root):
 		return
 
-	_spawn_single_missile(target_pos, bullet_root)
+	_spawn_single_missile(target_pos, bullet_root, weapon)
 
 	var total = player_stats.spread_count
 	var burst_key = WeaponData.WeaponID.MISSILE
@@ -463,16 +464,18 @@ func _fire_single_missile_for_burst(weapon) -> void:
 	var bullet_root = game_manager.get("bullet_root")
 	if not bullet_root or not is_instance_valid(bullet_root):
 		return
-	_spawn_single_missile(target_pos, bullet_root)
+	_spawn_single_missile(target_pos, bullet_root, weapon)
 
-func _spawn_single_missile(target_pos: Vector2, bullet_root: Node) -> void:
+func _spawn_single_missile(target_pos: Vector2, bullet_root: Node, weapon: WeaponData) -> void:
 	var base_angle = global_position.angle_to_point(target_pos)
 	var missile = _SCENE_MISSILE.instantiate()
 	bullet_root.add_child(missile)
 	missile.global_position = global_position
+	var quality_mult: float = EquipmentData.get_quality_mult(weapon.quality)
+	var missile_damage: float = player_stats.damage * quality_mult
 	missile.setup_target_direction(
 		Vector2.from_angle(base_angle),
-		player_stats.damage,
+		missile_damage,
 		player_stats.missile_speed,
 		player_stats.crit_rate,
 		player_stats.crit_mult,
@@ -519,7 +522,7 @@ func _fire_cannon_at(target_pos: Vector2, weapon: WeaponData) -> void:
 			80.0
 		)
 
-func _fire_railgun_at(target_pos: Vector2) -> void:
+func _fire_railgun_at(target_pos: Vector2, weapon: WeaponData) -> void:
 	SoundManager.play_sfx("shoot_railgun")
 	if not game_manager:
 		return
@@ -527,9 +530,9 @@ func _fire_railgun_at(target_pos: Vector2) -> void:
 	if not bullet_root or not is_instance_valid(bullet_root):
 		return
 
-	_fire_single_railgun(target_pos)
+	_fire_single_railgun(target_pos, weapon)
 
-func _fire_single_railgun(target_pos: Vector2) -> void:
+func _fire_single_railgun(target_pos: Vector2, weapon: WeaponData) -> void:
 	if not game_manager:
 		return
 	var bullet_root = game_manager.get("bullet_root")
@@ -539,6 +542,8 @@ func _fire_single_railgun(target_pos: Vector2) -> void:
 	var base_angle = global_position.angle_to_point(target_pos)
 	var count = player_stats.railgun_multi_count
 	var spacing = 10.0
+	var quality_mult: float = EquipmentData.get_quality_mult(weapon.quality)
+	var railgun_damage: float = player_stats.railgun_damage * quality_mult
 
 	for i in range(count):
 		var offset_idx = i - (count - 1) * 0.5
@@ -555,7 +560,7 @@ func _fire_single_railgun(target_pos: Vector2) -> void:
 		var final_crit_rate = player_stats.crit_rate + player_stats.railgun_crit_bonus
 		bullet.setup(
 			Vector2.from_angle(final_angle),
-			player_stats.railgun_damage,
+			railgun_damage,
 			player_stats.railgun_speed,
 			player_stats.railgun_range,
 			final_crit_rate,

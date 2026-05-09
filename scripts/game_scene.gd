@@ -17,6 +17,7 @@ var shake_time: float = 0.0
 var original_offset: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
+	add_to_group("game_scene")
 	is_settlement_open = false
 	game_manager = $GameManager
 	_setup_ui()
@@ -41,6 +42,9 @@ func _setup_ui() -> void:
 	var pause_menu = $UIRoot/PauseMenu
 	if pause_menu:
 		pause_menu.visible = false
+
+	if hud and hud.speed_changed.get_connections().is_empty():
+		hud.speed_changed.connect(_on_hud_speed_changed)
 
 func _connect_signals() -> void:
 	if game_manager:
@@ -71,6 +75,10 @@ func _process(_delta: float) -> void:
 
 	# 屏幕震动
 	_update_screen_shake(_delta)
+
+func _on_hud_speed_changed(speed: float) -> void:
+	if game_manager and is_instance_valid(game_manager):
+		game_manager.set_game_speed(speed)
 
 func _on_upgrade_requested() -> void:
 	SoundManager.play_sfx("upgrade")

@@ -42,6 +42,15 @@ func open_menu(gm: Node2D) -> void:
 		game_manager.is_paused = true
 		get_tree().paused = true
 		_build_pause_loot_list()
+	_notify_hud_paused(true)
+
+func _notify_hud_paused(paused: bool) -> void:
+	var gs = get_tree().get_first_node_in_group("game_scene") as Node
+	if not gs:
+		return
+	var hud = gs.get_node_or_null("UIRoot/HUD")
+	if hud and hud.has_method("set_paused_state"):
+		hud.set_paused_state(paused)
 
 func _on_continue_pressed() -> void:
 	SoundManager.play_sfx("button_click")
@@ -54,6 +63,7 @@ func close_menu() -> void:
 	if game_manager and is_instance_valid(game_manager):
 		game_manager.is_paused = false
 	get_tree().paused = false
+	_notify_hud_paused(false)
 
 func _build_pause_loot_list() -> void:
 	if loot_section_label:

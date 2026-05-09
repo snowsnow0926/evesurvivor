@@ -1,6 +1,7 @@
 extends Control
 
 const SAVE_SLOTS := 3
+const SLOT_AUTO := 3
 
 enum Mode { LOAD, SAVE }
 
@@ -52,16 +53,28 @@ func _populate_slots() -> void:
 	slot_buttons.clear()
 	_has_save = false
 
+	# 自动存档始终显示在顶部
+	var auto_data = _load_slot_info(SLOT_AUTO)
+	var auto_row = _create_auto_slot_row(auto_data)
+	slots_container.add_child(auto_row)
+	if not auto_data.is_empty():
+		_has_save = true
+
+	# 分隔线
+	var sep = HSeparator.new()
+	sep.set("theme_override_constants/separation", 8)
+	slots_container.add_child(sep)
+
 	for i in range(SAVE_SLOTS):
 		var slot_data = _load_slot_info(i)
 		var row = _create_slot_row(i, slot_data)
 		slots_container.add_child(row)
-		if slot_data != null:
+		if not slot_data.is_empty():
 			_has_save = true
 
 	if _mode == Mode.LOAD:
 		if _has_save:
-			new_game_btn.text = "新建游戏 (覆盖存档)"
+			new_game_btn.text = "新建游戏 (覆盖自动存档)"
 		else:
 			new_game_btn.text = "新建游戏"
 		new_game_btn.disabled = false
@@ -83,6 +96,31 @@ func _load_slot_info(slot_idx: int) -> Dictionary:
 		"highest_level": cfg.get_value("progress", "highest_level", 1),
 		"unlocked_stages": cfg.get_value("progress", "unlocked_stages", {}),
 	}
+
+func _create_auto_slot_row(data: Dictionary) -> HBoxContainer:
+	var row = HBoxContainer.new()
+	row.custom_minimum_size = Vector2(0, 48)
+
+	var label = Label.new()
+	label.text = "[自动存档]"
+	label.custom_minimum_size = Vector2(100, 0)
+	row.add_child(label)
+
+	var info_label = Label.new()
+	if data.is_empty():
+		info_label.text = "[ 暂无自动存档 ]"
+		info_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+	else:
+		var name = data.get("player_name", "")
+		var coin = data.get("star_coin", 0)
+		var stages: Dictionary = data.get("unlocked_stages", {})
+		var progress = GameState._compute_progress_from_dict(stages)
+		var date = data.get("saved_at", "")
+		info_label.text = "%s  |  星币:%d  |  %s  |  %s" % [name, coin, progress, date]
+		info_label.add_theme_color_override("font_color", Color(0.7, 0.9, 0.7))
+	row.add_child(info_label)
+
+	return row
 
 func _create_slot_row(slot_idx: int, data: Dictionary) -> HBoxContainer:
 	var row = HBoxContainer.new()
@@ -161,8 +199,9 @@ func _on_confirm_pressed() -> void:
 
 func _on_new_game() -> void:
 	SoundManager.play_sfx("button_click")
-	GameState.reset_for_new_run()
-	GameState.pending_new_game_slot = _selected_slot
+	GameState.reset_all_data()
+	GameState.current_save_slot = GameState.SLOT_AUTO
+	GameState.pending_new_game_slot = GameState.SLOT_AUTO
 	emit_signal("new_game_requested")
 	get_tree().change_scene_to_file("res://scenes/CharacterCreate.tscn")
 
