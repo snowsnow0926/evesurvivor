@@ -314,7 +314,6 @@ func reset_all_data() -> void:
 	var auto_path = _resolve_path(SLOT_AUTO)
 	if FileAccess.file_exists(auto_path):
 		DirAccess.remove_absolute(auto_path)
-		print("[GameState] Auto save file deleted: ", auto_path)
 
 func get_repair_cost() -> int:
 	var ship = ShipData.get_ship(selected_ship_id)

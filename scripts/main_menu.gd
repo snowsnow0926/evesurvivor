@@ -134,4 +134,7 @@ func _play_intro_video() -> void:
 	video_player.play()
 
 func _on_video_finished() -> void:
+	GameState.reset_all_data()
+	GameState.current_save_slot = GameState.SLOT_AUTO
+	GameState.pending_new_game_slot = GameState.SLOT_AUTO
 	get_tree().change_scene_to_file("res://scenes/CharacterCreate.tscn")

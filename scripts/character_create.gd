@@ -259,7 +259,7 @@ func _on_confirm() -> void:
 	GameState.minerals_high = 200000
 	GameState.selected_ship_id = ShipData.ShipID.FRIGATE
 	GameState.first_run = false
-	var slot = GameState.pending_new_game_slot if GameState.pending_new_game_slot >= 0 else 0
+	var slot = GameState.pending_new_game_slot if GameState.pending_new_game_slot >= 0 else GameState.SLOT_AUTO
 	GameState.current_save_slot = slot
 	GameState.pending_new_game_slot = -1
 	GameState.save_save_slot(slot)
