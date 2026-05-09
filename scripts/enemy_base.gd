@@ -329,7 +329,7 @@ func _update_shader_params() -> void:
 func set_icon_rotation(angle: float) -> void:
 	_current_angle = angle
 	if ship_sprite != null:
-		ship_sprite.rotation = angle + PI / 2
+		ship_sprite.rotation = angle + PI / 2 + PI
 	queue_redraw()
 
 func take_damage(amount: float, is_crit: bool = false) -> void:
