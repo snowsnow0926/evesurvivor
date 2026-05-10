@@ -92,7 +92,7 @@ func _find_nearest_enemy() -> Node2D:
 	var nearest: Node2D = null
 	var nearest_dist = max_distance
 	for enemy in enemy_root.get_children():
-		if not is_instance_valid(enemy) or not enemy is Node2D:
+		if not is_instance_valid(enemy) or not enemy is CharacterBody2D:
 			continue
 		var dist = global_position.distance_to(enemy.global_position)
 		if dist < nearest_dist:
@@ -134,6 +134,8 @@ func _on_body_entered(body: Node) -> void:
 	print("[Missile._on_body_entered] body=", body.name, " body_type=", body.get_class())
 	if body == self:
 		return
+	if not body is CharacterBody2D:
+		return
 	if body.has_method("take_damage"):
 		var is_crit = randf() < crit_rate
 		var final_damage = damage * (crit_mult if is_crit else 1.0)
@@ -152,7 +154,7 @@ func _apply_splash_damage(hit_pos: Vector2, base_damage: float) -> void:
 	var splash_dmg = base_damage * 0.5
 	var hit_count = 0
 	for enemy in enemy_root.get_children():
-		if not is_instance_valid(enemy) or not enemy.has_method("take_damage"):
+		if not is_instance_valid(enemy) or not enemy is CharacterBody2D or not enemy.has_method("take_damage"):
 			continue
 		if enemy == self:
 			continue

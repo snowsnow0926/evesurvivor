@@ -36,6 +36,8 @@ signal stats_changed()
 
 @export var shield_regen: float = 4.0
 @export var shield_regen_timer: float = 0.0
+@export var hp_regen: float = 0.0
+@export var hp_regen_timer: float = 0.0
 
 # === Movement & Survival ===
 @export var move_speed: float = 320.0
@@ -107,6 +109,7 @@ func reset() -> void:
 	var mh = max_hp
 	var sm = shield_max
 	var sr = shield_regen
+	var hr = hp_regen
 	var ms = move_speed
 	var d = dodge
 	var cr = crit_rate
@@ -118,6 +121,7 @@ func reset() -> void:
 	new_stats.max_hp = mh
 	new_stats.shield_max = sm
 	new_stats.shield_regen = sr
+	new_stats.hp_regen = hr
 	new_stats.move_speed = ms
 	new_stats.dodge = d
 	new_stats.crit_rate = cr
@@ -131,6 +135,7 @@ func _copy_from(other: PlayerStats) -> void:
 	max_hp = other.max_hp
 	shield_max = other.shield_max
 	shield_regen = other.shield_regen
+	hp_regen = other.hp_regen
 	move_speed = other.move_speed
 	dodge = other.dodge
 	crit_rate = other.crit_rate
@@ -178,6 +183,12 @@ func update_regen(delta: float) -> void:
 	if shield_regen_timer >= 1.0:
 		shield_regen_timer = 0.0
 		shield = minf(shield + shield_regen, shield_max)
+
+	if hp_regen > 0.0:
+		hp_regen_timer += delta
+		if hp_regen_timer >= 1.0:
+			hp_regen_timer = 0.0
+			hp = mini(hp + int(hp_regen), max_hp)
 
 	if lifesteal > 0.0:
 		lifesteal_timer += delta

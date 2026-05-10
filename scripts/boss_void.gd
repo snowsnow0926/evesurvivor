@@ -135,6 +135,7 @@ func _on_death_rewards() -> void:
 
 func _die() -> void:
 	_spawn_death_effect()
+	_spawn_wreck()
 	_on_death_rewards()
 	if game_manager and is_instance_valid(game_manager):
 		game_manager.spawn_boss_loot(self)

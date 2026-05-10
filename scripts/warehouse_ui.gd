@@ -519,11 +519,14 @@ func _update_detail_panel() -> void:
 	if is_armor:
 		var shield = selected_item.get("shield_bonus", 0.0)
 		var regen = selected_item.get("shield_regen_bonus", 0.0)
+		var hp_regen_val = selected_item.get("hp_regen_bonus", 0.0)
 		var lines: Array = []
 		if shield > 0:
 			lines.append("护盾上限 +%.0f" % shield)
 		if regen > 0:
 			lines.append("护盾回充 +%.1f/秒" % regen)
+		if hp_regen_val > 0:
+			lines.append("装甲回复 +%.1f/秒" % hp_regen_val)
 		stats_text = "\n".join(lines) if not lines.is_empty() else "无防御加成"
 	else:
 		var dmg = selected_item.get("base_damage", 0.0)

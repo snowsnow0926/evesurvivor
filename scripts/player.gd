@@ -394,7 +394,7 @@ func _find_closest_enemy(max_range: float) -> Vector2:
 	var closest: Node2D = null
 	var closest_dist = max_range
 	for enemy in enemy_root.get_children():
-		if not is_instance_valid(enemy) or not enemy is Node2D:
+		if not is_instance_valid(enemy) or not enemy is CharacterBody2D:
 			continue
 		var dist = global_position.distance_to(enemy.global_position)
 		if dist < closest_dist:
@@ -411,7 +411,7 @@ func _find_farthest_enemy_in_range(max_range: float) -> Node2D:
 	var farthest: Node2D = null
 	var farthest_dist_sq: float = -1.0
 	for enemy in enemy_root.get_children():
-		if not is_instance_valid(enemy) or not enemy is Node2D:
+		if not is_instance_valid(enemy) or not enemy is CharacterBody2D:
 			continue
 		var dist = global_position.distance_to(enemy.global_position)
 		if dist <= max_range and dist * dist > farthest_dist_sq:
@@ -632,6 +632,7 @@ func _apply_armor_bonuses() -> void:
 		if armor is Dictionary:
 			player_stats.shield_max += armor.get("shield_bonus", 0.0)
 			player_stats.shield_regen += armor.get("shield_regen_bonus", 0.0)
+			player_stats.hp_regen += armor.get("hp_regen_bonus", 0.0)
 	player_stats.shield = player_stats.shield_max
 
 func set_game_manager(gm: Node2D) -> void:

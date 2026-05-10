@@ -72,6 +72,8 @@ func setup(dir: Vector2, dmg: float, spd: float, rng: float, crit_r: float, crit
 	explode_radius = explode_rad
 
 func _on_body_entered(body: Node) -> void:
+	if not body is CharacterBody2D:
+		return
 	if not body.has_method("take_damage"):
 		return
 	if hit_count >= pierce_count:

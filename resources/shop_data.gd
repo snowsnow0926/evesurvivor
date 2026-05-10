@@ -8,6 +8,7 @@ enum ShopItemID {
 	SMALL_LASER, MEDIUM_LASER, LARGE_LASER, FLAGSHIP_LASER,
 	SMALL_SHIELD_OPTIMIZER, MEDIUM_SHIELD_OPTIMIZER, LARGE_SHIELD_OPTIMIZER, FLAGSHIP_SHIELD_OPTIMIZER,
 	SMALL_SHIELD_REGEN, MEDIUM_SHIELD_REGEN, LARGE_SHIELD_REGEN, FLAGSHIP_SHIELD_REGEN,
+	SMALL_ARMOR_REPAIRER, MEDIUM_ARMOR_REPAIRER, LARGE_ARMOR_REPAIRER, FLAGSHIP_ARMOR_REPAIRER,
 }
 enum MineralTier { LOW, MID, HIGH }
 enum EquipType { WEAPON, ARMOR }
@@ -29,6 +30,7 @@ enum TonnageTier { SMALL, MEDIUM, LARGE, FLAGSHIP }
 @export var equip_type: EquipType
 @export var shield_bonus: float
 @export var shield_regen_bonus: float
+@export var hp_regen_bonus: float
 @export var quality: int
 @export var tonnage_tier: TonnageTier
 
@@ -44,6 +46,7 @@ static func _ensure_cache() -> void:
 			_small_laser(), _medium_laser(), _large_laser(), _flagship_laser(),
 			_small_shield_optimizer(), _medium_shield_optimizer(), _large_shield_optimizer(), _flagship_shield_optimizer(),
 			_small_shield_regen(), _medium_shield_regen(), _large_shield_regen(), _flagship_shield_regen(),
+			_small_armor_repairer(), _medium_armor_repairer(), _large_armor_repairer(), _flagship_armor_repairer(),
 		]
 		for item in _all_items_cache:
 			_by_id_cache[item.shop_item_id] = item
@@ -581,6 +584,99 @@ static func _flagship_shield_regen() -> ShopItemData:
 	e.scene_path = ""
 	e.shield_bonus = 0.0
 	e.shield_regen_bonus = 12.0
+	e.hp_regen_bonus = 0.0
+	e.quality = 0
+	return e
+
+static func _small_armor_repairer() -> ShopItemData:
+	var e = ShopItemData.new()
+	e.shop_item_id = ShopItemID.SMALL_ARMOR_REPAIRER
+	e.equip_type = EquipType.ARMOR
+	e.tonnage_tier = TonnageTier.SMALL
+	e.display_name = "小型装甲维修器"
+	e.description = "装甲回复 +2/秒"
+	e.star_coin_price = 800
+	e.mineral_tier = MineralTier.LOW
+	e.mineral_count = 0
+	e.sell_price = 320
+	e.base_damage = 0.0
+	e.fire_interval = 0.0
+	e.range = 0.0
+	e.crit_rate = 0.0
+	e.crit_mult = 1.0
+	e.scene_path = ""
+	e.shield_bonus = 0.0
+	e.shield_regen_bonus = 0.0
+	e.hp_regen_bonus = 2.0
+	e.quality = 0
+	return e
+
+static func _medium_armor_repairer() -> ShopItemData:
+	var e = ShopItemData.new()
+	e.shop_item_id = ShopItemID.MEDIUM_ARMOR_REPAIRER
+	e.equip_type = EquipType.ARMOR
+	e.tonnage_tier = TonnageTier.MEDIUM
+	e.display_name = "中型装甲维修器"
+	e.description = "装甲回复 +5/秒"
+	e.star_coin_price = 3500
+	e.mineral_tier = MineralTier.LOW
+	e.mineral_count = 0
+	e.sell_price = 1400
+	e.base_damage = 0.0
+	e.fire_interval = 0.0
+	e.range = 0.0
+	e.crit_rate = 0.0
+	e.crit_mult = 1.0
+	e.scene_path = ""
+	e.shield_bonus = 0.0
+	e.shield_regen_bonus = 0.0
+	e.hp_regen_bonus = 5.0
+	e.quality = 0
+	return e
+
+static func _large_armor_repairer() -> ShopItemData:
+	var e = ShopItemData.new()
+	e.shop_item_id = ShopItemID.LARGE_ARMOR_REPAIRER
+	e.equip_type = EquipType.ARMOR
+	e.tonnage_tier = TonnageTier.LARGE
+	e.display_name = "大型装甲维修器"
+	e.description = "装甲回复 +10/秒"
+	e.star_coin_price = 12000
+	e.mineral_tier = MineralTier.MID
+	e.mineral_count = 0
+	e.sell_price = 4800
+	e.base_damage = 0.0
+	e.fire_interval = 0.0
+	e.range = 0.0
+	e.crit_rate = 0.0
+	e.crit_mult = 1.0
+	e.scene_path = ""
+	e.shield_bonus = 0.0
+	e.shield_regen_bonus = 0.0
+	e.hp_regen_bonus = 10.0
+	e.quality = 0
+	return e
+
+static func _flagship_armor_repairer() -> ShopItemData:
+	var e = ShopItemData.new()
+	e.shop_item_id = ShopItemID.FLAGSHIP_ARMOR_REPAIRER
+	e.equip_type = EquipType.ARMOR
+	e.tonnage_tier = TonnageTier.FLAGSHIP
+	e.display_name = "旗舰级装甲维修器"
+	e.description = "装甲回复 +18/秒"
+	e.star_coin_price = 40000
+	e.mineral_tier = MineralTier.HIGH
+	e.mineral_count = 0
+	e.sell_price = 16000
+	e.base_damage = 0.0
+	e.fire_interval = 0.0
+	e.range = 0.0
+	e.crit_rate = 0.0
+	e.crit_mult = 1.0
+	e.scene_path = ""
+	e.shield_bonus = 0.0
+	e.shield_regen_bonus = 0.0
+	e.hp_regen_bonus = 18.0
 	e.quality = 0
 	return e
 
@@ -600,6 +696,7 @@ func to_inventory_dict() -> Dictionary:
 		"crit_mult": crit_mult,
 		"shield_bonus": shield_bonus,
 		"shield_regen_bonus": shield_regen_bonus,
+		"hp_regen_bonus": hp_regen_bonus,
 		"tonnage_tier": tonnage_tier,
 		"star_coin_price": star_coin_price,
 	}

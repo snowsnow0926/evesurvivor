@@ -248,7 +248,9 @@ func _spawn_boss(current_chapter_id: int, player_level: int) -> void:
 func spawn_exp_orb(pos: Vector2) -> void:
 	var orb = _SCENE_EXP_ORB.instantiate()
 	orb.set_game_manager(game_manager)
-	orb.global_position = pos
+	# 经验球生成在敌人残骸附近20px范围内的随机位置，避免与残骸重叠
+	var offset := Vector2(randf_range(-20.0, 20.0), randf_range(-20.0, 20.0))
+	orb.global_position = pos + offset
 	exp_orb_root.call_deferred("add_child", orb)
 
 func on_boss_killed(boss_node: Node2D) -> void:

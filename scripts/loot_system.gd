@@ -9,7 +9,7 @@ var session_loot: Array = []
 var session_star_coin: int = 0
 var session_minerals: int = 0
 
-const DROP_ARMOR: Array[int] = [0, 1]
+const DROP_ARMOR: Array[int] = [0, 1, 2]
 
 const StageData = preload("res://resources/stage_data.gd")
 const WeaponData = preload("res://resources/weapon_data.gd")
@@ -61,6 +61,7 @@ func try_drop_equipment(enemy: Node2D) -> void:
 			"name": shop_item.display_name,
 			"shield_bonus": shop_item.shield_bonus * mult,
 			"shield_regen_bonus": shop_item.shield_regen_bonus * mult,
+			"hp_regen_bonus": shop_item.hp_regen_bonus * mult,
 			"star_coin_price": shop_item.sell_price,
 			"tonnage_tier": loot.equipment_tier,
 			"pos": enemy.global_position
@@ -108,6 +109,7 @@ func spawn_boss_loot(boss_node: Node2D) -> void:
 			"name": shop_item.display_name,
 			"shield_bonus": shop_item.shield_bonus * mult,
 			"shield_regen_bonus": shop_item.shield_regen_bonus * mult,
+			"hp_regen_bonus": shop_item.hp_regen_bonus * mult,
 			"star_coin_price": shop_item.sell_price,
 			"tonnage_tier": loot.equipment_tier,
 			"pos": boss_node.global_position
@@ -157,6 +159,9 @@ func grant_loot_to_player() -> Array:
 			"tonnage_tier": loot.get("tonnage_tier", 0),
 			"equip_type": loot.get("type", "weapon"),
 			"scene_path": loot.get("scene_path", ""),
+			"shield_bonus": loot.get("shield_bonus", 0.0),
+			"shield_regen_bonus": loot.get("shield_regen_bonus", 0.0),
+			"hp_regen_bonus": loot.get("hp_regen_bonus", 0.0),
 			"is_new": true,
 		}
 		granted.append(item_dict)

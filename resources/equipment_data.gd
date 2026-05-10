@@ -59,28 +59,32 @@ static func can_equip_on_ship(ship_tonnage: int, equip_tonnage: int) -> bool:
 		3: return true
 	return false
 
-enum ArmorID { SMALL_SHIELD_OPTIMIZER, SMALL_SHIELD_REGEN }
+enum ArmorID { SMALL_SHIELD_OPTIMIZER, SMALL_SHIELD_REGEN, SMALL_ARMOR_REPAIRER }
 
 static func get_armor_name(aid: ArmorID) -> String:
 	match aid:
 		ArmorID.SMALL_SHIELD_OPTIMIZER: return "小型立场优化器"
 		ArmorID.SMALL_SHIELD_REGEN: return "小型护盾回充器"
+		ArmorID.SMALL_ARMOR_REPAIRER: return "小型装甲维修器"
 	return "?"
 
 static func get_armor_desc(aid: ArmorID) -> String:
 	match aid:
 		ArmorID.SMALL_SHIELD_OPTIMIZER: return "护盾上限 +20"
 		ArmorID.SMALL_SHIELD_REGEN: return "护盾回复 +2/s"
+		ArmorID.SMALL_ARMOR_REPAIRER: return "装甲回复 +2/s"
 	return "?"
 
 static func get_armor_bonus(aid: ArmorID) -> Dictionary:
 	match aid:
-		ArmorID.SMALL_SHIELD_OPTIMIZER: return {"shield_bonus": 20.0, "shield_regen_bonus": 0.0}
-		ArmorID.SMALL_SHIELD_REGEN: return {"shield_bonus": 0.0, "shield_regen_bonus": 2.0}
+		ArmorID.SMALL_SHIELD_OPTIMIZER: return {"shield_bonus": 20.0, "shield_regen_bonus": 0.0, "hp_regen_bonus": 0.0}
+		ArmorID.SMALL_SHIELD_REGEN: return {"shield_bonus": 0.0, "shield_regen_bonus": 2.0, "hp_regen_bonus": 0.0}
+		ArmorID.SMALL_ARMOR_REPAIRER: return {"shield_bonus": 0.0, "shield_regen_bonus": 0.0, "hp_regen_bonus": 2.0}
 	return {}
 
 static func get_shop_item_id_for_armor(aid: ArmorID) -> int:
 	match aid:
 		ArmorID.SMALL_SHIELD_OPTIMIZER: return 16  # ShopItemData.ShopItemID.SMALL_SHIELD_OPTIMIZER
 		ArmorID.SMALL_SHIELD_REGEN: return 20       # ShopItemData.ShopItemID.SMALL_SHIELD_REGEN
+		ArmorID.SMALL_ARMOR_REPAIRER: return 24     # ShopItemData.ShopItemID.SMALL_ARMOR_REPAIRER
 	return 16

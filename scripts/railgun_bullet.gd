@@ -58,6 +58,8 @@ func setup(dir: Vector2, dmg: float, spd: float, rng: float, cr: float, cm: floa
 	traveled_distance = 0.0
 
 func _on_body_entered(body: Node) -> void:
+	if not body is CharacterBody2D:
+		return
 	if not body.has_method("take_damage"):
 		return
 	var is_crit = randf() < crit_rate

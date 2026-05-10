@@ -4,6 +4,8 @@ extends CharacterBody2D
 ## damage numbers, death effects, hit flash, and HP bar updates.
 ## Extend this class and override _update_movement() and _process_combat().
 
+const _SCENE_WRECK: PackedScene = preload("res://scenes/EnemyWreck.tscn")
+
 # === Shared State ===
 var game_manager: Node2D
 var max_hp: float = 30.0
@@ -421,10 +423,29 @@ func _die() -> void:
 	SoundManager.play_sfx("enemy_death")
 	enemy_dead.emit(self, _get_enemy_type())
 	_spawn_death_effect()
+	_spawn_wreck()
 	_on_death_rewards()
 	if game_manager and is_instance_valid(game_manager):
 		game_manager.try_drop_equipment(self)
 	queue_free()
+
+func _spawn_wreck() -> void:
+	if _icon_tex == null:
+		return
+	var parent = get_parent()
+	if parent == null or not is_instance_valid(parent):
+		return
+	var wreck = _SCENE_WRECK.instantiate()
+	wreck.global_position = global_position
+	parent.call_deferred("add_child", wreck)
+	wreck.call_deferred("setup",
+		_icon_tex,
+		_visual_scale,
+		ship_sprite.rotation if ship_sprite != null else 0.0,
+		_death_particle_color,
+		_death_particle_count,
+		3.0
+	)
 
 func _on_death_rewards() -> void:
 	pass

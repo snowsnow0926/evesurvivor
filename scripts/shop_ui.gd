@@ -196,6 +196,8 @@ func _update_detail_panel() -> void:
 					lines.append("护盾上限 +%.0f" % selected_shop_item.shield_bonus)
 				if selected_shop_item.shield_regen_bonus > 0:
 					lines.append("护盾回充 +%.0f/s" % selected_shop_item.shield_regen_bonus)
+				if selected_shop_item.hp_regen_bonus > 0:
+					lines.append("装甲回复 +%.0f/s" % selected_shop_item.hp_regen_bonus)
 				lines.append("吨位: %s" % t_name)
 				detail_stats.text = "\n".join(lines)
 		if detail_cost:
@@ -272,62 +274,10 @@ func _on_buy() -> void:
 	_update_buy_button()
 
 func _buy_weapon(item_dict: Dictionary) -> void:
-	var ship_id = int(GameState.selected_ship_id)
-	if ship_id == 0:
-		ship_id = ShipData.ShipID.FRIGATE
-
-	var ship = ShipData.get_ship(ship_id)
-	if not ship:
-		GameState.equipment_inventory.append(item_dict)
-		return
-
 	GameState.equipment_inventory.append(item_dict)
 
-	var weapon_slot_count = ship.weapon_slot_count
-	if GameState.upgraded_ships.get(ship_id, false):
-		weapon_slot_count = ship.upgraded_weapon_slots
-
-	if not GameState.equipped_weapons.has(ship_id):
-		GameState.equipped_weapons[ship_id] = []
-
-	var equipped_list: Array = GameState.equipped_weapons[ship_id]
-	if not (equipped_list is Array):
-		equipped_list = []
-		GameState.equipped_weapons[ship_id] = equipped_list
-
-	if equipped_list.size() < weapon_slot_count:
-		equipped_list.append(item_dict)
-		GameState.equipped_weapons[ship_id] = equipped_list
-		GameState.equipment_inventory.erase(item_dict)
-
 func _buy_armor(item_dict: Dictionary) -> void:
-	var ship_id = int(GameState.selected_ship_id)
-	if ship_id == 0:
-		ship_id = ShipData.ShipID.FRIGATE
-
-	var ship = ShipData.get_ship(ship_id)
-	if not ship:
-		GameState.equipment_inventory.append(item_dict)
-		return
-
-	var armor_slot_count = ship.armor_slot_count
-	if GameState.upgraded_ships.get(ship_id, false):
-		armor_slot_count = ship.upgraded_armor_slots
-
-	if not GameState.equipped_armor.has(ship_id):
-		GameState.equipped_armor[ship_id] = []
-
-	var armor_list: Array = GameState.equipped_armor.get(ship_id, [])
-	if not (armor_list is Array):
-		armor_list = []
-		GameState.equipped_armor[ship_id] = armor_list
-
-	if armor_list.size() < armor_slot_count:
-		armor_list.append(item_dict)
-		GameState.equipped_armor[ship_id] = armor_list
-		GameState.equipment_inventory.erase(item_dict)
-	else:
-		GameState.equipment_inventory.append(item_dict)
+	GameState.equipment_inventory.append(item_dict)
 
 func _on_sell() -> void:
 	if selected_inventory_item.is_empty():

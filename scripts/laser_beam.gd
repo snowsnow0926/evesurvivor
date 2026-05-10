@@ -83,7 +83,7 @@ func _scan_and_damage() -> void:
 	var tick_damage: float = dps * TICK_INTERVAL
 
 	for child in enemy_root.get_children():
-		if not is_instance_valid(child) or not child is Node2D:
+		if not is_instance_valid(child) or not child is CharacterBody2D:
 			continue
 		if child == self or child == owner_player:
 			continue
@@ -147,7 +147,7 @@ func _find_farthest_enemy_in_range() -> Node2D:
 	var farthest: Node2D = null
 	var farthest_dist_sq: float = -1.0
 	for child in enemy_root.get_children():
-		if not is_instance_valid(child) or not child is Node2D:
+		if not is_instance_valid(child) or not child is CharacterBody2D:
 			continue
 		var dist_sq: float = _player_pos.distance_squared_to(child.global_position)
 		var dist: float = sqrt(dist_sq)

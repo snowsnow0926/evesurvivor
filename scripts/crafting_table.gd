@@ -174,8 +174,10 @@ func _on_craft_pressed() -> void:
 	else:
 		var base_shield = selected_items[0].get("shield_bonus", 0.0)
 		var base_regen = selected_items[0].get("shield_regen_bonus", 0.0)
+		var base_hp_regen = selected_items[0].get("hp_regen_bonus", 0.0)
 		new_item["shield_bonus"] = base_shield * mult
 		new_item["shield_regen_bonus"] = base_regen * mult
+		new_item["hp_regen_bonus"] = base_hp_regen * mult
 
 	GameState.equipment_inventory.append(new_item)
 
@@ -278,6 +280,7 @@ func _on_quick_craft_pressed() -> void:
 				else:
 					new_item["shield_bonus"] = item_a.get("shield_bonus", 0.0) * mult
 					new_item["shield_regen_bonus"] = item_a.get("shield_regen_bonus", 0.0) * mult
+					new_item["hp_regen_bonus"] = item_a.get("hp_regen_bonus", 0.0) * mult
 
 				GameState.equipment_inventory.append(new_item)
 				group.resize(group.size() - 2)

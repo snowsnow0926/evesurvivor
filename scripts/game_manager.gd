@@ -131,6 +131,7 @@ func _apply_race_to_player_stats(race: RaceData) -> void:
 	player_stats.shield_max = ship.base_shield + race.shield_max
 	player_stats.shield = player_stats.shield_max
 	player_stats.shield_regen = ship.base_shield_regen + race.shield_regen
+	player_stats.hp_regen = 0.0
 	player_stats.move_speed = race.move_speed
 	player_stats.dodge = race.dodge_rate
 	player_stats.crit_rate = race.crit_rate
@@ -213,6 +214,7 @@ func _apply_armor_bonuses() -> void:
 		if armor is Dictionary:
 			player_stats.shield_max += armor.get("shield_bonus", 0.0)
 			player_stats.shield_regen += armor.get("shield_regen_bonus", 0.0)
+			player_stats.hp_regen += armor.get("hp_regen_bonus", 0.0)
 	player_stats.shield = player_stats.shield_max
 
 func setup_for_stage(chapter_id: int, stage_id: int) -> void:
