@@ -11,6 +11,14 @@ extends Control
 @onready var storage_panel: Control = $StoragePanel
 @onready var save_ui: Control = $SaveUI
 
+@onready var building_repair: Area2D = $BuildingLayer/BuildingNode_repair
+@onready var building_crafting: Area2D = $BuildingLayer/BuildingNode_crafting
+@onready var building_research: Area2D = $BuildingLayer/BuildingNode_research
+@onready var building_shop: Area2D = $BuildingLayer/BuildingNode_shop
+@onready var building_warehouse: Area2D = $BuildingLayer/BuildingNode_warehouse
+@onready var building_shipyard: Area2D = $BuildingLayer/BuildingNode_shipyard
+@onready var building_storage: Area2D = $BuildingLayer/BuildingNode_storage
+
 var base_pause_menu: Control
 var current_panel: Control = null
 var warning_timer: float = 0.0
@@ -19,6 +27,10 @@ var _shop_panel: Control
 var _warehouse_panel: Control
 var _shipyard_panel: Control
 var _research_panel: Control
+
+var _building_nodes: Dictionary = {}
+var _hover_tween: Dictionary = {}
+var _hovered_building: String = ""
 
 const _PANEL_SCENES := {
 	"shop": "res://scenes/ShopUI.tscn",
@@ -33,6 +45,7 @@ const BUILDING_DATA: Array[Dictionary] = [
 		"name": "维修站",
 		"desc": "修复战斗中受损的舰船，恢复全部耐久度",
 		"icon": "res://assets/base/icons/icon_repair.png",
+		"sprite": "res://assets/base/buildings/building_repair.png",
 		"method": "_show_repair",
 	},
 	{
@@ -40,6 +53,7 @@ const BUILDING_DATA: Array[Dictionary] = [
 		"name": "装备合成",
 		"desc": "将两件相同品质的装备合成为更高品质",
 		"icon": "res://assets/base/icons/icon_crafting.png",
+		"sprite": "res://assets/base/buildings/building_crafting.png",
 		"method": "_show_crafting",
 	},
 	{
@@ -47,6 +61,7 @@ const BUILDING_DATA: Array[Dictionary] = [
 		"name": "科研中心",
 		"desc": "解锁并升级各类型武器的科技",
 		"icon": "res://assets/base/icons/icon_research.png",
+		"sprite": "res://assets/base/buildings/building_research.png",
 		"method": "_show_research",
 	},
 	{
@@ -54,6 +69,7 @@ const BUILDING_DATA: Array[Dictionary] = [
 		"name": "武器商店",
 		"desc": "购买或出售武器与装甲",
 		"icon": "res://assets/base/icons/icon_shop.png",
+		"sprite": "res://assets/base/buildings/building_shop.png",
 		"method": "_show_shop",
 	},
 	{
@@ -61,6 +77,7 @@ const BUILDING_DATA: Array[Dictionary] = [
 		"name": "物品仓库",
 		"desc": "管理仓库中的所有装备",
 		"icon": "res://assets/base/icons/icon_warehouse.png",
+		"sprite": "res://assets/base/buildings/building_warehouse.png",
 		"method": "_show_warehouse",
 	},
 	{
@@ -68,6 +85,7 @@ const BUILDING_DATA: Array[Dictionary] = [
 		"name": "造船厂",
 		"desc": "解锁新战舰，扩展武器与装甲槽位",
 		"icon": "res://assets/base/icons/icon_shipyard.png",
+		"sprite": "res://assets/base/buildings/building_shipyard.png",
 		"method": "_show_shipyard",
 	},
 	{
@@ -75,15 +93,15 @@ const BUILDING_DATA: Array[Dictionary] = [
 		"name": "星港",
 		"desc": "选择本次出战的主力舰船",
 		"icon": "res://assets/base/icons/icon_storage.png",
+		"sprite": "res://assets/base/buildings/building_dock.png",
 		"method": "_show_storage",
 	},
 ]
 
 func _ready() -> void:
 	SoundManager.play_music("base")
-	_build_building_cards()
-	building_grid.add_theme_constant_override("h_separation", 32)
-	building_grid.add_theme_constant_override("v_separation", 32)
+	building_grid.visible = false
+	_setup_building_nodes()
 	_bind_buttons()
 	_update_currency_display()
 	base_pause_menu = find_child("BasePauseMenu", true, false)
@@ -91,64 +109,85 @@ func _ready() -> void:
 	if GameState.player_name.is_empty() or GameState.first_run:
 		get_tree().change_scene_to_file("res://scenes/CharacterCreate.tscn")
 
-func _build_building_cards() -> void:
-	for data in BUILDING_DATA:
-		var card := _create_building_card(data)
-		building_grid.add_child(card)
+func _setup_building_nodes() -> void:
+	var id_to_node := {
+		"repair":    building_repair,
+		"crafting":  building_crafting,
+		"research":  building_research,
+		"shop":      building_shop,
+		"warehouse": building_warehouse,
+		"shipyard":  building_shipyard,
+		"storage":   building_storage,
+	}
+	var id_to_data := {}
+	for d in BUILDING_DATA:
+		id_to_data[d["id"]] = d
 
-func _create_building_card(data: Dictionary) -> PanelContainer:
-	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(0, 192)
+	for bid in id_to_node:
+		var area: Area2D = id_to_node[bid]
+		if area == null:
+			continue
+		var data: Dictionary = id_to_data.get(bid, {})
+		if data.is_empty():
+			continue
 
-	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 48)
-	panel.add_child(hbox)
+		var shape := area.get_node_or_null("CollisionShape2D") as CollisionShape2D
+		if shape == null:
+			shape = CollisionShape2D.new()
+			shape.name = "CollisionShape2D"
+			area.add_child(shape)
+		var circle := CircleShape2D.new()
+		circle.radius = 120.0
+		shape.shape = circle
 
-	var icon_tex := load(data["icon"])
-	var icon: Control
-	if icon_tex:
-		icon = TextureRect.new()
-		icon.texture = icon_tex
-		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		icon.custom_minimum_size = Vector2(128, 128)
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		var sprite := area.get_node_or_null("Sprite2D") as Sprite2D
+		if sprite:
+			sprite.centered = true
+			sprite.offset = Vector2.ZERO
+
+		_building_nodes[bid] = area
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			_check_building_click()
+
+func _check_building_click() -> void:
+	var world_mouse := get_global_mouse_position()
+	for bid in _building_nodes:
+		var area: Area2D = _building_nodes[bid]
+		if area == null or not is_instance_valid(area):
+			continue
+		var diff := world_mouse - area.get_global_position()
+		if diff.length() <= 120.0:
+			for d in BUILDING_DATA:
+				if d["id"] == bid:
+					call(d["method"])
+					break
+			return
+
+func _set_building_hover(area: Area2D, on: bool) -> void:
+	if area == null or not is_instance_valid(area):
+		return
+	var sprite := area.get_node_or_null("Sprite2D") as Sprite2D
+	var hover_sprite := area.get_node_or_null("HoverOverlay") as Sprite2D
+
+	if is_instance_valid(_hover_tween.get(area)):
+		_hover_tween[area].kill()
+
+	var tw := create_tween().set_parallel(true)
+	_hover_tween[area] = tw
+
+	if on:
+		if hover_sprite:
+			hover_sprite.modulate.a = 0.4
+		if sprite:
+			tw.tween_property(sprite, "modulate", Color(1.2, 1.3, 1.4, 1.0), 0.15)
 	else:
-		icon = _create_placeholder_icon()
-	hbox.add_child(icon)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
-	hbox.add_child(vbox)
-
-	var name_lbl := Label.new()
-	name_lbl.text = data["name"]
-	name_lbl.add_theme_font_size_override("font_size", 36)
-	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	vbox.add_child(name_lbl)
-
-	var desc_lbl := Label.new()
-	desc_lbl.text = data["desc"]
-	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc_lbl.add_theme_font_size_override("font_size", 26)
-	desc_lbl.custom_minimum_size = Vector2(480, 0)
-	desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	vbox.add_child(desc_lbl)
-
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hbox.add_child(spacer)
-
-	var arrow := Label.new()
-	arrow.text = ">"
-	arrow.add_theme_font_size_override("font_size", 44)
-	arrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	arrow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	hbox.add_child(arrow)
-
-	panel.gui_input.connect(_make_card_input_handler(data["method"]))
-	panel.mouse_filter = Control.MOUSE_FILTER_STOP
-
-	return panel
+		if hover_sprite:
+			tw.tween_property(hover_sprite, "modulate:a", 0.0, 0.15)
+		if sprite:
+			tw.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.15)
 
 func _create_placeholder_icon() -> Control:
 	var rect := ColorRect.new()
@@ -189,6 +228,24 @@ func _update_currency_display() -> void:
 			GameState.minerals_low, GameState.minerals_mid, GameState.minerals_high]
 
 func _process(delta: float) -> void:
+	var current_hover := ""
+
+	for bid in _building_nodes:
+		var area: Area2D = _building_nodes[bid]
+		if area == null or not is_instance_valid(area):
+			continue
+		var diff := get_global_mouse_position() - area.get_global_position()
+		if diff.length() <= 120.0:
+			current_hover = bid
+			break
+
+	if current_hover != _hovered_building:
+		if _hovered_building != "" and _building_nodes.has(_hovered_building):
+			_set_building_hover(_building_nodes[_hovered_building], false)
+		if current_hover != "":
+			_set_building_hover(_building_nodes[current_hover], true)
+		_hovered_building = current_hover
+
 	_update_currency_display()
 	if no_weapon_warning.visible:
 		warning_timer -= delta

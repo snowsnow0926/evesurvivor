@@ -6,65 +6,195 @@
 [ext_resource type="Script" uid="uid://cgxiak3fj5gsl" path="res://scripts/ship_storage.gd" id="4_storage"]
 [ext_resource type="Script" uid="uid://1wq6kw27revi" path="res://scripts/base_pause_menu.gd" id="8_pause"]
 [ext_resource type="Script" uid="uid://btclujxwxuon5" path="res://scripts/save_ui.gd" id="9_save"]
-[ext_resource type="Texture2D" uid="uid://ccbg_img_002" path="res://assets/base/menu/bg_resized.png" id="10_bg"]
+[ext_resource type="Texture2D" uid="uid://svq815nbjue4" path="res://assets/base/backgrounds/station_interior_bg.png" id="10_bg"]
+[ext_resource type="Texture2D" uid="uid://67afwjmpehyw" path="res://assets/base/buildings/building_repair.png" id="11_repair"]
+[ext_resource type="Texture2D" uid="uid://d27r845y2crwv" path="res://assets/base/buildings/building_crafting.png" id="12_crafting"]
+[ext_resource type="Texture2D" uid="uid://bsujddk8vttl7" path="res://assets/base/buildings/building_research.png" id="13_research"]
+[ext_resource type="Texture2D" uid="uid://b58uymuufhcsr" path="res://assets/base/buildings/building_shop.png" id="14_shop"]
+[ext_resource type="Texture2D" uid="uid://ke60hblbdunl" path="res://assets/base/buildings/building_warehouse.png" id="15_warehouse"]
+[ext_resource type="Texture2D" uid="uid://b68fbuww8w4hb" path="res://assets/base/buildings/building_shipyard.png" id="16_shipyard"]
+[ext_resource type="Texture2D" uid="uid://bb8n0otaxitj5" path="res://assets/base/buildings/building_dock.png" id="17_dock"]
+[ext_resource type="Texture2D" uid="uid://dekpokb4mlat" path="res://assets/base/icons/icon_repair.png" id="18_icon_repair"]
+[ext_resource type="Texture2D" uid="uid://dpopw1pot1x4v" path="res://assets/base/icons/icon_crafting.png" id="19_icon_crafting"]
+[ext_resource type="Texture2D" uid="uid://dgsvqurkm32un" path="res://assets/base/icons/icon_research.png" id="20_icon_research"]
+[ext_resource type="Texture2D" uid="uid://c1y3dcivdwv" path="res://assets/base/icons/icon_shop.png" id="21_icon_shop"]
+[ext_resource type="Texture2D" uid="uid://btnrx8aa51udv" path="res://assets/base/icons/icon_warehouse.png" id="22_icon_warehouse"]
+[ext_resource type="Texture2D" uid="uid://bertklknb7bye" path="res://assets/base/icons/icon_shipyard.png" id="23_icon_shipyard"]
+[ext_resource type="Texture2D" uid="uid://c0d0ppxovta8y" path="res://assets/base/icons/icon_storage.png" id="24_icon_storage"]
 
-[node name="BaseScene" type="Control" unique_id=492705084]
+[node name="BaseScene" type="Control" unique_id=1162540618]
 layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+anchors_preset = 0
+offset_right = 1920.0
+offset_bottom = 1080.0
 script = ExtResource("1_base")
 
-[node name="BG" type="TextureRect" parent="." unique_id=738838918]
+[node name="BG" type="TextureRect" parent="." unique_id=90896506]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-stretch_mode = 5
 texture = ExtResource("10_bg")
+stretch_mode = 5
 
-[node name="Header" type="PanelContainer" parent="." unique_id=1064547344]
+[node name="BuildingLayer" type="Node2D" parent="." unique_id=668470360]
+
+[node name="BuildingNode_repair" type="Area2D" parent="BuildingLayer" unique_id=1510825470]
+position = Vector2(779, 462)
+scale = Vector2(0.42778334, 0.42778334)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BuildingLayer/BuildingNode_repair" unique_id=743803208]
+
+[node name="Sprite2D" type="Sprite2D" parent="BuildingLayer/BuildingNode_repair" unique_id=1145588432]
+texture = ExtResource("11_repair")
+
+[node name="HoverOverlay" type="Sprite2D" parent="BuildingLayer/BuildingNode_repair" unique_id=612123871]
+
+[node name="Label" type="Sprite2D" parent="BuildingLayer/BuildingNode_repair" unique_id=999001000]
+position = Vector2(4.6752644, -287.52875)
+scale = Vector2(0.45710245, 0.45710245)
+texture = ExtResource("18_icon_repair")
+
+[node name="BuildingNode_crafting" type="Area2D" parent="BuildingLayer" unique_id=841982006]
+position = Vector2(1136, 279.00003)
+scale = Vector2(0.3685184, 0.3685184)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BuildingLayer/BuildingNode_crafting" unique_id=1737217494]
+
+[node name="Sprite2D" type="Sprite2D" parent="BuildingLayer/BuildingNode_crafting" unique_id=501660509]
+texture = ExtResource("12_crafting")
+
+[node name="HoverOverlay" type="Sprite2D" parent="BuildingLayer/BuildingNode_crafting" unique_id=1725733088]
+
+[node name="Label" type="Sprite2D" parent="BuildingLayer/BuildingNode_crafting" unique_id=999002000]
+position = Vector2(-5.427124, -241.50769)
+scale = Vector2(0.4092258, 0.4092258)
+texture = ExtResource("19_icon_crafting")
+
+[node name="BuildingNode_research" type="Area2D" parent="BuildingLayer" unique_id=2085264669]
+position = Vector2(1476, 469)
+scale = Vector2(0.38470566, 0.43347397)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BuildingLayer/BuildingNode_research" unique_id=583897273]
+
+[node name="Sprite2D" type="Sprite2D" parent="BuildingLayer/BuildingNode_research" unique_id=1279384687]
+texture = ExtResource("13_research")
+
+[node name="HoverOverlay" type="Sprite2D" parent="BuildingLayer/BuildingNode_research" unique_id=44668203]
+
+[node name="Label" type="Sprite2D" parent="BuildingLayer/BuildingNode_research" unique_id=999003000]
+position = Vector2(-23.39451, -230.69435)
+scale = Vector2(0.48117065, 0.413412)
+texture = ExtResource("20_icon_research")
+
+[node name="BuildingNode_shop" type="Area2D" parent="BuildingLayer" unique_id=1206211347]
+position = Vector2(377, 657)
+rotation = 0.05102986
+scale = Vector2(0.4344094, 0.4344094)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BuildingLayer/BuildingNode_shop" unique_id=302327187]
+
+[node name="Sprite2D" type="Sprite2D" parent="BuildingLayer/BuildingNode_shop" unique_id=1197070993]
+texture = ExtResource("14_shop")
+
+[node name="HoverOverlay" type="Sprite2D" parent="BuildingLayer/BuildingNode_shop" unique_id=2111954655]
+
+[node name="Label" type="Sprite2D" parent="BuildingLayer/BuildingNode_shop" unique_id=999004000]
+position = Vector2(2.4042397, -223.70549)
+rotation = -0.04920155
+scale = Vector2(0.4436965, 0.4436965)
+texture = ExtResource("21_icon_shop")
+
+[node name="BuildingNode_warehouse" type="Area2D" parent="BuildingLayer" unique_id=1890668331]
+position = Vector2(724.00006, 905)
+scale = Vector2(0.43753126, 0.43753126)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BuildingLayer/BuildingNode_warehouse" unique_id=1838991453]
+
+[node name="Sprite2D" type="Sprite2D" parent="BuildingLayer/BuildingNode_warehouse" unique_id=1792005901]
+texture = ExtResource("15_warehouse")
+
+[node name="HoverOverlay" type="Sprite2D" parent="BuildingLayer/BuildingNode_warehouse" unique_id=321376351]
+
+[node name="Label" type="Sprite2D" parent="BuildingLayer/BuildingNode_warehouse" unique_id=999005000]
+position = Vector2(-9.1423435, -239.98285)
+scale = Vector2(0.43637943, 0.43637943)
+texture = ExtResource("22_icon_warehouse")
+
+[node name="BuildingNode_shipyard" type="Area2D" parent="BuildingLayer" unique_id=1948533033]
+position = Vector2(1112.0001, 698)
+scale = Vector2(0.38508117, 0.38508117)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BuildingLayer/BuildingNode_shipyard" unique_id=1181638893]
+
+[node name="Sprite2D" type="Sprite2D" parent="BuildingLayer/BuildingNode_shipyard" unique_id=1734907866]
+scale = Vector2(1, 1.0043104)
+texture = ExtResource("16_shipyard")
+
+[node name="HoverOverlay" type="Sprite2D" parent="BuildingLayer/BuildingNode_shipyard" unique_id=1835288375]
+
+[node name="Label" type="Sprite2D" parent="BuildingLayer/BuildingNode_shipyard" unique_id=999006000]
+position = Vector2(-5.194026, -337.5911)
+scale = Vector2(0.5287088, 0.5287088)
+texture = ExtResource("23_icon_shipyard")
+
+[node name="BuildingNode_storage" type="Area2D" parent="BuildingLayer" unique_id=159108231]
+position = Vector2(1539.0001, 862)
+scale = Vector2(0.47443864, 0.47443864)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BuildingLayer/BuildingNode_storage" unique_id=770207403]
+
+[node name="Sprite2D" type="Sprite2D" parent="BuildingLayer/BuildingNode_storage" unique_id=82131831]
+texture = ExtResource("17_dock")
+
+[node name="HoverOverlay" type="Sprite2D" parent="BuildingLayer/BuildingNode_storage" unique_id=900218685]
+
+[node name="Label" type="Sprite2D" parent="BuildingLayer/BuildingNode_storage" unique_id=999007000]
+position = Vector2(-59.017376, -158.08159)
+scale = Vector2(0.3854697, 0.3854697)
+texture = ExtResource("24_icon_storage")
+
+[node name="Header" type="PanelContainer" parent="." unique_id=1092498915]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 120.0
 grow_horizontal = 2
 
-[node name="HBox" type="HBoxContainer" parent="Header" unique_id=543094276]
+[node name="HBox" type="HBoxContainer" parent="Header" unique_id=1897761179]
 layout_mode = 2
 theme_override_constants/separation = 32
 
-[node name="Title" type="Label" parent="Header/HBox" unique_id=870987588]
+[node name="Title" type="Label" parent="Header/HBox" unique_id=1783036172]
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
 text = "星际基地"
 vertical_alignment = 1
 
-[node name="Spacer" type="Control" parent="Header/HBox" unique_id=1835212625]
+[node name="Spacer" type="Control" parent="Header/HBox" unique_id=742729716]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="CurrencyBar" type="HBoxContainer" parent="Header/HBox" unique_id=741415814]
+[node name="CurrencyBar" type="HBoxContainer" parent="Header/HBox" unique_id=1665879379]
 layout_mode = 2
 theme_override_constants/separation = 24
 
-[node name="CoinLabel" type="Label" parent="Header/HBox/CurrencyBar" unique_id=2086427646]
+[node name="CoinLabel" type="Label" parent="Header/HBox/CurrencyBar" unique_id=1754041639]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "星币: 0"
 vertical_alignment = 1
 
-[node name="MineralsLabel" type="Label" parent="Header/HBox/CurrencyBar" unique_id=583170831]
+[node name="MineralsLabel" type="Label" parent="Header/HBox/CurrencyBar" unique_id=1584159162]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "矿物: 0低/0中/0高"
 vertical_alignment = 1
 
-[node name="BuildingGrid" type="GridContainer" parent="." unique_id=900000001]
+[node name="BuildingGrid" type="GridContainer" parent="." unique_id=1416992541]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -75,11 +205,11 @@ offset_right = -280.0
 offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 2
-columns = 2
 theme_override_constants/h_separation = 32
 theme_override_constants/v_separation = 32
+columns = 2
 
-[node name="BottomPanel" type="PanelContainer" parent="." unique_id=900000002]
+[node name="BottomPanel" type="PanelContainer" parent="." unique_id=756449662]
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
@@ -93,13 +223,13 @@ offset_bottom = -24.0
 grow_horizontal = 0
 grow_vertical = 0
 
-[node name="StartBattleBtn" type="Button" parent="BottomPanel" unique_id=600264913]
+[node name="StartBattleBtn" type="Button" parent="BottomPanel" unique_id=1267944088]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_font_sizes/font_size = 28
 text = "出发战斗"
 
-[node name="NoWeaponWarning" type="Label" parent="." unique_id=1126992432]
+[node name="NoWeaponWarning" type="Label" parent="." unique_id=1828353795]
 visible = false
 layout_mode = 1
 anchors_preset = 8
@@ -117,7 +247,7 @@ text = "舰船未装备武器，请先前往商店或仓库进行装备"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="RepairPanel" type="Control" parent="." unique_id=799150906]
+[node name="RepairPanel" type="Control" parent="." unique_id=156096201]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -127,7 +257,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("2_repair")
 
-[node name="Panel" type="Panel" parent="RepairPanel" unique_id=1956476070]
+[node name="Panel" type="Panel" parent="RepairPanel" unique_id=1204457874]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -141,7 +271,7 @@ offset_bottom = 320.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="RepairPanel/Panel" unique_id=2118869222]
+[node name="VBox" type="VBoxContainer" parent="RepairPanel/Panel" unique_id=1716729704]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -154,29 +284,29 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="RepairPanel/Panel/VBox" unique_id=1663751680]
+[node name="Title" type="Label" parent="RepairPanel/Panel/VBox" unique_id=1921831339]
 layout_mode = 2
 text = "维修站"
 horizontal_alignment = 1
 
-[node name="ShipList" type="VBoxContainer" parent="RepairPanel/Panel/VBox" unique_id=1599315832]
+[node name="ShipList" type="VBoxContainer" parent="RepairPanel/Panel/VBox" unique_id=1331342074]
 layout_mode = 2
 
-[node name="DetailLabel" type="Label" parent="RepairPanel/Panel/VBox" unique_id=751115310]
+[node name="DetailLabel" type="Label" parent="RepairPanel/Panel/VBox" unique_id=348023830]
 layout_mode = 2
 text = "选择要维修的舰船"
 horizontal_alignment = 1
 
-[node name="RepairBtn" type="Button" parent="RepairPanel/Panel/VBox" unique_id=1912301665]
+[node name="RepairBtn" type="Button" parent="RepairPanel/Panel/VBox" unique_id=914881656]
 layout_mode = 2
 disabled = true
 text = "执行维修"
 
-[node name="BackBtn" type="Button" parent="RepairPanel/Panel/VBox" unique_id=25940479]
+[node name="BackBtn" type="Button" parent="RepairPanel/Panel/VBox" unique_id=2022218614]
 layout_mode = 2
 text = "返回"
 
-[node name="CraftingPanel" type="Control" parent="." unique_id=1751566554]
+[node name="CraftingPanel" type="Control" parent="." unique_id=305098907]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -186,7 +316,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("3_craft")
 
-[node name="Panel" type="Panel" parent="CraftingPanel" unique_id=1251025967]
+[node name="Panel" type="Panel" parent="CraftingPanel" unique_id=1238737001]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -200,7 +330,7 @@ offset_bottom = 320.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="CraftingPanel/Panel" unique_id=2114672267]
+[node name="VBox" type="VBoxContainer" parent="CraftingPanel/Panel" unique_id=654353813]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -213,21 +343,21 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="CraftingPanel/Panel/VBox" unique_id=145715421]
+[node name="Title" type="Label" parent="CraftingPanel/Panel/VBox" unique_id=429888191]
 layout_mode = 2
 text = "装备合成"
 horizontal_alignment = 1
 
-[node name="InventoryLabel" type="Label" parent="CraftingPanel/Panel/VBox" unique_id=861058748]
+[node name="InventoryLabel" type="Label" parent="CraftingPanel/Panel/VBox" unique_id=1221717572]
 layout_mode = 2
 text = "我的装备："
 
-[node name="InventoryScroll" type="ScrollContainer" parent="CraftingPanel/Panel/VBox" unique_id=290729768]
+[node name="InventoryScroll" type="ScrollContainer" parent="CraftingPanel/Panel/VBox" unique_id=1802137909]
 custom_minimum_size = Vector2(0, 200)
 layout_mode = 2
 horizontal_scroll_mode = 0
 
-[node name="InventoryGrid" type="GridContainer" parent="CraftingPanel/Panel/VBox/InventoryScroll" unique_id=290729769]
+[node name="InventoryGrid" type="GridContainer" parent="CraftingPanel/Panel/VBox/InventoryScroll" unique_id=1933524192]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -235,52 +365,52 @@ theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 8
 columns = 4
 
-[node name="CraftingSlotsLabel" type="Label" parent="CraftingPanel/Panel/VBox" unique_id=2104051833]
+[node name="CraftingSlotsLabel" type="Label" parent="CraftingPanel/Panel/VBox" unique_id=2084068418]
 layout_mode = 2
 text = "合成槽（放入2件相同品质装备）："
 
-[node name="CraftingSlots" type="HBoxContainer" parent="CraftingPanel/Panel/VBox" unique_id=913949896]
+[node name="CraftingSlots" type="HBoxContainer" parent="CraftingPanel/Panel/VBox" unique_id=1062644418]
 layout_mode = 2
 theme_override_constants/separation = 24
 alignment = 1
 
-[node name="Slot0" type="PanelContainer" parent="CraftingPanel/Panel/VBox/CraftingSlots" unique_id=1435378838]
+[node name="Slot0" type="PanelContainer" parent="CraftingPanel/Panel/VBox/CraftingSlots" unique_id=413096839]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="CraftingPanel/Panel/VBox/CraftingSlots/Slot0" unique_id=1325006744]
-layout_mode = 2
-text = "[空]"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Slot1" type="PanelContainer" parent="CraftingPanel/Panel/VBox/CraftingSlots" unique_id=2009406929]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="CraftingPanel/Panel/VBox/CraftingSlots/Slot1" unique_id=1333786381]
+[node name="Label" type="Label" parent="CraftingPanel/Panel/VBox/CraftingSlots/Slot0" unique_id=1425622119]
 layout_mode = 2
 text = "[空]"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ResultPreview" type="Label" parent="CraftingPanel/Panel/VBox" unique_id=873482571]
+[node name="Slot1" type="PanelContainer" parent="CraftingPanel/Panel/VBox/CraftingSlots" unique_id=823458868]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CraftingPanel/Panel/VBox/CraftingSlots/Slot1" unique_id=1653272066]
+layout_mode = 2
+text = "[空]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ResultPreview" type="Label" parent="CraftingPanel/Panel/VBox" unique_id=787134217]
 layout_mode = 2
 text = "放入2件相同品质装备进行合成"
 horizontal_alignment = 1
 
-[node name="CraftBtn" type="Button" parent="CraftingPanel/Panel/VBox" unique_id=937151672]
+[node name="CraftBtn" type="Button" parent="CraftingPanel/Panel/VBox" unique_id=1424807394]
 layout_mode = 2
 disabled = true
 text = "合成"
 
-[node name="QuickCraftBtn" type="Button" parent="CraftingPanel/Panel/VBox" unique_id=1923876894]
+[node name="QuickCraftBtn" type="Button" parent="CraftingPanel/Panel/VBox" unique_id=742076051]
 layout_mode = 2
 text = "一键合成"
 
-[node name="BackBtn" type="Button" parent="CraftingPanel/Panel/VBox" unique_id=1386777170]
+[node name="BackBtn" type="Button" parent="CraftingPanel/Panel/VBox" unique_id=1682973517]
 layout_mode = 2
 text = "返回"
 
-[node name="StoragePanel" type="Control" parent="." unique_id=1030566512]
+[node name="StoragePanel" type="Control" parent="." unique_id=1368841515]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -290,7 +420,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("4_storage")
 
-[node name="Panel" type="Panel" parent="StoragePanel" unique_id=98766213]
+[node name="Panel" type="Panel" parent="StoragePanel" unique_id=1012569272]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -304,7 +434,7 @@ offset_bottom = 320.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="StoragePanel/Panel" unique_id=1060605793]
+[node name="VBox" type="VBoxContainer" parent="StoragePanel/Panel" unique_id=645224376]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -317,24 +447,24 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="StoragePanel/Panel/VBox" unique_id=125909640]
+[node name="Title" type="Label" parent="StoragePanel/Panel/VBox" unique_id=7436863]
 layout_mode = 2
 text = "星港"
 horizontal_alignment = 1
 
-[node name="ShipList" type="VBoxContainer" parent="StoragePanel/Panel/VBox" unique_id=239779018]
+[node name="ShipList" type="VBoxContainer" parent="StoragePanel/Panel/VBox" unique_id=1479894803]
 layout_mode = 2
 
-[node name="EquipDetail" type="Label" parent="StoragePanel/Panel/VBox" unique_id=514549510]
+[node name="EquipDetail" type="Label" parent="StoragePanel/Panel/VBox" unique_id=1566083071]
 layout_mode = 2
 text = "选择舰船查看详情"
 horizontal_alignment = 1
 
-[node name="BackBtn" type="Button" parent="StoragePanel/Panel/VBox" unique_id=60719784]
+[node name="BackBtn" type="Button" parent="StoragePanel/Panel/VBox" unique_id=1340725363]
 layout_mode = 2
 text = "返回"
 
-[node name="BasePauseMenu" type="Control" parent="." unique_id=1163450823]
+[node name="BasePauseMenu" type="Control" parent="." unique_id=1126019188]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -344,7 +474,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("8_pause")
 
-[node name="Overlay" type="ColorRect" parent="BasePauseMenu" unique_id=348210600]
+[node name="Overlay" type="ColorRect" parent="BasePauseMenu" unique_id=244548476]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -353,7 +483,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.7)
 
-[node name="Panel" type="Panel" parent="BasePauseMenu" unique_id=788430597]
+[node name="Panel" type="Panel" parent="BasePauseMenu" unique_id=2005666469]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -367,7 +497,7 @@ offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="BasePauseMenu/Panel" unique_id=1716760977]
+[node name="VBox" type="VBoxContainer" parent="BasePauseMenu/Panel" unique_id=1879145290]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -380,32 +510,32 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 16
 
-[node name="TitleLabel" type="Label" parent="BasePauseMenu/Panel/VBox" unique_id=147763730]
+[node name="TitleLabel" type="Label" parent="BasePauseMenu/Panel/VBox" unique_id=582813976]
 layout_mode = 2
 text = "基地菜单"
 horizontal_alignment = 1
 
-[node name="ContinueBtn" type="Button" parent="BasePauseMenu/Panel/VBox" unique_id=1401377961]
+[node name="ContinueBtn" type="Button" parent="BasePauseMenu/Panel/VBox" unique_id=1791264505]
 layout_mode = 2
 text = "返回游戏"
 
-[node name="SaveGameBtn" type="Button" parent="BasePauseMenu/Panel/VBox" unique_id=1671258948]
+[node name="SaveGameBtn" type="Button" parent="BasePauseMenu/Panel/VBox" unique_id=1862907543]
 layout_mode = 2
 text = "保存游戏"
 
-[node name="LoadGameBtn" type="Button" parent="BasePauseMenu/Panel/VBox" unique_id=808630162]
+[node name="LoadGameBtn" type="Button" parent="BasePauseMenu/Panel/VBox" unique_id=894865600]
 layout_mode = 2
 text = "读取游戏"
 
-[node name="MainMenuBtn" type="Button" parent="BasePauseMenu/Panel/VBox" unique_id=2059392746]
+[node name="MainMenuBtn" type="Button" parent="BasePauseMenu/Panel/VBox" unique_id=1731513224]
 layout_mode = 2
 text = "返回主菜单"
 
-[node name="QuitBtn" type="Button" parent="BasePauseMenu/Panel/VBox" unique_id=359427005]
+[node name="QuitBtn" type="Button" parent="BasePauseMenu/Panel/VBox" unique_id=268193184]
 layout_mode = 2
 text = "结束游戏"
 
-[node name="SaveUI" type="Control" parent="." unique_id=4200000001]
+[node name="SaveUI" type="Control" parent="." unique_id=793111996]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -415,7 +545,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("9_save")
 
-[node name="BG" type="ColorRect" parent="SaveUI"]
+[node name="BG" type="ColorRect" parent="SaveUI" unique_id=897120637]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -424,8 +554,9 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.6)
 
-[node name="Panel" type="PanelContainer" parent="SaveUI"]
+[node name="Panel" type="PanelContainer" parent="SaveUI" unique_id=882105888]
 layout_mode = 1
+anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -437,36 +568,36 @@ offset_bottom = 240.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="SaveUI/Panel"]
+[node name="VBox" type="VBoxContainer" parent="SaveUI/Panel" unique_id=42337712]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="SaveUI/Panel/VBox"]
+[node name="Title" type="Label" parent="SaveUI/Panel/VBox" unique_id=63184785]
 layout_mode = 2
 text = "读取存档"
 horizontal_alignment = 1
 
-[node name="SlotsContainer" type="VBoxContainer" parent="SaveUI/Panel/VBox"]
+[node name="SlotsContainer" type="VBoxContainer" parent="SaveUI/Panel/VBox" unique_id=1085327934]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="HSep" type="HSeparator" parent="SaveUI/Panel/VBox"]
+[node name="HSep" type="HSeparator" parent="SaveUI/Panel/VBox" unique_id=471073067]
 layout_mode = 2
 
-[node name="BtnRow" type="HBoxContainer" parent="SaveUI/Panel/VBox"]
+[node name="BtnRow" type="HBoxContainer" parent="SaveUI/Panel/VBox" unique_id=1766873575]
 layout_mode = 2
-alignment = 2
 theme_override_constants/separation = 12
+alignment = 2
 
-[node name="ConfirmBtn" type="Button" parent="SaveUI/Panel/VBox/BtnRow"]
-layout_mode = 2
+[node name="ConfirmBtn" type="Button" parent="SaveUI/Panel/VBox/BtnRow" unique_id=368960601]
 visible = false
+layout_mode = 2
 text = "确认"
 
-[node name="NewGameBtn" type="Button" parent="SaveUI/Panel/VBox/BtnRow"]
+[node name="NewGameBtn" type="Button" parent="SaveUI/Panel/VBox/BtnRow" unique_id=1205504889]
 layout_mode = 2
 text = "新建游戏"
 
-[node name="BackBtn" type="Button" parent="SaveUI/Panel/VBox/BtnRow"]
+[node name="BackBtn" type="Button" parent="SaveUI/Panel/VBox/BtnRow" unique_id=1947367837]
 layout_mode = 2
 text = "返回"
