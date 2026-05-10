@@ -12,6 +12,7 @@ var current_chapter: StageData.ChapterInfo
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var stage_container: VBoxContainer = $Panel/VBox/ScrollContainer/StageContainer
 @onready var back_btn: Button = $Panel/VBox/BackBtn
+@onready var bg: TextureRect = $BG
 
 func _ready() -> void:
 	_connect_buttons()
@@ -28,12 +29,22 @@ func open(chapter_id: int) -> void:
 		current_chapter = StageData.get_all_chapters()[0]
 		current_chapter_id = current_chapter.id
 	_update_title()
+	_update_bg()
 	_load_stages()
 	visible = true
 
 func _update_title() -> void:
 	if title_label and current_chapter:
 		title_label.text = current_chapter.name
+
+func _update_bg() -> void:
+	if not bg:
+		return
+	var bg_path := "res://assets/base/menu/chapter_cards/stage_select_bg_%02d.png" % current_chapter_id
+	if FileAccess.file_exists(bg_path):
+		bg.texture = load(bg_path)
+	else:
+		bg.texture = null
 
 func _load_stages() -> void:
 	if not current_chapter or not stage_container:

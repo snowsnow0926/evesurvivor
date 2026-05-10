@@ -36,6 +36,21 @@ func _create_chapter_card(chapter: StageData.ChapterInfo, is_unlocked: bool = tr
 	panel.custom_minimum_size.y = 90
 	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 
+	var img_path := "res://assets/base/menu/chapter_cards/chapter_%02d_card.png" % chapter.id
+	var img_exists := FileAccess.file_exists(img_path)
+
+	if img_exists:
+		var tex_rect := TextureRect.new()
+		tex_rect.name = "CardImage"
+		tex_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		var img := Image.new()
+		img.load(img_path)
+		if not is_unlocked:
+			_desaturate_image(img)
+		tex_rect.texture = ImageTexture.create_from_image(img)
+		panel.add_child(tex_rect)
+
 	var vbox := VBoxContainer.new()
 	panel.add_child(vbox)
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -57,12 +72,6 @@ func _create_chapter_card(chapter: StageData.ChapterInfo, is_unlocked: bool = tr
 	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	desc_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.7))
 	vbox.add_child(desc_label)
-
-	var stage_count_label := Label.new()
-	stage_count_label.text = "%d 个关卡" % chapter.stages.size()
-	stage_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	stage_count_label.add_theme_color_override("font_color", Color(0.4, 0.4, 0.5))
-	vbox.add_child(stage_count_label)
 
 	var btn := Button.new()
 	btn.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -109,3 +118,12 @@ func _on_stage_selected(chapter_id: int, stage_id: int) -> void:
 func _on_back_pressed() -> void:
 	SoundManager.play_sfx("button_click")
 	get_tree().change_scene_to_file("res://scenes/BaseScene.tscn")
+
+func _desaturate_image(img: Image) -> void:
+	var w := img.get_width()
+	var h := img.get_height()
+	for y in range(h):
+		for x in range(w):
+			var c := img.get_pixel(x, y)
+			var gray := c.r * 0.299 + c.g * 0.587 + c.b * 0.114
+			img.set_pixel(x, y, Color(gray * 0.5, gray * 0.5, gray * 0.5, c.a))
