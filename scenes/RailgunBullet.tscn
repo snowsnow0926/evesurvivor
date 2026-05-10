@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cf8railgun001"]
 
 [ext_resource type="Script" path="res://scripts/railgun_bullet.gd" id="1_railgun"]
+[ext_resource type="Texture2D" path="res://assets/sprites/weapons/磁轨.png" id="2_railgun_tex"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_railgun"]
 radius = 5.0
@@ -13,8 +14,7 @@ script = ExtResource("1_railgun")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_railgun")
 
-[node name="Polygon2D" type="Polygon2D" parent="."]
-rotation = 1.5708
-scale = Vector2(1.2, 1.8)
-color = Color(0.2, 1.0, 0.8, 1.0)
-polygon = PackedVector2Array(-5, 0, 5, 0, 0, -10)
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_railgun_tex")
+centered = true
+scale = Vector2(0.7, 0.7)

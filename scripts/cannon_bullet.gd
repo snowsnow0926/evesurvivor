@@ -17,14 +17,13 @@ var hit_count: int = 0
 var explode_chance: float = 0.0
 var explode_radius: float = 80.0
 
-var polygon: Node2D
+var sprite: Sprite2D
 var trail_points: Array = []
 var trail_max_length: int = 10
 
 func _ready() -> void:
-	polygon = $Polygon2D
+	sprite = $Sprite2D
 	body_entered.connect(_on_body_entered)
-	print("[CannonBullet] _ready called")
 
 func _physics_process(delta: float) -> void:
 	var step_vec = direction * speed * delta
@@ -35,8 +34,8 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 		return
 
-	if polygon:
-		polygon.rotation = direction.angle() + PI / 2
+	if sprite:
+		sprite.rotation = direction.angle()
 
 	trail_points.push_front(global_position)
 	if trail_points.size() > trail_max_length:

@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cf8cannon001"]
 
 [ext_resource type="Script" path="res://scripts/cannon_bullet.gd" id="1_cannon"]
+[ext_resource type="Texture2D" path="res://assets/sprites/weapons/加农.png" id="2_cannon_tex"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_cannon"]
 radius = 8.0
@@ -13,8 +14,7 @@ script = ExtResource("1_cannon")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_cannon")
 
-[node name="Polygon2D" type="Polygon2D" parent="."]
-rotation = 1.5708
-scale = Vector2(1.5, 1.5)
-color = Color(1.0, 0.55, 0.0, 1.0)
-polygon = PackedVector2Array(-8, 0, 8, 0, 0, -12)
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_cannon_tex")
+centered = true
+scale = Vector2(0.7, 0.7)

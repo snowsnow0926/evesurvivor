@@ -29,6 +29,19 @@ var _target_pos: Vector2 = Vector2.ZERO
 func _ready() -> void:
 	line2d_core = $Line2D_Core
 	line2d_glow = $Line2D_Glow
+	_apply_laser_texture()
+
+func _apply_laser_texture() -> void:
+	var tex_path := "res://assets/sprites/weapons/激光.png"
+	if not FileAccess.file_exists(tex_path):
+		return
+	var img := Image.new()
+	img.load(tex_path)
+	var itex := ImageTexture.create_from_image(img)
+	for l: Line2D in [line2d_core, line2d_glow]:
+		if l:
+			l.texture = itex
+			l.texture_mode = 2  # LINE_TEXTURE_STRETCH
 
 func _physics_process(delta: float) -> void:
 	elapsed += delta
@@ -123,7 +136,7 @@ func _refresh_laser_visual() -> void:
 	line2d_core.add_point(to_player)
 	line2d_core.add_point(to_target)
 	line2d_core.width = beam_width
-	line2d_core.default_color = Color(0.6, 0.9, 1.0, 0.95)
+	line2d_core.default_color = Color(1, 1, 1, 1)
 	line2d_core.joint_mode = Line2D.LINE_JOINT_ROUND
 	line2d_core.begin_cap_mode = Line2D.LINE_CAP_ROUND
 	line2d_core.end_cap_mode = Line2D.LINE_CAP_ROUND
@@ -132,7 +145,7 @@ func _refresh_laser_visual() -> void:
 	line2d_glow.add_point(to_player)
 	line2d_glow.add_point(to_target)
 	line2d_glow.width = beam_width * 3.0
-	line2d_glow.default_color = Color(0.0, 0.4, 1.0, 0.25)
+	line2d_glow.default_color = Color(1, 1, 1, 1)
 	line2d_glow.joint_mode = Line2D.LINE_JOINT_ROUND
 	line2d_glow.begin_cap_mode = Line2D.LINE_CAP_ROUND
 	line2d_glow.end_cap_mode = Line2D.LINE_CAP_ROUND

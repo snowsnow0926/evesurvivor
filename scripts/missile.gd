@@ -19,15 +19,13 @@ var tracking_time: float = 0.0
 var current_target: Node2D = null
 var initial_target_pos: Vector2 = Vector2.ZERO
 
-var polygon: Node2D
-
+var sprite: Sprite2D
 var trail_points: Array = []
 var trail_max_length: int = 8
 
 func _ready() -> void:
-	polygon = $Polygon2D
+	sprite = $Sprite2D
 	body_entered.connect(_on_body_entered)
-	print("[Missile] _ready called, collision_layer=", collision_layer, " collision_mask=", collision_mask)
 
 func _physics_process(delta: float) -> void:
 	lifetime += delta
@@ -44,8 +42,8 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 		return
 
-	if polygon:
-		polygon.rotation = target_dir.angle() + PI / 2
+	if sprite:
+		sprite.rotation = target_dir.angle()
 
 	trail_points.push_front(global_position)
 	if trail_points.size() > trail_max_length:
@@ -131,7 +129,6 @@ func setup_with_target(dir: Vector2, dmg: float, spd: float, cr: float, cm: floa
 	initial_target_pos = target.global_position
 
 func _on_body_entered(body: Node) -> void:
-	print("[Missile._on_body_entered] body=", body.name, " body_type=", body.get_class())
 	if body == self:
 		return
 	if not body is CharacterBody2D:

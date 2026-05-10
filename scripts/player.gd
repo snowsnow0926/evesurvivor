@@ -350,7 +350,7 @@ func _update_railgun_firing(delta: float, weapon: WeaponData) -> void:
 			railgun_burst_count -= 1
 			var target_pos = _find_closest_enemy(weapon.range)
 			if target_pos == Vector2.ZERO:
-				target_pos = _get_mouse_world_pos()
+				return
 			SoundManager.play_sfx("shoot_railgun")
 			_fire_single_railgun(target_pos, weapon)
 	else:
@@ -359,7 +359,7 @@ func _update_railgun_firing(delta: float, weapon: WeaponData) -> void:
 			weapon_fire_timers[wt] = 0.0
 			var target_pos = _find_closest_enemy(weapon.range)
 			if target_pos == Vector2.ZERO:
-				target_pos = _get_mouse_world_pos()
+				return
 			railgun_burst_count = player_stats.railgun_multi_count - 1
 			railgun_burst_timer = 0.0
 			SoundManager.play_sfx("shoot_railgun")
@@ -369,7 +369,7 @@ func _fire_weapon(weapon: WeaponData) -> void:
 	if not game_manager or not is_instance_valid(game_manager):
 		return
 	var enemy_root = game_manager.get("enemy_root")
-	if not enemy_root or not is_instance_valid(enemy_root):
+	if not enemy_root or not is_instance_valid(enemy_root) or enemy_root.get_child_count() == 0:
 		return
 
 	var target_pos = _find_closest_enemy(weapon.range)
@@ -454,7 +454,7 @@ func _update_missile_firing(delta: float, weapon) -> void:
 		weapon_fire_timers[wt] = 0.0
 		var target_pos = _find_closest_enemy(weapon.range)
 		if target_pos == Vector2.ZERO:
-			target_pos = _get_mouse_world_pos()
+			return
 		_fire_missiles_at(target_pos, weapon)
 
 func _fire_single_missile_for_burst(weapon) -> void:
@@ -569,6 +569,9 @@ func _fire_single_railgun(target_pos: Vector2, weapon: WeaponData) -> void:
 		)
 
 func _fire_laser_at(weapon: WeaponData) -> void:
+	var laser_target = _find_farthest_enemy_in_range(weapon.range)
+	if laser_target == null:
+		return
 	SoundManager.play_sfx("shoot_laser")
 	if not game_manager:
 		return
@@ -581,9 +584,8 @@ func _fire_laser_at(weapon: WeaponData) -> void:
 	laser.global_position = global_position
 
 	var dir = Vector2.RIGHT
-	var farthest = _find_farthest_enemy_in_range(weapon.range)
-	if farthest != null:
-		dir = (farthest.global_position - global_position).normalized()
+	if laser_target != null:
+		dir = (laser_target.global_position - global_position).normalized()
 
 	laser.setup(
 		dir,

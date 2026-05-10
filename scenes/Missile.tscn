@@ -1,20 +1,20 @@
-[gd_scene load_steps=3 format=3 uid="uid://cf8missile001"]
+[gd_scene format=3 uid="uid://cf8missile001"]
 
-[ext_resource type="Script" path="res://scripts/missile.gd" id="1_missile"]
+[ext_resource type="Script" uid="uid://durhrkntd4h52" path="res://scripts/missile.gd" id="1_missile"]
+[ext_resource type="Texture2D" uid="uid://30dn36br7k0c" path="res://assets/sprites/weapons/导弹.png" id="2_missile_tex"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_missile"]
 radius = 6.0
 
-[node name="Missile" type="Area2D"]
+[node name="Missile" type="Area2D" unique_id=1656201232]
+scale = Vector2(0.47, 0.47)
 collision_layer = 4
 collision_mask = 2
 script = ExtResource("1_missile")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=862290443]
 shape = SubResource("CircleShape2D_missile")
 
-[node name="Polygon2D" type="Polygon2D" parent="."]
-rotation = 1.5708
-scale = Vector2(1.5, 1.5)
-color = Color(1.0, 0.85, 0.0, 1.0)
-polygon = PackedVector2Array(-6, 0, 6, 0, 0, -8)
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=616781694]
+scale = Vector2(0.7, 0.7)
+texture = ExtResource("2_missile_tex")
