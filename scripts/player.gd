@@ -679,6 +679,7 @@ func on_player_take_damage(amount: float) -> void:
 	for talent in race_talents:
 		if talent.get("type") == "damage_reduction":
 			final_amount *= (1.0 - talent.get("value", 0.0))
+	print("[玩家受伤] 原始伤害: %.1f → 最终伤害: %.1f" % [amount, final_amount])
 	if game_manager and is_instance_valid(game_manager) and game_manager.has_method("on_player_take_damage"):
 		game_manager.on_player_take_damage(final_amount)
 	if player_stats:

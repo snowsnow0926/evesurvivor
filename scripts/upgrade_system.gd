@@ -10,11 +10,12 @@ var player_stats: PlayerStats
 
 var upgrade_counts: Dictionary = {}
 var upgrade_pool: Array = []
+var _research_bonus_counts: Dictionary = {}
+var _race_talent_counts: Dictionary = {}
 
 func _init(ps: PlayerStats) -> void:
 	player_stats = ps
 	_setup_upgrade_pool()
-	_apply_research_bonuses()
 
 func _setup_upgrade_pool() -> void:
 	upgrade_pool = [
@@ -44,8 +45,9 @@ func apply_upgrade(upgrade_id: String) -> bool:
 		return false
 
 	var data = upgrade_data[0]
-	var research_bonus = GameState.research_progress.get(upgrade_id, 0)
-	var effective_max = data["max"] + research_bonus
+	var research_bonus = _research_bonus_counts.get(upgrade_id, 0)
+	var race_bonus = _race_talent_counts.get(upgrade_id, 0)
+	var effective_max = data["max"] + research_bonus + race_bonus
 	if upgrade_counts[upgrade_id] >= effective_max:
 		return false
 
@@ -62,13 +64,26 @@ func get_available_upgrades() -> Array:
 
 func reset() -> void:
 	upgrade_counts = {}
+	_research_bonus_counts = {}
+	_race_talent_counts = {}
 	_setup_upgrade_pool()
-	_apply_research_bonuses()
 
-func _apply_research_bonuses() -> void:
-	if not GameState.research_progress.is_empty():
-		for upgrade_id in GameState.research_progress:
-			var bonus_level = GameState.research_progress[upgrade_id]
-			for i in range(bonus_level):
-				player_stats.apply_upgrade(upgrade_id)
-				upgrade_counts[upgrade_id] = upgrade_counts.get(upgrade_id, 0) + 1
+func apply_research_bonuses() -> void:
+	if GameState.research_progress.is_empty():
+		return
+	for upgrade_id in GameState.research_progress:
+		var bonus_level = GameState.research_progress[upgrade_id]
+		if bonus_level <= 0:
+			continue
+		_research_bonus_counts[upgrade_id] = bonus_level
+		for i in range(bonus_level):
+			player_stats._apply_upgrade_effect(upgrade_id)
+			upgrade_counts[upgrade_id] = upgrade_counts.get(upgrade_id, 0) + 1
+
+func apply_race_talent(upgrade_id: String, level: int = 1) -> void:
+	if level <= 0:
+		return
+	for i in range(level):
+		player_stats._apply_upgrade_effect(upgrade_id)
+		upgrade_counts[upgrade_id] = upgrade_counts.get(upgrade_id, 0) + 1
+	_race_talent_counts[upgrade_id] = _race_talent_counts.get(upgrade_id, 0) + level

@@ -4,6 +4,7 @@ const RaceData = preload("res://resources/race_data.gd")
 const ShipData = preload("res://resources/ship_data.gd")
 const WeaponData = preload("res://resources/weapon_data.gd")
 const EquipmentData = preload("res://resources/equipment_data.gd")
+const StageData = preload("res://resources/stage_data.gd")
 
 signal speed_changed(speed: float)
 
@@ -198,6 +199,8 @@ class CustomProgressBar extends Control:
 @onready var status_vbox: VBoxContainer = $TopRightAnchor/StatusVBox
 @onready var coin_gain_label: Label = $TopRightAnchor/StatusVBox/CoinGainLabel
 @onready var info_label: RichTextLabel = $TopRightAnchor/StatusVBox/InfoLabel
+@onready var enemy_hp_label: Label = $TopRightAnchor/StatusVBox/EnemyInfoPanel/EnemyHPLabel
+@onready var enemy_dps_label: Label = $TopRightAnchor/StatusVBox/EnemyInfoPanel/EnemyDPSLabel
 @onready var combo_label: Label = $TopRightAnchor/StatusVBox/ComboLabel
 
 @onready var speed_panel: PanelContainer = $SpeedControlPanel
@@ -358,6 +361,13 @@ func _apply_all_styles() -> void:
 
 	_apply_weapon_slot_base_style()
 	_apply_cd_label_style()
+
+	if enemy_hp_label:
+		enemy_hp_label.add_theme_color_override("font_color", Color(0.75, 0.85, 1.00))
+		enemy_hp_label.add_theme_font_size_override("font_size", 11)
+	if enemy_dps_label:
+		enemy_dps_label.add_theme_color_override("font_color", Color(1.00, 0.75, 0.60))
+		enemy_dps_label.add_theme_font_size_override("font_size", 11)
 
 func _apply_glow_panel(panel: PanelContainer, bg: Color, border: Color, glow: Color) -> void:
 	if not panel:
@@ -671,6 +681,7 @@ func _process(delta: float) -> void:
 	_update_top_weapon_display(player, all_weapon_data, defense_list)
 	_update_race_and_ship_display()
 	_update_upgrade_list_display(gm)
+	_update_enemy_info_display(gm)
 
 func _get_weapon_upgrade_level(weapon_id) -> int:
 	var upgrade_ids = _get_upgrade_ids_for_weapon(weapon_id)
@@ -839,6 +850,37 @@ func _update_upgrade_list_display(gm) -> void:
 
 	for i in range(label_idx, existing_labels.size()):
 		existing_labels[i].visible = false
+
+# ============================================================
+#  敌均属性显示
+# ============================================================
+func _update_enemy_info_display(gm) -> void:
+	if not enemy_hp_label or not enemy_dps_label:
+		return
+	if not gm.current_stage:
+		enemy_hp_label.text = "敌均血量: -"
+		enemy_dps_label.text = "敌均DPS: -"
+		return
+
+	var final_strength: float = gm.current_stage.strength_mult
+	if gm.difficulty_scaler and gm.difficulty_scaler.has_method("get_strength_mult"):
+		final_strength *= gm.difficulty_scaler.get_strength_mult()
+
+	var chapter_id: int = gm.current_chapter_id if gm.current_chapter_id > 0 else 1
+	var melee_stats := StageData.get_chapter_stats(chapter_id, "melee")
+	var sentry_stats := StageData.get_chapter_stats(chapter_id, "sentry")
+	var raven_stats := StageData.get_chapter_stats(chapter_id, "raven")
+
+	var avg_hp: float = (melee_stats.hp + sentry_stats.hp + raven_stats.hp) / 3.0 * final_strength
+	# Sentry 实际伤害走 bullet_damage，Raven 走 explosion_damage，两者都与 stats.damage / stats.explosion_damage * final_strength 一致
+	var avg_dps: float = (melee_stats.damage + sentry_stats.damage + raven_stats.explosion_damage) / 3.0 * final_strength
+
+	var tier: int = 0
+	if gm.difficulty_scaler and gm.difficulty_scaler.has_method("get_difficulty_tier"):
+		tier = gm.difficulty_scaler.get_difficulty_tier()
+
+	enemy_hp_label.text = "敌均血量: %.0f 层:%d" % [avg_hp, tier]
+	enemy_dps_label.text = "敌均DPS: %.1f" % avg_dps
 
 # ============================================================
 #  主更新函数

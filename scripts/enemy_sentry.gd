@@ -26,9 +26,10 @@ func _ready() -> void:
 func _apply_chapter_stats() -> void:
 	var cid: int = _chapter_id_override if _chapter_id_override > 0 else (game_manager.current_chapter_id if game_manager else 0)
 	var sentry_stats := StageData.get_chapter_stats(cid, "sentry")
-	var level_bonus: float = 1.0 + 0.3 * (game_manager.player_level - 1) if game_manager else 1.0
-	var final_strength: float = (game_manager.current_stage.strength_mult * level_bonus) if game_manager and game_manager.current_stage else 1.0
-	bullet_damage = sentry_stats.damage * final_strength
+	var strength_mult: float = game_manager.current_stage.strength_mult if game_manager and game_manager.current_stage else 1.0
+	if game_manager and game_manager.difficulty_scaler and game_manager.difficulty_scaler.has_method("get_strength_mult"):
+		strength_mult *= game_manager.difficulty_scaler.get_strength_mult()
+	bullet_damage = sentry_stats.damage * strength_mult
 
 func _process_combat(delta: float) -> void:
 	var player = _get_player()

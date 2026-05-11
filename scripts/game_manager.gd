@@ -68,6 +68,7 @@ var _timer_expired_once: bool = false
 const FIRST_RUN_DURATION: float = 300.0
 var _unlimited_start_real_time: int = 0
 var _timer_start_real_time: int = 0
+var stage_duration: float = 0.0
 
 var current_stage: StageData.StageInfo
 var current_chapter_id: int = 1
@@ -84,6 +85,7 @@ func _init_subsystems() -> void:
 	difficulty_scaler = DifficultyScaler.new()
 	loot_system = LootSystem.new(self)
 
+	difficulty_scaler.setup(spawn_manager)
 	upgrade_system.upgrade_requested.connect(_on_upgrade_requested)
 
 func _setup_references() -> void:
@@ -124,6 +126,7 @@ func _spawn_player() -> void:
 		push_error("[GameManager] failed to load Player scene")
 
 func _apply_race_to_player_stats(race: RaceData) -> void:
+	upgrade_system.apply_research_bonuses()
 	var ship = ShipData.get_ship(GameState.selected_ship_id)
 	var ship_base_hp = ship.base_hp if ship else 100
 	player_stats.max_hp = ship_base_hp
@@ -159,49 +162,31 @@ func _apply_race_to_player_stats(race: RaceData) -> void:
 			"cannon_fire_rate":
 				player_stats.cannon_fire_interval *= (1.0 - talent.get("value", 0.0))
 			"cannon_base_level":
-				for i in range(int(talent.get("value", 1))):
-					upgrade_system.upgrade_counts["cannon_bloodthirst"] = upgrade_system.upgrade_counts.get("cannon_bloodthirst", 0) + 1
-					upgrade_system.upgrade_counts["cannon_rush"] = upgrade_system.upgrade_counts.get("cannon_rush", 0) + 1
-					upgrade_system.upgrade_counts["cannon_vengeance"] = upgrade_system.upgrade_counts.get("cannon_vengeance", 0) + 1
-					upgrade_system.player_stats.apply_upgrade("cannon_bloodthirst")
-					upgrade_system.player_stats.apply_upgrade("cannon_rush")
-					upgrade_system.player_stats.apply_upgrade("cannon_vengeance")
+				upgrade_system.apply_race_talent("cannon_bloodthirst", int(talent.get("value", 1)))
+				upgrade_system.apply_race_talent("cannon_rush", int(talent.get("value", 1)))
+				upgrade_system.apply_race_talent("cannon_vengeance", int(talent.get("value", 1)))
 			"missile_range":
 				player_stats.missile_range *= (1.0 + talent.get("value", 0.0))
 			"missile_base_level":
-				for i in range(int(talent.get("value", 1))):
-					upgrade_system.upgrade_counts["fire_coverage"] = upgrade_system.upgrade_counts.get("fire_coverage", 0) + 1
-					upgrade_system.upgrade_counts["silent_hunter"] = upgrade_system.upgrade_counts.get("silent_hunter", 0) + 1
-					upgrade_system.upgrade_counts["precision_kill"] = upgrade_system.upgrade_counts.get("precision_kill", 0) + 1
-					upgrade_system.player_stats.apply_upgrade("fire_coverage")
-					upgrade_system.player_stats.apply_upgrade("silent_hunter")
-					upgrade_system.player_stats.apply_upgrade("precision_kill")
+				upgrade_system.apply_race_talent("fire_coverage", int(talent.get("value", 1)))
+				upgrade_system.apply_race_talent("silent_hunter", int(talent.get("value", 1)))
+				upgrade_system.apply_race_talent("precision_kill", int(talent.get("value", 1)))
 			"railgun_base_level":
-				for i in range(int(talent.get("value", 1))):
-					upgrade_system.upgrade_counts["railgun_damage"] = upgrade_system.upgrade_counts.get("railgun_damage", 0) + 1
-					upgrade_system.upgrade_counts["railgun_crit"] = upgrade_system.upgrade_counts.get("railgun_crit", 0) + 1
-					upgrade_system.upgrade_counts["railgun_multi"] = upgrade_system.upgrade_counts.get("railgun_multi", 0) + 1
-					upgrade_system.player_stats.apply_upgrade("railgun_damage")
-					upgrade_system.player_stats.apply_upgrade("railgun_crit")
-					upgrade_system.player_stats.apply_upgrade("railgun_multi")
+				upgrade_system.apply_race_talent("railgun_damage", int(talent.get("value", 1)))
+				upgrade_system.apply_race_talent("railgun_crit", int(talent.get("value", 1)))
+				upgrade_system.apply_race_talent("railgun_multi", int(talent.get("value", 1)))
 			"railgun_crit":
 				player_stats.railgun_crit_bonus += talent.get("value", 0.0)
 			"laser_base_level":
-				for i in range(int(talent.get("value", 1))):
-					upgrade_system.upgrade_counts["laser_duration"] = upgrade_system.upgrade_counts.get("laser_duration", 0) + 1
-					upgrade_system.upgrade_counts["laser_width"] = upgrade_system.upgrade_counts.get("laser_width", 0) + 1
-					upgrade_system.upgrade_counts["laser_shield"] = upgrade_system.upgrade_counts.get("laser_shield", 0) + 1
-					upgrade_system.player_stats.apply_upgrade("laser_duration")
-					upgrade_system.player_stats.apply_upgrade("laser_width")
-					upgrade_system.player_stats.apply_upgrade("laser_shield")
+				upgrade_system.apply_race_talent("laser_duration", int(talent.get("value", 1)))
+				upgrade_system.apply_race_talent("laser_width", int(talent.get("value", 1)))
+				upgrade_system.apply_race_talent("laser_shield", int(talent.get("value", 1)))
 			"laser_width_duration":
 				player_stats.laser_width *= (1.0 + talent.get("value", 0.0))
 				player_stats.laser_duration *= (1.0 + talent.get("value", 0.0))
 			_:
 				pass
 	_apply_armor_bonuses()
-	if player and is_instance_valid(player) and player.has_method("_init_weapon_defaults"):
-		player._init_weapon_defaults()
 
 func _apply_armor_bonuses() -> void:
 	var ship_id = int(GameState.selected_ship_id)
@@ -224,8 +209,11 @@ func setup_for_stage(chapter_id: int, stage_id: int) -> void:
 		push_warning("[GameManager] Stage not found, using defaults")
 		current_stage = StageData.get_stage(1, 1)
 
+	print_debug("[GameManager] setup_for_stage: chapter=%d stage=%d stage.type=%s stage.id=%d" % [chapter_id, stage_id, current_stage.type, current_stage.id])
+
 	spawn_manager.setup_stage(chapter_id, stage_id, player_level)
 	difficulty_scaler.setup_stage(current_stage.strength_mult, current_stage.density_mult, player_level)
+	set_game_speed(1.0)
 	loot_system.reset()
 
 	if current_stage.has_timer:
@@ -236,8 +224,7 @@ func setup_for_stage(chapter_id: int, stage_id: int) -> void:
 			run_time_elapsed = 0.0
 			_unlimited_start_real_time = Time.get_ticks_msec()
 		else:
-			# 第六章 BOSS 关限时 8 分钟
-			if chapter_id == 6:
+			if stage_id == 6:
 				time_remaining = 480.0
 			else:
 				time_remaining = FIRST_RUN_DURATION
@@ -258,8 +245,7 @@ func start_run_timer() -> void:
 			run_time_elapsed = 0.0
 			_unlimited_start_real_time = Time.get_ticks_msec()
 		else:
-			# 第六章 BOSS 关限时 8 分钟
-			if current_chapter_id == 6:
+			if current_stage.id == 6:
 				time_remaining = 480.0
 			else:
 				time_remaining = FIRST_RUN_DURATION
@@ -288,19 +274,19 @@ func _process(delta: float) -> void:
 func _update_timer(delta: float) -> void:
 	if not has_timer:
 		return
+	if is_paused:
+		return
 	if is_unlimited_mode:
-		run_time_elapsed = float(Time.get_ticks_msec() - _unlimited_start_real_time) / 1000.0
+		run_time_elapsed += delta * game_speed
 		_notify_hud_update()
 		return
 	if time_remaining <= 0.0:
 		return
-	var elapsed_real = float(Time.get_ticks_msec() - _timer_start_real_time) / 1000.0
-	var new_remaining = FIRST_RUN_DURATION - elapsed_real
-	if new_remaining != time_remaining:
-		time_remaining = maxf(new_remaining, 0.0)
-		if time_remaining <= 0.0:
-			_notify_hud_update()
-			_on_timer_expired()
+	time_remaining -= delta * game_speed
+	if time_remaining <= 0.0:
+		time_remaining = 0.0
+		_notify_hud_update()
+		_on_timer_expired()
 
 func _on_timer_expired() -> void:
 	if spawn_manager.is_boss_phase and not _timer_expired_once:
@@ -496,6 +482,7 @@ func reset_for_new_run() -> void:
 	player_level = 1
 	time_remaining = 0.0
 	has_timer = false
+	stage_duration = 0.0
 	_timer_expired_once = false
 	is_boss_infinite = false
 
@@ -522,9 +509,7 @@ func reset_for_new_run() -> void:
 			player.sync_from_player_stats(player_stats)
 		player.global_position = get_viewport_rect().size / 2.0
 		if player.has_method("reset_state"):
-			player.reset_state()
-		if player.has_method("_init_weapon_defaults"):
-			player._init_weapon_defaults()
+				player.reset_state()
 	else:
 		_spawn_player()
 

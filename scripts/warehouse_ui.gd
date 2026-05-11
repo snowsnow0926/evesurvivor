@@ -279,6 +279,7 @@ func _make_item_btn(item: Dictionary, is_equipped: bool, is_armor: bool) -> Butt
 	btn.text = "%s\n%s" % [prefix, name_short]
 
 	btn.pressed.connect(_on_item_selected.bind(item, is_equipped))
+	btn.gui_input.connect(_on_item_btn_input.bind(btn, item, is_equipped))
 	return btn
 
 func _make_empty_slot_btn(is_armor: bool) -> Button:
@@ -345,6 +346,15 @@ func _on_item_selected(item: Dictionary, from_equipped: bool) -> void:
 	_update_button_states()
 	_update_detail_panel()
 
+func _on_item_btn_input(event: InputEvent, btn: Button, item: Dictionary, from_equipped: bool) -> void:
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT and mb.double_click:
+			if from_equipped:
+				_unequip_item(item, true)
+			else:
+				_equip_item(item, false)
+
 func _update_button_states() -> void:
 	var has_selection = not selected_item.is_empty()
 	var can_equip = true
@@ -358,9 +368,12 @@ func _update_button_states() -> void:
 		sell_btn.disabled = not has_selection
 
 func _on_equip() -> void:
-	if selected_item.is_empty() or _selected_equipped:
+	_equip_item(selected_item, _selected_equipped)
+
+func _equip_item(item: Dictionary, from_equipped: bool) -> void:
+	if item.is_empty() or from_equipped:
 		return
-	if not _can_equip(selected_item):
+	if not _can_equip(item):
 		_show_tonnage_warning()
 		return
 
@@ -368,20 +381,20 @@ func _on_equip() -> void:
 	if ship_id == 0:
 		ship_id = ShipData.ShipID.FRIGATE
 
-	var equip_id = selected_item.get("equip_id", "")
+	var equip_id = item.get("equip_id", "")
 
-	var equip_type_val = selected_item.get("equip_type", "")
+	var equip_type_val = item.get("equip_type", "")
 	var is_armor = false
 	if typeof(equip_type_val) == TYPE_STRING:
 		if not equip_type_val.is_empty():
 			is_armor = equip_type_val.to_upper() == "ARMOR"
 		else:
-			is_armor = selected_item.get("type", "").to_upper() == "ARMOR"
+			is_armor = item.get("type", "").to_upper() == "ARMOR"
 
 	var inventory_item: Dictionary = {}
-	for item in GameState.equipment_inventory:
-		if item.get("equip_id", "") == equip_id:
-			inventory_item = item
+	for inv_item in GameState.equipment_inventory:
+		if inv_item.get("equip_id", "") == equip_id:
+			inventory_item = inv_item
 			break
 
 	if inventory_item.is_empty():
@@ -425,21 +438,24 @@ func _show_tonnage_warning() -> void:
 	print("[WarehouseUI] ", msg)
 
 func _on_unequip() -> void:
-	if selected_item.is_empty() or not _selected_equipped:
+	_unequip_item(selected_item, _selected_equipped)
+
+func _unequip_item(item: Dictionary, from_equipped: bool) -> void:
+	if item.is_empty() or not from_equipped:
 		return
 	var ship_id = int(GameState.selected_ship_id)
 	if ship_id == 0:
 		ship_id = ShipData.ShipID.FRIGATE
 
-	var equip_id = _selected_equip_id
+	var equip_id = item.get("equip_id", "")
 
-	var equip_type_val = selected_item.get("equip_type", "")
+	var equip_type_val = item.get("equip_type", "")
 	var is_armor = false
 	if typeof(equip_type_val) == TYPE_STRING:
 		if not equip_type_val.is_empty():
 			is_armor = equip_type_val.to_upper() == "ARMOR"
 		else:
-			is_armor = selected_item.get("type", "").to_upper() == "ARMOR"
+			is_armor = item.get("type", "").to_upper() == "ARMOR"
 
 	if is_armor:
 		var armor_list: Array = GameState.equipped_armor.get(ship_id, [])
@@ -454,7 +470,7 @@ func _on_unequip() -> void:
 		var already_in_inventory = GameState.equipment_inventory.any(
 			func(it): return it.get("equip_id", "") == equip_id)
 		if not already_in_inventory:
-			GameState.equipment_inventory.append(selected_item.duplicate(true))
+			GameState.equipment_inventory.append(item.duplicate(true))
 	else:
 		var equipped_list: Array = GameState.equipped_weapons.get(ship_id, [])
 		if equipped_list is Array:
@@ -467,7 +483,7 @@ func _on_unequip() -> void:
 		var already_in_inventory = GameState.equipment_inventory.any(
 			func(it): return it.get("equip_id", "") == equip_id)
 		if not already_in_inventory:
-			GameState.equipment_inventory.append(selected_item.duplicate(true))
+			GameState.equipment_inventory.append(item.duplicate(true))
 
 	selected_item = {}
 	_selected_equip_id = ""

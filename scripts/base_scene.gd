@@ -99,6 +99,7 @@ const BUILDING_DATA: Array[Dictionary] = [
 ]
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	SoundManager.play_music("base")
 	building_grid.visible = false
 	_setup_building_nodes()
@@ -231,6 +232,25 @@ func _update_currency_display() -> void:
 
 func _process(delta: float) -> void:
 	if current_panel and is_instance_valid(current_panel):
+		_update_currency_display()
+		if no_weapon_warning.visible:
+			warning_timer -= delta
+			if warning_timer <= 0:
+				no_weapon_warning.visible = false
+		if Input.is_action_just_pressed("pause"):
+			close_all_panels()
+		return
+
+	_update_currency_display()
+	if no_weapon_warning.visible:
+		warning_timer -= delta
+		if warning_timer <= 0:
+			no_weapon_warning.visible = false
+	if Input.is_action_just_pressed("pause"):
+		if base_pause_menu and base_pause_menu.visible:
+			base_pause_menu.close_menu()
+		else:
+			base_pause_menu.open_menu()
 		return
 
 	var current_hover := ""
@@ -251,17 +271,26 @@ func _process(delta: float) -> void:
 			_set_building_hover(_building_nodes[current_hover], true)
 		_hovered_building = current_hover
 
-	_update_currency_display()
-	if no_weapon_warning.visible:
-		warning_timer -= delta
-		if warning_timer <= 0:
-			no_weapon_warning.visible = false
-	if Input.is_action_just_pressed("pause"):
-		if base_pause_menu and base_pause_menu.visible:
-			base_pause_menu.close_menu()
-		else:
-			if base_pause_menu:
-				base_pause_menu.open_menu()
+func _any_panel_visible() -> bool:
+	if current_panel and is_instance_valid(current_panel) and current_panel.visible:
+		return true
+	if repair_panel and repair_panel.visible:
+		return true
+	if crafting_panel and crafting_panel.visible:
+		return true
+	if storage_panel and storage_panel.visible:
+		return true
+	if _shop_panel and _shop_panel.visible:
+		return true
+	if _warehouse_panel and _warehouse_panel.visible:
+		return true
+	if _shipyard_panel and _shipyard_panel.visible:
+		return true
+	if _research_panel and _research_panel.visible:
+		return true
+	if base_pause_menu and base_pause_menu.visible:
+		return true
+	return false
 
 func _get_or_create_panel(key: StringName) -> Control:
 	match key:

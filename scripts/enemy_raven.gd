@@ -21,10 +21,13 @@ func _ready() -> void:
 func _apply_chapter_stats() -> void:
 	var cid: int = _chapter_id_override if _chapter_id_override > 0 else (game_manager.current_chapter_id if game_manager else 0)
 	var raven_stats: StageData.ToncalStats = StageData.get_chapter_stats(cid, "raven")
-	var level_bonus: float = 1.0 + 0.3 * (game_manager.player_level - 1) if game_manager else 1.0
-	var final_strength: float = (game_manager.current_stage.strength_mult * level_bonus) if game_manager and game_manager.current_stage else 1.0
-	explosion_damage = raven_stats.explosion_damage * final_strength
-	move_speed = raven_stats.speed * (1.0 + (final_strength - 1.0) * 0.2)
+	var strength_mult: float = game_manager.current_stage.strength_mult if game_manager and game_manager.current_stage else 1.0
+	var speed_mult: float = 1.0
+	if game_manager and game_manager.difficulty_scaler and game_manager.difficulty_scaler.has_method("get_strength_mult"):
+		strength_mult *= game_manager.difficulty_scaler.get_strength_mult()
+		speed_mult = game_manager.difficulty_scaler.get_speed_mult()
+	explosion_damage = raven_stats.explosion_damage * strength_mult
+	move_speed = raven_stats.speed * speed_mult
 
 func _update_movement(delta: float) -> void:
 	var player = _get_player()

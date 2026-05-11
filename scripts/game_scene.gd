@@ -102,14 +102,7 @@ func _on_self_destruct_requested() -> void:
 	_game_over_to_base()
 
 func _on_pause_toggled(is_paused: bool) -> void:
-	if is_paused:
-		var pause_menu = $UIRoot/PauseMenu
-		if not pause_menu.is_open:
-			pause_menu.open_menu(game_manager)
-	else:
-		var pause_menu = $UIRoot/PauseMenu
-		if pause_menu.is_open:
-			pause_menu.close_menu()
+	pass
 
 func _on_game_ended(reason: String) -> void:
 	get_tree().paused = false

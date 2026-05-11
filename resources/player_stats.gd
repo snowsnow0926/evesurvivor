@@ -175,6 +175,10 @@ func _copy_from(other: PlayerStats) -> void:
 	xp_boost = other.xp_boost
 
 func apply_upgrade(upgrade_id: String) -> void:
+	_apply_upgrade_effect(upgrade_id)
+	stats_changed.emit()
+
+func _apply_upgrade_effect(upgrade_id: String) -> void:
 	match upgrade_id:
 		"damage":
 			damage *= 1.2
@@ -207,7 +211,6 @@ func apply_upgrade(upgrade_id: String) -> void:
 			laser_width *= 1.2
 		"laser_shield":
 			laser_shield_mult += 0.2
-	stats_changed.emit()
 
 func update_regen(delta: float) -> void:
 	shield_regen_timer += delta
