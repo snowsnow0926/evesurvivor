@@ -2,7 +2,7 @@ class_name DifficultyScaler
 extends Node
 
 ## Manages combo system and enemy difficulty scaling.
-## Difficulty scales every 20 kills: HP ×1.10, damage ×1.10, speed +1.5%, spawn interval -0.1s.
+## Difficulty scales every 20 kills: HP ×1.10, damage ×1.10, speed +1.5%, spawn interval ×0.9 (min 0.15s).
 
 var combo_count: int = 0
 var combo_timer: float = 0.0
@@ -11,13 +11,14 @@ var combo_multiplier: float = 1.0
 
 var _difficulty_tier: int = 0       # 累计难度层数（每20击杀+1）
 var _spawn_manager: Node = null
+var _stage_base_interval: float = 2.0  # 每关初始基础间隔
 
 # === 难度递进参数 ===
 const HP_SCALE_PER_TIER: float = 1.10       # 每层 HP ×1.10（+10%）
 const DMG_SCALE_PER_TIER: float = 1.10       # 每层 伤害 ×1.10（+10%）
 const SPEED_SCALE_PER_TIER: float = 1.015   # 每层 移速 ×1.015（+1.5%）
-const SPAWN_INTERVAL_DECAY: float = 0.1     # 每层 生成间隔 -0.1s
-const MIN_SPAWN_INTERVAL: float = 0.1       # 生成间隔下限
+const SPAWN_INTERVAL_DECAY: float = 0.9     # 每层 生成间隔 ×0.9（-10%）
+const MIN_SPAWN_INTERVAL: float = 0.15      # 生成间隔下限（最多约6.67只/秒）
 
 # === 内部缓存（避免每帧重复计算） ===
 var _cached_strength: float = 1.0
@@ -32,11 +33,8 @@ func setup_stage(stage_strength: float, stage_density: float, player_level: int)
 	combo_count = 0
 	combo_timer = 0.0
 	combo_multiplier = 1.0
-	# stage_density 作为初始生成间隔基准
-	if _spawn_manager:
-		var base_interval: float = 2.0 / stage_density
-		_cached_spawn_interval = base_interval
-		_spawn_manager.update_spawn_interval(_cached_spawn_interval)
+	_stage_base_interval = 2.0 / stage_density
+	_cached_spawn_interval = _stage_base_interval
 	_recalculate()
 
 func update_combo(delta: float) -> void:
@@ -61,10 +59,9 @@ func _recalculate() -> void:
 	_cached_strength = pow(HP_SCALE_PER_TIER, _difficulty_tier)
 	# 移速倍率
 	_cached_speed_mult = pow(SPEED_SCALE_PER_TIER, _difficulty_tier)
-	# 生成间隔（从当前间隔递减，不从基础值重置）
-	_cached_spawn_interval = maxf(MIN_SPAWN_INTERVAL, _cached_spawn_interval - SPAWN_INTERVAL_DECAY * _difficulty_tier)
-
+	# 生成间隔：从当前关卡基础间隔乘以每层衰退倍率（每层 ×0.9，最多减到下限）
 	if _spawn_manager:
+		_cached_spawn_interval = maxf(MIN_SPAWN_INTERVAL, _stage_base_interval * pow(SPAWN_INTERVAL_DECAY, _difficulty_tier))
 		_spawn_manager.update_spawn_interval(_cached_spawn_interval)
 
 func _get_combo_multiplier() -> float:
@@ -95,6 +92,7 @@ func reset() -> void:
 	combo_timer = 0.0
 	combo_multiplier = 1.0
 	_difficulty_tier = 0
+	_stage_base_interval = 2.0
 	_cached_strength = 1.0
 	_cached_speed_mult = 1.0
 	_cached_spawn_interval = 2.0

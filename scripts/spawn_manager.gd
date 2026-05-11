@@ -42,13 +42,19 @@ var kill_since_boss: int = 0
 
 var _debug_frame_count: int = 0
 
-## BOSS 关波次控制（适用于所有章节的第6关）
-var _boss_wave: int = 0       # 当前波次（0=未开始, 1=第1波, 2=第2波, 3=第3波, 4=全部完成）
-var _bosses_alive: int = 0     # 当前波次存活的BOSS数量
-var _waiting_next_wave: bool = false  # 是否在等待下一波刷新（锁，防止重复触发）
+## 第6关时间波次BOSS控制（所有章节通用）
+## 波次计划：第2秒刷1只 → 第30秒刷2只 → 第75秒刷3只
+var _s6_wave: int = 0           # 0=未开始 1=第1波 2=第2波 3=第3波 4=全部完成
+var _s6_bosses_alive: int = 0   # 当前波次存活数
+var _s6_spawned_this_wave: int = 0  # 本波已刷数量
+var _s6_wave_counts: Array = [1, 2, 3]  # [第1波数量, 第2波数量, 第3波数量]
+var _s6_wave_times: Array = [2.0, 30.0, 75.0]  # [第1波触发秒, 第2波触发秒, 第3波触发秒]
+var _s6_next_spawn_frames: int = 0  # 下一只BOSS的帧延迟（用于多只间隔生成）
+var _s6_elapsed: float = 0.0  # 第6关独立计时器（不受 is_unlimited_mode 影响）
 
 signal enemy_dead(enemy: Node2D, enemy_type: String)
 signal boss_killed(boss: Node2D)
+signal s6_all_bosses_defeated()
 
 func _init(gm: Node2D, ps: PlayerStats) -> void:
 	game_manager = gm
@@ -104,9 +110,12 @@ func setup_stage(chapter_id: int, stage_id: int, player_level: int) -> void:
 	spawn_timer = 0.0
 	spawn_interval = 2.0 / stage.density_mult
 
-	# BOSS 关波次重置
-	_boss_wave = 0
-	_bosses_alive = 0
+	# 第6关时间波次BOSS重置
+	_s6_wave = 0
+	_s6_bosses_alive = 0
+	_s6_spawned_this_wave = 0
+	_s6_next_spawn_frames = 0
+	_s6_elapsed = 0.0
 
 	if boss_warning and boss_warning.has_method("hide_warning"):
 		boss_warning.hide_warning()
@@ -121,22 +130,20 @@ func update_spawning(delta: float, current_stage: StageData.StageInfo, current_c
 	if game_manager.is_game_over or game_manager.is_paused or game_manager.is_upgrading:
 		return
 
-	spawn_timer += delta
+	# 所有章节的 stage 6（第6关）：时间波次BOSS逻辑
+	if current_stage.id == 6:
+		_s6_elapsed += delta * game_manager.game_speed
+		_update_s6_boss_waves(delta)
+		return
 
-	# 所有章节的 stage 6（Boss关）不刷新普通怪物，只通过波次逻辑刷 BOSS
-	if boss_active and current_stage.id == 6:
-		if randf() < 0.5:
-			return
-	if current_stage.id != 6 and spawn_timer >= spawn_interval:
+	# 非第6关：正常普通怪物刷新
+	spawn_timer += delta
+	if spawn_timer >= spawn_interval:
 		spawn_timer = 0.0
 		print_debug("[SpawnManager] -> calling _spawn_enemy: stage=%d interval=%.2f" % [current_stage.id, spawn_interval])
 		_spawn_enemy(current_stage, current_chapter_id)
 
 	_check_boss_warning(current_stage, current_chapter_id)
-
-	# 调试打印（仅在BOSS相关状态时输出）
-	if is_boss_phase or current_stage.id == 6 or _boss_wave > 0:
-		print_debug("[SpawnManager] frame=%d: boss_active=%s is_boss_phase=%s stage.id=%d _boss_wave=%d boss_remaining=%d" % [_debug_frame_count, boss_active, is_boss_phase, current_stage.id, _boss_wave, boss_remaining])
 
 func _spawn_enemy(current_stage: StageData.StageInfo, current_chapter_id: int) -> void:
 	if not game_manager.player or not is_instance_valid(game_manager.player):
@@ -210,25 +217,14 @@ func _choose_enemy_type() -> String:
 			return ENEMY_RAVEN_PATH
 
 func _check_boss_warning(current_stage: StageData.StageInfo, current_chapter_id: int) -> void:
-	print_debug("[_check_boss_warning] ENTER: boss_active=%s is_boss_phase=%s stage.id=%d _boss_wave=%d" % [boss_active, is_boss_phase, current_stage.id, _boss_wave])
+	print_debug("[_check_boss_warning] ENTER: boss_active=%s is_boss_phase=%s stage.id=%d" % [boss_active, is_boss_phase, current_stage.id])
 	if boss_active:
 		print_debug("[_check_boss_warning] -> early return: boss_active=true")
 		return
-	if is_boss_phase and current_stage.id != 6:
-		print_debug("[_check_boss_warning] -> normal boss flow (is_boss_phase && stage.id!=6) boss_remaining=%d" % boss_remaining)
+	if is_boss_phase:
+		print_debug("[_check_boss_warning] -> normal boss flow (is_boss_phase) boss_remaining=%d" % boss_remaining)
 		if boss_remaining > 0:
 			_spawn_boss(current_chapter_id)
-		return
-
-	# BOSS 关（第6关）波次逻辑
-	if current_stage.id == 6:
-		print_debug("[_check_boss_warning] -> BOSS关 stage6: _waiting_next_wave=%s _boss_wave=%d" % [_waiting_next_wave, _boss_wave])
-		if _waiting_next_wave:
-			return
-		if _boss_wave == 0:
-			print_debug("[_check_boss_warning] -> TRIGGER wave 1!")
-			_boss_wave = 1
-			_spawn_boss_wave(current_stage, current_chapter_id, 1)
 		return
 
 	var warn_kills := _get_balance_value("difficulty", "boss_warning_kills", 45)
@@ -239,70 +235,103 @@ func _check_boss_warning(current_stage: StageData.StageInfo, current_chapter_id:
 	elif kill_since_boss >= spawn_kills:
 		_spawn_boss(current_chapter_id)
 
-func _spawn_boss_wave(current_stage: StageData.StageInfo, current_chapter_id: int, count: int) -> void:
-	print_debug("[_spawn_boss_wave] CALLED: count=%d chapter=%d stage_id=%d" % [count, current_chapter_id, current_stage.id])
+func _update_s6_boss_waves(delta: float) -> void:
+	# 波次1：第2秒刷1只
+	if _s6_wave == 0 and _s6_elapsed >= _s6_wave_times[0]:
+		_s6_wave = 1
+		_s6_spawned_this_wave = 0
+		_s6_next_spawn_frames = 0
+		_do_spawn_s6_boss()
+		_s6_spawned_this_wave += 1
+		print_debug("[S6] wave1 spawned 1/1")
 
-	if not is_instance_valid(enemy_root):
-		push_error("[SpawnManager] _spawn_boss_wave: enemy_root is invalid")
+	# 波次2：第30秒刷2只（不管前面杀没杀完）
+	if _s6_wave == 1 and _s6_elapsed >= _s6_wave_times[1]:
+		_s6_wave = 2
+		_s6_spawned_this_wave = 0
+		_s6_next_spawn_frames = int(1.5 * 60.0)
+		print_debug("[S6] wave2 triggered at %.1fs" % _s6_elapsed)
+
+	# 波次3：第75秒刷3只（不管前面杀没杀完）
+	if _s6_wave == 2 and _s6_elapsed >= _s6_wave_times[2]:
+		_s6_wave = 3
+		_s6_spawned_this_wave = 0
+		_s6_next_spawn_frames = int(1.5 * 60.0)
+		print_debug("[S6] wave3 triggered at %.1fs" % _s6_elapsed)
+
+	# 多只BOSS间隔生成（所有波次统一处理）
+	if _s6_next_spawn_frames > 0:
+		_s6_next_spawn_frames -= 1
+	elif _s6_wave >= 1 and _s6_wave <= 3:
+		var wave_idx: int = _s6_wave - 1
+		var wave_count: int = _s6_wave_counts[wave_idx]
+		if _s6_spawned_this_wave < wave_count:
+			_do_spawn_s6_boss()
+			_s6_spawned_this_wave += 1
+			print_debug("[S6] wave%d spawned %d/%d" % [_s6_wave, _s6_spawned_this_wave, wave_count])
+			if _s6_spawned_this_wave < wave_count:
+				_s6_next_spawn_frames = int(0.5 * 60.0)
+
+	# 检测全部通关：所有波次刷完且场上无BOSS存活
+	if _s6_wave >= 1 and _s6_spawned_this_wave >= _s6_wave_counts[_s6_wave - 1] and _s6_bosses_alive <= 0:
+		if _s6_wave == 3:
+			_s6_wave = 4  # 全部完成
+			s6_all_bosses_defeated.emit()
+			print_debug("[S6] ALL BOSSES DEFEATED!")
+
+func _do_spawn_s6_boss() -> void:
+	if not is_instance_valid(game_manager) or not is_instance_valid(enemy_root):
 		return
-	if not is_instance_valid(game_manager) or game_manager.is_game_over:
+	if not game_manager.player or not is_instance_valid(game_manager.player):
 		return
 
 	SoundManager.play_sfx("boss_appear")
 	SoundManager.play_music("battle_boss")
 
 	boss_active = true
-	_bosses_alive = count
+	_s6_bosses_alive += 1
 
 	if boss_warning and boss_warning.has_method("hide_warning"):
 		boss_warning.hide_warning()
 
 	var game_scene = game_manager.get_parent()
 	if game_scene and game_scene.has_method("trigger_screen_shake"):
-		game_scene.call_deferred("trigger_screen_shake", 15.0, 0.3)
+		game_scene.trigger_screen_shake(15.0, 0.3)
 		var overlay = ColorRect.new()
 		overlay.color = Color(1.0, 1.0, 1.0, 0.5)
 		overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-		game_scene.call_deferred("add_child", overlay)
-		overlay.call_deferred("add_to_group", "_spawn_boss_overlay")
-		overlay.call_deferred("set_process_callback", 1)
+		game_scene.add_child(overlay)
+		var t = overlay.create_tween()
+		t.tween_property(overlay, "modulate:a", 0.0, 0.3)
+		t.tween_callback(overlay.queue_free)
 
-	if not game_manager.player or not is_instance_valid(game_manager.player):
-		push_error("[SpawnManager] _spawn_boss_wave: player invalid")
-		boss_active = false
-		return
+	var chapter_id: int = game_manager.current_chapter_id
+	var stage: StageData.StageInfo = game_manager.current_stage
 
-	var boss_tonnage_chapter: int = current_chapter_id
-	var boss_stats := StageData.get_chapter_stats(boss_tonnage_chapter, "boss")
-	var strength_mult: float = current_stage.strength_mult
+	var spawn_angle := randf_range(0, TAU)
+	var spawn_dist := randf_range(400.0, 700.0)
+	var offset_pos: Vector2 = game_manager.player.global_position + Vector2.from_angle(spawn_angle) * spawn_dist
+
+	var boss = _SCENE_BOSS.instantiate()
+	enemy_root.add_child(boss)
+	boss.global_position = offset_pos
+
+	var boss_stats := StageData.get_chapter_stats(chapter_id, "boss")
+	var strength_mult: float = stage.strength_mult
 	var speed_mult: float = 1.0
 	if difficulty_scaler and difficulty_scaler.has_method("get_strength_mult"):
 		strength_mult *= difficulty_scaler.get_strength_mult()
 		speed_mult = difficulty_scaler.get_speed_mult()
 
-	for i in range(count):
-		if game_manager.is_game_over:
-			return
-		var delay: float = i * 0.8
-		if delay > 0.0:
-			await get_tree().create_timer(delay).timeout
-			if game_manager.is_game_over:
-				return
-		var spawn_angle := randf_range(0, TAU)
-		var spawn_dist := randf_range(400.0, 700.0)
-		var offset_pos: Vector2 = game_manager.player.global_position + Vector2.from_angle(spawn_angle) * spawn_dist
+	boss.setup_boss(game_manager,
+		boss_stats.hp * strength_mult,
+		boss_stats.damage * strength_mult,
+		boss_stats.speed * speed_mult,
+		boss_stats.shield * strength_mult,
+		chapter_id)
+	boss.enemy_dead.connect(_on_enemy_dead)
 
-		var boss = _SCENE_BOSS.instantiate()
-		enemy_root.add_child(boss)
-		boss.global_position = offset_pos
-		boss.setup_boss(game_manager,
-			boss_stats.hp * strength_mult,
-			boss_stats.damage * strength_mult,
-			boss_stats.speed * speed_mult,
-			boss_stats.shield * strength_mult,
-			boss_tonnage_chapter)
-		boss.enemy_dead.connect(_on_enemy_dead)
-		print_debug("[_spawn_boss_wave] Spawned boss %d/%d at %s" % [i + 1, count, offset_pos])
+	print_debug("[_do_spawn_s6_boss] spawned, total alive: %d" % _s6_bosses_alive)
 
 func _spawn_boss(current_chapter_id: int) -> void:
 	if boss_active:
@@ -368,53 +397,22 @@ func on_boss_killed(boss_node: Node2D) -> void:
 
 	kill_since_boss = 0
 
-	# BOSS 关波次处理
-	if _boss_wave > 0:
-		_bosses_alive -= 1
+	# 第6关时间波次BOSS处理
+	if game_manager.current_stage != null and game_manager.current_stage.id == 6:
+		_s6_bosses_alive -= 1
+		if _s6_bosses_alive <= 0:
+			boss_active = false
+		# 不 emit boss_killed，避免触发掉落等副作用，直接返回
+		return
 
-		if _bosses_alive <= 0:
-			match _boss_wave:
-				1:  # 第1波击杀 → 刷新第2波（2个）
-					_boss_wave = 2
-					boss_active = false
-					_waiting_next_wave = true
-					var t1 := get_tree()
-					if not t1:
-						return
-					await t1.create_timer(1.5).timeout
-					if not _is_safe_to_continue():
-						return
-					_waiting_next_wave = false
-					_spawn_boss_wave(game_manager.current_stage, game_manager.current_chapter_id, 2)
-					return  # 中间波次不 emit boss_killed，避免触发游戏结束/loot
-				2:  # 第2波击杀 → 刷新第3波（3个）
-					_boss_wave = 3
-					boss_active = false
-					_waiting_next_wave = true
-					var t2 := get_tree()
-					if not t2:
-						return
-					await t2.create_timer(1.5).timeout
-					if not _is_safe_to_continue():
-						return
-					_waiting_next_wave = false
-					_spawn_boss_wave(game_manager.current_stage, game_manager.current_chapter_id, 3)
-					return  # 中间波次不 emit boss_killed
-				3:  # 第3波击杀 → 全部通关！
-					_boss_wave = 4
-					boss_active = false
-					boss_remaining = 0  # 触发 game_manager 的过关检测
-					# 继续执行到下面的 boss_killed.emit()
-				_:
-					boss_active = false
-					boss_killed.emit(boss_node)
-					return
+	# 非第6关的普通BOSS流程
+	if is_boss_phase:
+		boss_active = false
+		boss_remaining -= 1
+		boss_killed.emit(boss_node)
 	else:
 		boss_active = false
-		if is_boss_phase:
-			boss_remaining -= 1
-
-	boss_killed.emit(boss_node)
+		boss_killed.emit(boss_node)
 
 func on_enemy_killed() -> void:
 	kill_since_boss += 1
@@ -423,12 +421,17 @@ func reset() -> void:
 	boss_active = false
 	kill_since_boss = 0
 	spawn_timer = 0.0
-	_boss_wave = 0
-	_bosses_alive = 0
-	_waiting_next_wave = false
+	_s6_wave = 0
+	_s6_bosses_alive = 0
+	_s6_spawned_this_wave = 0
+	_s6_next_spawn_frames = 0
+	_s6_elapsed = 0.0
 	_debug_frame_count = 0
 	if boss_warning and boss_warning.has_method("hide_warning"):
 		boss_warning.hide_warning()
+
+func is_s6_all_defeated() -> bool:
+	return _s6_wave >= 4
 
 func _on_enemy_dead(enemy: Node2D, enemy_type: String) -> void:
 	enemy_dead.emit(enemy, enemy_type)

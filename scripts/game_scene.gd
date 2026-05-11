@@ -147,12 +147,15 @@ func _record_run_and_loot(reason: String, kills: int, level: int, coin_gained: i
 			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, true)
 		"timeout":
 			GameState.last_run_reason = "timeout"
-			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, false)
+			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, true)
 		"retreat":
 			GameState.last_run_reason = "retreat"
-			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, false)
+			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, true)
 		"self_destruct":
 			GameState.last_run_reason = "self_destruct"
+			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, true)
+		"s6_victory":
+			GameState.last_run_reason = "s6_victory"
 			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, false)
 		_:
 			GameState.last_run_reason = reason
@@ -184,6 +187,18 @@ func _record_run_and_loot(reason: String, kills: int, level: int, coin_gained: i
 	game_manager.get_session_loot().clear()
 
 func _handle_stage_progression(reason: String) -> void:
+	if reason == "s6_victory" and game_manager.current_stage != null:
+		var cur_chapter: int = game_manager.current_chapter_id
+		var cur_stage: int = game_manager.current_stage.id
+		GameState.clear_stage(cur_chapter, cur_stage)
+		match cur_chapter:
+			1: GameState.unlock_chapter(2)
+			2: GameState.unlock_chapter(3)
+			3: GameState.unlock_chapter(4)
+			4: GameState.unlock_chapter(5)
+			5: GameState.unlock_chapter(6)
+		return
+
 	if reason == "retreat" and game_manager.current_stage != null:
 		var cur_chapter: int = game_manager.current_chapter_id
 		var cur_stage: int = game_manager.current_stage.id
@@ -194,6 +209,7 @@ func _handle_stage_progression(reason: String) -> void:
 				3: GameState.unlock_chapter(4)
 				4: GameState.unlock_chapter(5)
 				5: GameState.unlock_chapter(6)
+		return
 
 	if reason == "timeout" and game_manager.current_stage != null:
 		var c_ch: int = game_manager.current_chapter_id
@@ -216,9 +232,10 @@ func _build_settlement_scene(reason: String, coin_gained: int, minerals_gained: 
 
 	var result_labels = {
 		"dead": ["任务失败", "舰船损毁，损失50%%收益"],
-		"timeout": ["时间到！", "时间到！100%%收益"],
+		"timeout": ["任务失败", "时间耗尽，损失50%%收益"],
 		"retreat": ["任务完成", "撤离成功，100%%收益"],
 		"self_destruct": ["任务中止", "自毁退出，无收益"],
+		"s6_victory": ["任务完成", "全部BOSS已击杀，解锁下一章节！"],
 	}
 	var rl = result_labels.get(reason, ["任务完成", ""])
 

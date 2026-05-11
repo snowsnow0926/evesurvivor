@@ -99,6 +99,7 @@ func _setup_references() -> void:
 	spawn_manager.setup_references(enemy_root, exp_orb_root, boss_warning)
 	spawn_manager.enemy_dead.connect(_on_enemy_dead)
 	spawn_manager.boss_killed.connect(_on_boss_killed)
+	spawn_manager.s6_all_bosses_defeated.connect(_on_s6_all_bosses_defeated)
 
 func _spawn_player() -> void:
 	if player != null and is_instance_valid(player):
@@ -289,6 +290,13 @@ func _update_timer(delta: float) -> void:
 		_on_timer_expired()
 
 func _on_timer_expired() -> void:
+	# 第6关：时间到 = 任务失败（没有无限模式）
+	if current_stage != null and current_stage.id == 6:
+		is_game_over = true
+		get_tree().paused = true
+		game_ended.emit("timeout")
+		return
+	# 其他BOSS关：时间到后切换为无限BOSS模式
 	if spawn_manager.is_boss_phase and not _timer_expired_once:
 		_timer_expired_once = true
 		is_boss_infinite = true
@@ -301,6 +309,14 @@ func _on_timer_expired() -> void:
 	is_game_over = true
 	get_tree().paused = true
 	game_ended.emit("timeout")
+
+func _on_s6_all_bosses_defeated() -> void:
+	# 第6关全部BOSS被击杀 → 胜利
+	if current_stage != null and current_stage.id == 6:
+		is_game_over = true
+		get_tree().paused = true
+		game_ended.emit("s6_victory")
+		return
 
 
 func _on_enemy_dead(enemy: Node2D, enemy_type: String) -> void:

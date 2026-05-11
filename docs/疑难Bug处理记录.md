@@ -286,3 +286,79 @@ for ci in range(2, vbox.get_child_count()):
 - **UI 组件复制粘贴后，逐项核对 layout 属性**：尤其注意 `anchors_preset`、`offset_*`、`size_flags_*`、`custom_minimum_size`。
 - **调试 UI 不可见问题时，永远先打印 `global_position` 和 `size`**：Bug #003 和 #004 的经验表明，节点存在且 `visible=true` 并不代表实际可见，尺寸为 0 是最常见原因。
 - **使用控制变量法逐步排查**：当多个潜在问题同时存在时（如本例的锚点错误 + ScrollContainer 结构），应先修复最基础的布局问题，再验证其他修复是否有效。
+
+---
+
+## Bug #006：导出后美术素材（动态加载图片）不显示
+
+**影响版本**：v1.0 ~ v2.1
+**严重程度**：功能失效（界面可打开但图片空白）
+
+### 问题现象
+
+在 Godot 编辑器中 F6 运行游戏，关卡选择界面（`ChapterSelectUI.tscn`）的背景图和关卡卡片图片均正常显示。但使用导出模板生成 `.exe` 后运行，背景图正常，关卡卡片图片完全消失。
+
+### 根因分析
+
+**核心问题：编辑器路径 vs 打包资源路径解析不一致。**
+
+场景 `.tscn` 中的图片引用通过 `ExtResource` 直接声明，在编辑器环境和导出环境中都能被 Godot 资源管理系统正确处理。
+
+关卡卡片的图片是通过代码动态加载的：
+
+```gdscript
+# 错误写法（Bug 中的原始代码）
+var img := Image.new()
+img.load(img_path)  # "res://assets/base/menu/chapter_cards/chapter_01_card.png"
+tex_rect.texture = ImageTexture.create_from_image(img)
+```
+
+`Image.load()` 是 Godot 3 的旧 API，在 Godot 4 + 打包导出场景下，虚拟文件系统路径（`res://`）解析行为与编辑器内运行不一致。当资源被打包进 `.pck` 文件后，`Image.load("res://...")` 无法正确解析路径，导致图片加载失败而静默跳过。
+
+即使改用 `load()` 也无法在所有导出环境下保证可靠加载。
+
+### 最终修复方案
+
+**彻底放弃动态加载，改用静态节点引用图片。**
+
+1. 在 `ChapterSelectUI.tscn` 中预置 6 个卡片节点（Card1 ~ Card6），每个卡片包含 `TextureRect`、`VBoxContainer`、`Label`、`Button`。
+2. 每个卡片的 `TextureRect` 通过 `ExtResource` 直接引用对应的图片：
+   - Card1 → `chapter_01_card.png`
+   - Card2 → `chapter_02_card.png`
+   - ... 以此类推到 chapter_06。
+3. 脚本不再动态创建节点和加载图片，只负责从静态节点读取并配置文字、颜色、按钮信号。
+
+关键改动——脚本中通过固定路径访问静态节点：
+
+```gdscript
+const CARD_PATHS := [
+    "Panel/VBox/ScrollContainer/ChapterContainer/Card1",
+    "Panel/VBox/ScrollContainer/ChapterContainer/Card2",
+    # ... 共 6 个
+]
+
+func _load_chapters() -> void:
+    var chapters := StageData.get_all_chapters()
+    for i in range(min(chapters.size(), CARD_PATHS.size())):
+        var chapter: StageData.ChapterInfo = chapters[i]
+        var card: Panel = get_node(CARD_PATHS[i])
+        var is_unlocked: bool = GameState.is_chapter_unlocked(chapter.id)
+        _configure_card(card, chapter, is_unlocked)
+```
+
+图片引用通过 `.tscn` 的 `ExtResource` 声明，脚本只操作文字/颜色/信号，完全不处理图片加载逻辑。
+
+### 受影响范围（其他可能存在相同问题的美术素材）
+
+**所有通过代码动态加载图片资源的地方都需要检查**，包括但不限于：
+
+- 动态生成的卡牌图片（如种族卡、装备图标、道具图标）
+- 运行时从文件路径拼接加载的图片（如按 ID 命名的皮肤/外观资源）
+- 通过 `Image.load()` / `load("res://...")` 加载的 `.png` / `.jpg` / `.webp` 纹理
+- 任何在 `.tscn` 中**不是**通过 `ExtResource` 直接引用的图片资源
+
+### 预防措施
+
+- **美术素材必须通过 `.tscn` 中的 `ExtResource` 直接引用**，不要在脚本中动态加载纹理文件路径。
+- 导出测试是必须的——编辑器正常运行不能作为导出后也正常的依据。
+- 如果必须动态创建节点，可以先在 `.tscn` 中预置节点、隐藏备用，运行时通过 `get_node()` 获取并显示，避免在代码里 `load()` 纹理路径。

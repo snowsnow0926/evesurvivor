@@ -10,8 +10,16 @@ var stage_select_ui: Control
 var stage_select_scene: PackedScene
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
-@onready var chapter_container: VBoxContainer = $Panel/VBox/ScrollContainer/ChapterContainer
 @onready var back_btn: Button = $Panel/VBox/BackBtn
+
+const CARD_PATHS: Array[String] = [
+	"Panel/VBox/ScrollContainer/ChapterContainer/Card1",
+	"Panel/VBox/ScrollContainer/ChapterContainer/Card2",
+	"Panel/VBox/ScrollContainer/ChapterContainer/Card3",
+	"Panel/VBox/ScrollContainer/ChapterContainer/Card4",
+	"Panel/VBox/ScrollContainer/ChapterContainer/Card5",
+	"Panel/VBox/ScrollContainer/ChapterContainer/Card6",
+]
 
 func _ready() -> void:
 	stage_select_scene = load("res://scenes/StageSelectUI.tscn")
@@ -23,69 +31,44 @@ func _connect_buttons() -> void:
 		back_btn.pressed.connect(_on_back_pressed)
 
 func _load_chapters() -> void:
-	for child in chapter_container.get_children():
-		child.queue_free()
 	var chapters := StageData.get_all_chapters()
-	for chapter: StageData.ChapterInfo in chapters:
+	for i in range(min(chapters.size(), CARD_PATHS.size())):
+		var chapter: StageData.ChapterInfo = chapters[i]
+		var card_path := CARD_PATHS[i]
+		var card: Panel = get_node(card_path)
 		var is_unlocked: bool = GameState.is_chapter_unlocked(chapter.id)
-		var card := _create_chapter_card(chapter, is_unlocked)
-		chapter_container.add_child(card)
+		_configure_card(card, chapter, is_unlocked)
 
-func _create_chapter_card(chapter: StageData.ChapterInfo, is_unlocked: bool = true) -> Panel:
-	var panel := Panel.new()
-	panel.custom_minimum_size.y = 90
-	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+func _configure_card(card: Panel, chapter: StageData.ChapterInfo, is_unlocked: bool) -> void:
+	var name_label: Label = card.get_node_or_null("VBox/NameLabel")
+	var desc_label: Label = card.get_node_or_null("VBox/DescLabel")
+	var click_btn: Button = card.get_node_or_null("ClickBtn")
+	var card_img: TextureRect = card.get_node_or_null("CardImage")
 
-	var img_path := "res://assets/base/menu/chapter_cards/chapter_%02d_card.png" % chapter.id
-	var img_exists := FileAccess.file_exists(img_path)
-
-	if img_exists:
-		var tex_rect := TextureRect.new()
-		tex_rect.name = "CardImage"
-		tex_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-		tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		var img := Image.new()
-		img.load(img_path)
+	if card_img:
 		if not is_unlocked:
-			_desaturate_image(img)
-		tex_rect.texture = ImageTexture.create_from_image(img)
-		panel.add_child(tex_rect)
+			var gray_mat := ShaderMaterial.new()
+			gray_mat.shader = load("res://shaders/grayscale.gdshader")
+			card_img.material = gray_mat
 
-	var vbox := VBoxContainer.new()
-	panel.add_child(vbox)
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left = 12.0
-	vbox.offset_top = 8.0
-	vbox.offset_right = -12.0
-	vbox.offset_bottom = -8.0
-	vbox.add_theme_constant_override("separation", 6)
+	if name_label:
+		name_label.text = chapter.name + (" [锁定]" if not is_unlocked else "")
+		name_label.add_theme_font_size_override("font_size", 24)
+		name_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6) if not is_unlocked else Color(0.9, 0.9, 1.0))
 
-	var name_label := Label.new()
-	name_label.text = chapter.name + (" [锁定]" if not is_unlocked else "")
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	name_label.add_theme_font_size_override("font_size", 24)
-	name_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6) if not is_unlocked else Color(0.9, 0.9, 1.0))
-	vbox.add_child(name_label)
+	if desc_label:
+		desc_label.text = chapter.description
+		desc_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.7))
 
-	var desc_label := Label.new()
-	desc_label.text = chapter.description
-	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	desc_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.7))
-	vbox.add_child(desc_label)
+	if click_btn:
+		if is_unlocked:
+			if not click_btn.pressed.is_connected(_on_chapter_pressed):
+				click_btn.pressed.connect(_on_chapter_pressed.bind(chapter.id))
+		else:
+			click_btn.add_theme_color_override("normal", Color(0.05, 0.05, 0.1, 0.5))
+			click_btn.add_theme_color_override("hover", Color(0.05, 0.05, 0.1, 0.5))
 
-	var btn := Button.new()
-	btn.set_anchors_preset(Control.PRESET_FULL_RECT)
-	btn.text = ""
-	btn.flat = true
-	if is_unlocked:
-		btn.pressed.connect(_on_chapter_pressed.bind(chapter.id))
-	else:
-		btn.add_theme_color_override("normal", Color(0.05, 0.05, 0.1, 0.5))
-		btn.add_theme_color_override("hover", Color(0.05, 0.05, 0.1, 0.5))
-	panel.add_child(btn)
-
-	panel.add_theme_stylebox_override("panel", _make_chapter_style(is_unlocked))
-	return panel
+	card.add_theme_stylebox_override("panel", _make_chapter_style(is_unlocked))
 
 func _make_chapter_style(is_unlocked: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -118,12 +101,3 @@ func _on_stage_selected(chapter_id: int, stage_id: int) -> void:
 func _on_back_pressed() -> void:
 	SoundManager.play_sfx("button_click")
 	get_tree().change_scene_to_file("res://scenes/BaseScene.tscn")
-
-func _desaturate_image(img: Image) -> void:
-	var w := img.get_width()
-	var h := img.get_height()
-	for y in range(h):
-		for x in range(w):
-			var c := img.get_pixel(x, y)
-			var gray := c.r * 0.299 + c.g * 0.587 + c.b * 0.114
-			img.set_pixel(x, y, Color(gray * 0.5, gray * 0.5, gray * 0.5, c.a))
