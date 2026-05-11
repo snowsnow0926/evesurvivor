@@ -34,6 +34,7 @@ var default_weapon_scene: String = "res://scenes/Missile.tscn"
 
 var active_weapons: Array = []
 var weapon_fire_timers: Dictionary = {}
+var weapon_fire_ready: Dictionary = {}
 
 var missile_burst_timers: Dictionary = {}
 var missile_burst_counts: Dictionary = {}
@@ -185,6 +186,7 @@ func init_weapons() -> void:
 				var weapon_data = WeaponData.get_weapon(weapon_type, quality)
 				active_weapons.append(weapon_data)
 				weapon_fire_timers[weapon_data.weapon_id] = 0.0
+				weapon_fire_ready[weapon_data.weapon_id] = true
 				added_any = true
 
 	if not added_any:
@@ -193,6 +195,7 @@ func init_weapons() -> void:
 		var weapon_data = WeaponData.get_weapon(weapon_type)
 		active_weapons.append(weapon_data)
 		weapon_fire_timers[weapon_data.weapon_id] = 0.0
+		weapon_fire_ready[weapon_data.weapon_id] = true
 		_init_weapon_defaults()
 	else:
 		_debug("loaded " + str(active_weapons.size()) + " weapon(s) from shop")
@@ -290,7 +293,10 @@ func _update_firing(delta: float) -> void:
 		var wt = weapon.weapon_id
 		if not weapon_fire_timers.has(wt):
 			weapon_fire_timers[wt] = 0.0
-		weapon_fire_timers[wt] += delta
+		if not weapon_fire_ready.has(wt):
+			weapon_fire_ready[wt] = false
+		if not weapon_fire_ready.get(wt, false):
+			weapon_fire_timers[wt] += delta
 
 		var missile_ids = [
 			WeaponData.WeaponID.MISSILE, WeaponData.WeaponID.SMALL_MISSILE,
@@ -307,10 +313,16 @@ func _update_firing(delta: float) -> void:
 		else:
 			var interval = _get_fire_interval(weapon)
 			if DEBUG and _physics_tick_counter % 120 == 0:
-				print("[Player] _update_firing: weapon=", weapon.display_name, " timer=", weapon_fire_timers[wt], " interval=", interval)
-			if weapon_fire_timers[wt] >= interval:
+				print("[Player] _update_firing: weapon=", weapon.display_name, " timer=", weapon_fire_timers[wt], " interval=", interval, " ready=", weapon_fire_ready.get(wt, false))
+			if weapon_fire_ready.get(wt, false):
+				_fire_weapon(weapon)
+				weapon_fire_ready[wt] = false
+				weapon_fire_timers[wt] = 0.0
+			elif weapon_fire_timers[wt] >= interval:
+				weapon_fire_ready[wt] = true
 				weapon_fire_timers[wt] = 0.0
 				_fire_weapon(weapon)
+				weapon_fire_ready[wt] = false
 
 func _get_fire_interval(weapon: WeaponData) -> float:
 	var base = weapon.fire_interval
@@ -341,6 +353,14 @@ func _get_fire_interval(weapon: WeaponData) -> float:
 		return weapon.fire_interval
 	return base
 
+func get_weapon_cd_remaining(weapon: WeaponData) -> float:
+	var wt = weapon.weapon_id
+	if weapon_fire_ready.get(wt, false):
+		return -1.0
+	var elapsed = weapon_fire_timers.get(wt, 0.0) as float
+	var interval = _get_fire_interval(weapon)
+	return interval - elapsed
+
 func _update_railgun_firing(delta: float, weapon: WeaponData) -> void:
 	var wt = weapon.weapon_id
 	if railgun_burst_count > 0:
@@ -353,10 +373,12 @@ func _update_railgun_firing(delta: float, weapon: WeaponData) -> void:
 				return
 			SoundManager.play_sfx("shoot_railgun")
 			_fire_single_railgun(target_pos, weapon)
+			if railgun_burst_count <= 0:
+				weapon_fire_timers[wt] = 0.0
+				weapon_fire_ready[wt] = false
 	else:
 		var interval = _get_fire_interval(weapon)
-		if weapon_fire_timers[wt] >= interval:
-			weapon_fire_timers[wt] = 0.0
+		if weapon_fire_ready.get(wt, false):
 			var target_pos = _find_closest_enemy(weapon.range)
 			if target_pos == Vector2.ZERO:
 				return
@@ -364,6 +386,10 @@ func _update_railgun_firing(delta: float, weapon: WeaponData) -> void:
 			railgun_burst_timer = 0.0
 			SoundManager.play_sfx("shoot_railgun")
 			_fire_single_railgun(target_pos, weapon)
+			weapon_fire_ready[wt] = false
+			weapon_fire_timers[wt] = 0.0
+		elif weapon_fire_timers[wt] >= interval:
+			weapon_fire_ready[wt] = true
 
 func _fire_weapon(weapon: WeaponData) -> void:
 	if not game_manager or not is_instance_valid(game_manager):
@@ -447,15 +473,20 @@ func _update_missile_firing(delta: float, weapon) -> void:
 			missile_burst_timers[wt] = 0.0
 			missile_burst_counts[wt] -= 1
 			_fire_single_missile_for_burst(weapon)
+			if missile_burst_counts[wt] <= 0:
+				weapon_fire_timers[wt] = 0.0
+				weapon_fire_ready[wt] = false
 		return
 
 	var interval = _get_fire_interval(weapon)
-	if weapon_fire_timers[wt] >= interval:
-		weapon_fire_timers[wt] = 0.0
+	if weapon_fire_ready.get(wt, false):
 		var target_pos = _find_closest_enemy(weapon.range)
 		if target_pos == Vector2.ZERO:
 			return
+		weapon_fire_ready[wt] = false
 		_fire_missiles_at(target_pos, weapon)
+	elif weapon_fire_timers[wt] >= interval:
+		weapon_fire_ready[wt] = true
 
 func _fire_single_missile_for_burst(weapon) -> void:
 	var target_pos = _find_closest_enemy(weapon.range)

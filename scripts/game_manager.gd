@@ -236,7 +236,11 @@ func setup_for_stage(chapter_id: int, stage_id: int) -> void:
 			run_time_elapsed = 0.0
 			_unlimited_start_real_time = Time.get_ticks_msec()
 		else:
-			time_remaining = FIRST_RUN_DURATION
+			# 第六章 BOSS 关限时 8 分钟
+			if chapter_id == 6:
+				time_remaining = 480.0
+			else:
+				time_remaining = FIRST_RUN_DURATION
 			_timer_start_real_time = Time.get_ticks_msec()
 	else:
 		has_timer = false
@@ -254,7 +258,11 @@ func start_run_timer() -> void:
 			run_time_elapsed = 0.0
 			_unlimited_start_real_time = Time.get_ticks_msec()
 		else:
-			time_remaining = FIRST_RUN_DURATION
+			# 第六章 BOSS 关限时 8 分钟
+			if current_chapter_id == 6:
+				time_remaining = 480.0
+			else:
+				time_remaining = FIRST_RUN_DURATION
 			_timer_start_real_time = Time.get_ticks_msec()
 		elites_killed_this_run = 0
 		_timer_expired_once = false
@@ -493,6 +501,7 @@ func reset_for_new_run() -> void:
 
 	spawn_manager.reset()
 	difficulty_scaler.reset()
+	player_stats.full_reset()
 	upgrade_system.reset()
 	loot_system.reset()
 

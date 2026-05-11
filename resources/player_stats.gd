@@ -131,6 +131,37 @@ func reset() -> void:
 
 	self._copy_from(new_stats)
 
+func full_reset() -> void:
+	var new_stats := PlayerStats.new()
+	self._copy_from(new_stats)
+	damage = 15.0
+	xp_boost = 1.0
+	missile_speed = 600.0
+	missile_range = 500.0
+	missile_splash_radius = 0.0
+	missile_splash_count = 0
+	spread_count = 1
+	spread_angle = 6.0
+	cannon_fire_interval = 1.2
+	cannon_damage = 25.0
+	cannon_pierce_count = 1
+	cannon_explode_chance = 0.0
+	cannon_bloodthirst = 0
+	cannon_rush_level = 0
+	cannon_vengeance_level = 0
+	railgun_damage = 30.0
+	railgun_speed = 1000.0
+	railgun_range = 400.0
+	railgun_fire_interval = 0.6
+	railgun_crit_bonus = 0.0
+	railgun_multi_count = 1
+	laser_damage = 12.0
+	laser_duration = 2.0
+	laser_width = 16.0
+	laser_fire_interval = 2.5
+	laser_shield_mult = 1.0
+	silent_hunter_level = 0
+
 func _copy_from(other: PlayerStats) -> void:
 	max_hp = other.max_hp
 	shield_max = other.shield_max

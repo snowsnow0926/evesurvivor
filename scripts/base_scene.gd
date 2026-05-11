@@ -148,6 +148,8 @@ func _setup_building_nodes() -> void:
 		_building_nodes[bid] = area
 
 func _input(event: InputEvent) -> void:
+	if current_panel and is_instance_valid(current_panel):
+		return
 	if event is InputEventMouseButton:
 		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			_check_building_click()
@@ -228,6 +230,9 @@ func _update_currency_display() -> void:
 			GameState.minerals_low, GameState.minerals_mid, GameState.minerals_high]
 
 func _process(delta: float) -> void:
+	if current_panel and is_instance_valid(current_panel):
+		return
+
 	var current_hover := ""
 
 	for bid in _building_nodes:

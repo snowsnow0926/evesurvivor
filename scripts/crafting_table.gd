@@ -102,6 +102,12 @@ func _update_preview() -> void:
 			craft_btn.disabled = true
 		return
 
+	if selected_items[0].get("name") != selected_items[1].get("name"):
+		result_preview.text = "名称不匹配！"
+		if craft_btn:
+			craft_btn.disabled = true
+		return
+
 	var q = selected_items[0].get("quality")
 	var next_q = q + 1
 	if next_q > EquipmentData.Quality.MYTHIC:
@@ -120,6 +126,9 @@ func _on_craft_pressed() -> void:
 	if selected_items[0] == null or selected_items[1] == null:
 		return
 	if selected_items[0].get("quality") != selected_items[1].get("quality"):
+		return
+
+	if selected_items[0].get("name") != selected_items[1].get("name"):
 		return
 
 	var q = selected_items[0].get("quality")
@@ -229,13 +238,13 @@ func _on_quick_craft_pressed() -> void:
 				continue
 			if item.get("quality", 0) != q:
 				continue
-			var etype = item.get("equip_type", "WEAPON")
-			if not by_type.has(etype):
-				by_type[etype] = []
-			by_type[etype].append(item)
+			var key = item.get("equip_type", "WEAPON") + "|" + item.get("name", "")
+			if not by_type.has(key):
+				by_type[key] = []
+			by_type[key].append(item)
 
-		for etype in by_type:
-			var group: Array = by_type[etype]
+		for key in by_type:
+			var group: Array = by_type[key]
 			while group.size() >= 2:
 				var cost_now = CRAFTING_COSTS.get(q, 0)
 				if GameState.star_coin < cost_now:

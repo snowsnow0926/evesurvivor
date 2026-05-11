@@ -22,6 +22,9 @@ class ToncalStats:
 		explosion_damage = p_exp_damage
 		explosion_speed = p_exp_speed
 
+	func copy() -> ToncalStats:
+		return ToncalStats.new(hp, shield, damage, speed, explosion_damage, explosion_speed)
+
 enum LootTier { LOW, MEDIUM, HIGH }
 
 class LootProfile:
@@ -275,12 +278,16 @@ func _setup_chapters() -> void:
 			chapter5.stages.append(StageInfo.boss_only(stage_id, name, strength, density, true))
 	_chapters.append(chapter5)
 
-	# 血脉死域 — 第六大关
+	# 血脉死域 — 第六大关（纯BOSS关，继承第五章属性，BOSS血量/伤害/护盾 x1.5）
 	var chapter6 := ChapterInfo.new(6, "血脉死域", "第六大关 — 血脉死域 | 随机混合")
-	chapter6.melee_stats = ToncalStats.new(0.0, 0.0, 0.0, 0.0)
-	chapter6.sentry_stats = ToncalStats.new(0.0, 0.0, 0.0, 0.0)
-	chapter6.raven_stats = ToncalStats.new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-	chapter6.boss_stats = ToncalStats.new(0.0, 0.0, 0.0, 0.0)
+	chapter6.melee_stats = chapter5.melee_stats.copy()
+	chapter6.sentry_stats = chapter5.sentry_stats.copy()
+	chapter6.raven_stats = chapter5.raven_stats.copy()
+	chapter6.boss_stats = chapter5.boss_stats.copy()
+	chapter6.boss_stats.hp = chapter5.boss_stats.hp * 1.5
+	chapter6.boss_stats.shield = chapter5.boss_stats.shield * 1.5
+	chapter6.boss_stats.damage = chapter5.boss_stats.damage * 1.5
+	chapter6.loot_profile = chapter5.loot_profile
 	var stage_strengths6 := [1.0, 1.5, 2.25, 3.38, 5.06, 5.06]
 	for i in range(6):
 		var stage_id := i + 1

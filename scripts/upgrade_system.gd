@@ -14,6 +14,7 @@ var upgrade_pool: Array = []
 func _init(ps: PlayerStats) -> void:
 	player_stats = ps
 	_setup_upgrade_pool()
+	_apply_research_bonuses()
 
 func _setup_upgrade_pool() -> void:
 	upgrade_pool = [
@@ -62,3 +63,12 @@ func get_available_upgrades() -> Array:
 func reset() -> void:
 	upgrade_counts = {}
 	_setup_upgrade_pool()
+	_apply_research_bonuses()
+
+func _apply_research_bonuses() -> void:
+	if not GameState.research_progress.is_empty():
+		for upgrade_id in GameState.research_progress:
+			var bonus_level = GameState.research_progress[upgrade_id]
+			for i in range(bonus_level):
+				player_stats.apply_upgrade(upgrade_id)
+				upgrade_counts[upgrade_id] = upgrade_counts.get(upgrade_id, 0) + 1

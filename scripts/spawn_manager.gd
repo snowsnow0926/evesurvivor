@@ -39,6 +39,12 @@ var boss_remaining: int = 0
 var is_boss_phase: bool = false
 var kill_since_boss: int = 0
 
+## 第六章 BOSS 波次控制
+var _chapter6_boss_wave: int = 0       # 当前波次（0=未开始, 1=第1波, 2=第2波, 3=第3波, 4=全部完成）
+var _chapter6_bosses_alive: int = 0     # 当前波次存活的BOSS数量
+var _chapter6_total_waves: int = 3     # 总共3波
+var _chapter6_waiting_next_wave: bool = false  # 是否在等待下一波刷新（锁，防止重复触发）
+
 signal enemy_dead(enemy: Node2D, enemy_type: String)
 signal boss_killed(boss: Node2D)
 
@@ -90,6 +96,10 @@ func setup_stage(chapter_id: int, stage_id: int, player_level: int) -> void:
 	var level_bonus := 1.0 + 0.3 * (player_level - 1)
 	spawn_interval = 2.0 / (stage.density_mult * level_bonus)
 
+	# 第六章 BOSS 波次重置
+	_chapter6_boss_wave = 0
+	_chapter6_bosses_alive = 0
+
 	if boss_warning and boss_warning.has_method("hide_warning"):
 		boss_warning.hide_warning()
 
@@ -97,10 +107,12 @@ func update_spawning(delta: float, current_stage: StageData.StageInfo, current_c
 	if game_manager.is_game_over or game_manager.is_paused or game_manager.is_upgrading:
 		return
 
+	# 第六章：正在等待 BOSS 击杀触发下一波时，可以继续循环（不阻止 update_spawning）
+	# 但 boss_active=true 时（场上有BOSS），不刷新小怪
 	if boss_active:
 		if randf() < 0.5:
 			return
-	if is_boss_phase:
+	if is_boss_phase and current_chapter_id != 6:
 		return
 
 	var stats_chapter: int = current_chapter_id if current_chapter_id != 6 else 1
@@ -186,10 +198,21 @@ func _choose_enemy_type() -> String:
 func _check_boss_warning(current_chapter_id: int, player_level: int) -> void:
 	if boss_active:
 		return
-	if is_boss_phase:
+	if is_boss_phase and current_chapter_id != 6:
 		if boss_remaining > 0:
 			_spawn_boss(current_chapter_id, player_level)
 		return
+
+	# 第六章 BOSS 关波次逻辑
+	if current_chapter_id == 6:
+		if _chapter6_waiting_next_wave:
+			return
+		# 波次0：开场触发第1波
+		if _chapter6_boss_wave == 0:
+			_chapter6_boss_wave = 1
+			_spawn_chapter6_boss(current_chapter_id, player_level, 1)
+		return
+
 	var warn_kills := _get_balance_value("difficulty", "boss_warning_kills", 45)
 	var spawn_kills := _get_balance_value("difficulty", "boss_trigger_kills", 50)
 	if kill_since_boss >= warn_kills and kill_since_boss < spawn_kills:
@@ -197,6 +220,54 @@ func _check_boss_warning(current_chapter_id: int, player_level: int) -> void:
 			boss_warning.show_warning()
 	elif kill_since_boss >= spawn_kills:
 		_spawn_boss(current_chapter_id, player_level)
+
+func _spawn_chapter6_boss(current_chapter_id: int, player_level: int, count: int) -> void:
+	SoundManager.play_sfx("boss_appear")
+	SoundManager.play_music("battle_boss")
+
+	boss_active = true
+	_chapter6_bosses_alive = count
+
+	if boss_warning and boss_warning.has_method("hide_warning"):
+		boss_warning.hide_warning()
+
+	var game_scene = game_manager.get_parent()
+	if game_scene and game_scene.has_method("trigger_screen_shake"):
+		game_scene.trigger_screen_shake(15.0, 0.3)
+		var overlay = ColorRect.new()
+		overlay.color = Color(1.0, 1.0, 1.0, 0.5)
+		overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+		game_scene.add_child(overlay)
+		var t = game_scene.create_tween()
+		t.tween_property(overlay, "modulate:a", 0.0, 0.3)
+		t.tween_callback(overlay.queue_free)
+
+	for i in range(count):
+		var delay: float = i * 0.8
+		var spawn_angle := randf_range(0, TAU)
+		var spawn_dist := randf_range(400.0, 700.0)
+		var offset_pos: Vector2 = game_manager.player.global_position + Vector2.from_angle(spawn_angle) * spawn_dist
+
+		if delay > 0.0:
+			await get_tree().create_timer(delay).timeout
+
+		var boss = _SCENE_BOSS.instantiate()
+		enemy_root.add_child(boss)
+		boss.global_position = offset_pos
+
+		var boss_tonnage_chapter: int = StageData.get_random_tonnage_chapter()
+		var boss_stats := StageData.get_chapter_stats(boss_tonnage_chapter, "boss")
+		var level_bonus := 1.0 + 0.3 * (player_level - 1)
+		var current_stage = game_manager.current_stage
+		var final_strength: float = current_stage.strength_mult * level_bonus
+
+		boss.setup_boss(game_manager,
+			boss_stats.hp * final_strength,
+			boss_stats.damage * final_strength,
+			boss_stats.speed * (1.0 + (final_strength - 1.0) * 0.2),
+			boss_stats.shield * final_strength,
+			boss_tonnage_chapter)
+		boss.enemy_dead.connect(_on_enemy_dead)
 
 func _spawn_boss(current_chapter_id: int, player_level: int) -> void:
 	if boss_active:
@@ -255,14 +326,48 @@ func spawn_exp_orb(pos: Vector2) -> void:
 
 func on_boss_killed(boss_node: Node2D) -> void:
 	SoundManager.play_music("battle")
-	boss_active = false
-	kill_since_boss = 0
 
 	if boss_warning and boss_warning.has_method("hide_warning"):
 		boss_warning.hide_warning()
 
-	if is_boss_phase:
-		boss_remaining -= 1
+	kill_since_boss = 0
+
+	# 第六章 BOSS 关波次处理
+	if game_manager.current_chapter_id == 6:
+		_chapter6_bosses_alive -= 1
+
+		if _chapter6_bosses_alive <= 0:
+			match _chapter6_boss_wave:
+				1:  # 第1波击杀 → 刷新第2波（2个）
+					_chapter6_boss_wave = 2
+					boss_active = false
+					_chapter6_waiting_next_wave = true
+					await get_tree().create_timer(1.5).timeout
+					_chapter6_waiting_next_wave = false
+					_spawn_chapter6_boss(game_manager.current_chapter_id, game_manager.player_level, 2)
+					return  # 中间波次不 emit boss_killed，避免触发游戏结束/loot
+				2:  # 第2波击杀 → 刷新第3波（3个）
+					_chapter6_boss_wave = 3
+					boss_active = false
+					_chapter6_waiting_next_wave = true
+					await get_tree().create_timer(1.5).timeout
+					_chapter6_waiting_next_wave = false
+					_spawn_chapter6_boss(game_manager.current_chapter_id, game_manager.player_level, 3)
+					return  # 中间波次不 emit boss_killed
+				3:  # 第3波击杀 → 全部通关！
+					_chapter6_boss_wave = 4
+					boss_active = false
+					boss_remaining = 0  # 让 game_manager 检测到 boss_remaining <= 0 触发过关
+					# 继续执行到下面的 boss_killed.emit()
+				_:
+					boss_active = false
+					boss_killed.emit(boss_node)
+					return
+	else:
+		boss_active = false
+		if is_boss_phase:
+			boss_remaining -= 1
+
 	boss_killed.emit(boss_node)
 
 func on_enemy_killed() -> void:
@@ -272,6 +377,9 @@ func reset() -> void:
 	boss_active = false
 	kill_since_boss = 0
 	spawn_timer = 0.0
+	_chapter6_boss_wave = 0
+	_chapter6_bosses_alive = 0
+	_chapter6_waiting_next_wave = false
 	if boss_warning and boss_warning.has_method("hide_warning"):
 		boss_warning.hide_warning()
 

@@ -181,6 +181,12 @@ class CustomProgressBar extends Control:
 @onready var top_slot5_name: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot5/WeaponSlot5VBox/Name
 @onready var top_slot6: PanelContainer = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot6
 @onready var top_slot6_name: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot6/WeaponSlot6VBox/Name
+@onready var top_slot1_cd: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot1/WeaponSlot1VBox/CDLabel
+@onready var top_slot2_cd: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot2/WeaponSlot2VBox/CDLabel
+@onready var top_slot3_cd: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot3/WeaponSlot3VBox/CDLabel
+@onready var top_slot4_cd: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot4/WeaponSlot4VBox/CDLabel
+@onready var top_slot5_cd: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot5/WeaponSlot5VBox/CDLabel
+@onready var top_slot6_cd: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot6/WeaponSlot6VBox/CDLabel
 @onready var top_defense1: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot1/DefenseSlot1VBox/Name
 @onready var top_defense2: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot2/DefenseSlot2VBox/Name
 @onready var top_defense3: Label = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot3/DefenseSlot3VBox/Name
@@ -190,9 +196,8 @@ class CustomProgressBar extends Control:
 @onready var upgrade_list_vbox: VBoxContainer = $BottomRightAnchor/UpgradeListPanel/UpgradeListVBox
 
 @onready var status_vbox: VBoxContainer = $TopRightAnchor/StatusVBox
-@onready var timer_label: Label = $TopRightAnchor/StatusVBox/TimerLabel
 @onready var coin_gain_label: Label = $TopRightAnchor/StatusVBox/CoinGainLabel
-@onready var info_label: Label = $TopRightAnchor/StatusVBox/InfoLabel
+@onready var info_label: RichTextLabel = $TopRightAnchor/StatusVBox/InfoLabel
 @onready var combo_label: Label = $TopRightAnchor/StatusVBox/ComboLabel
 
 @onready var speed_panel: PanelContainer = $SpeedControlPanel
@@ -352,6 +357,7 @@ func _apply_all_styles() -> void:
 	upgrade_list_vbox.custom_minimum_size.y = 30
 
 	_apply_weapon_slot_base_style()
+	_apply_cd_label_style()
 
 func _apply_glow_panel(panel: PanelContainer, bg: Color, border: Color, glow: Color) -> void:
 	if not panel:
@@ -490,6 +496,13 @@ func _apply_weapon_slot_style(slot: PanelContainer, quality: int) -> void:
 	s.set_corner_radius_all(4)
 	slot.add_theme_stylebox_override("panel", s)
 
+func _apply_cd_label_style() -> void:
+	var cd_labels := [top_slot1_cd, top_slot2_cd, top_slot3_cd, top_slot4_cd, top_slot5_cd, top_slot6_cd]
+	for lbl in cd_labels:
+		if lbl:
+			lbl.add_theme_color_override("font_color", Color(0.25, 1.00, 0.35))
+			lbl.add_theme_font_size_override("font_size", 11)
+
 func _connect_slot_signals() -> void:
 	var slot_paths := [
 		"TopWeaponHBox/WeaponSlot1", "TopWeaponHBox/WeaponSlot2",
@@ -596,9 +609,8 @@ func _process(delta: float) -> void:
 	var player = gm.player if (gm.player and is_instance_valid(gm.player)) else null
 	var all_weapon_data: Array = []
 	if player:
-		if player.get("active_weapons"):
-			var weapons: Array = player.get("active_weapons")
-			for w in weapons:
+		if not player.active_weapons.is_empty():
+			for w in player.active_weapons:
 				if w:
 					all_weapon_data.append({
 						"name": w.display_name,
@@ -621,6 +633,26 @@ func _process(delta: float) -> void:
 				"quality": armor.get("quality", 0),
 			})
 
+	var timer_text := ""
+	var timer_color := ""
+	if gm.has_timer:
+		if gm.is_unlimited_mode:
+			var elapsed: float = gm.run_time_elapsed
+			var mins := int(elapsed) / 60
+			var secs := int(elapsed) % 60
+			timer_text = "+%02d:%02d" % [mins, secs]
+			timer_color = "#4DFF80"
+		elif gm.time_remaining > 0:
+			var mins := int(gm.time_remaining) / 60
+			var secs := int(gm.time_remaining) % 60
+			timer_text = "%02d:%02d" % [mins, secs]
+			if gm.time_remaining <= 30.0:
+				timer_color = "#FF4D4D"
+			elif gm.time_remaining <= 60.0:
+				timer_color = "#FFCD00"
+			else:
+				timer_color = "#CCCCFF"
+
 	update_display(
 		gm.player_stats.hp,
 		gm.player_stats.max_hp,
@@ -632,10 +664,11 @@ func _process(delta: float) -> void:
 		gm.current_xp,
 		gm.xp_to_next_level,
 		gm.player_level,
-		gm.combo_count
+		gm.combo_count,
+		timer_text,
+		timer_color
 	)
-	_update_timer_display(gm)
-	_update_top_weapon_display(all_weapon_data, defense_list)
+	_update_top_weapon_display(player, all_weapon_data, defense_list)
 	_update_race_and_ship_display()
 	_update_upgrade_list_display(gm)
 
@@ -681,14 +714,14 @@ func _get_upgrade_ids_for_weapon(wid) -> Array:
 # ============================================================
 #  武器/防御槽
 # ============================================================
-func _update_top_weapon_display(all_weapon_data: Array, defense_list: Array) -> void:
+func _update_top_weapon_display(player, all_weapon_data: Array, defense_list: Array) -> void:
 	var slot_nodes = [
-		{"panel": null, "name_label": top_slot1_name},
-		{"panel": null, "name_label": top_slot2_name},
-		{"panel": null, "name_label": top_slot3_name},
-		{"panel": null, "name_label": top_slot4_name},
-		{"panel": null, "name_label": top_slot5_name},
-		{"panel": null, "name_label": top_slot6_name},
+		{"panel": null, "name_label": top_slot1_name, "cd_label": top_slot1_cd},
+		{"panel": null, "name_label": top_slot2_name, "cd_label": top_slot2_cd},
+		{"panel": null, "name_label": top_slot3_name, "cd_label": top_slot3_cd},
+		{"panel": null, "name_label": top_slot4_name, "cd_label": top_slot4_cd},
+		{"panel": null, "name_label": top_slot5_name, "cd_label": top_slot5_cd},
+		{"panel": null, "name_label": top_slot6_name, "cd_label": top_slot6_cd},
 	]
 	slot_nodes[0]["panel"] = $TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot1
 	slot_nodes[1]["panel"] = top_slot2
@@ -697,10 +730,15 @@ func _update_top_weapon_display(all_weapon_data: Array, defense_list: Array) -> 
 	slot_nodes[4]["panel"] = top_slot5
 	slot_nodes[5]["panel"] = top_slot6
 
+	var active_weapons: Array = []
+	if player:
+		active_weapons = player.active_weapons
+
 	for i in range(slot_nodes.size()):
 		var slot = slot_nodes[i]
 		var panel: Node = slot["panel"]
 		var name_lbl: Label = slot["name_label"]
+		var cd_lbl: Label = slot["cd_label"]
 		if not panel or not name_lbl:
 			continue
 		if i < all_weapon_data.size():
@@ -710,8 +748,21 @@ func _update_top_weapon_display(all_weapon_data: Array, defense_list: Array) -> 
 			name_lbl.text = str(wd.get("name", "?"))
 			name_lbl.add_theme_color_override("font_color", EquipmentData.get_quality_color(wd.get("quality", 0)))
 			_apply_weapon_slot_style(panel as PanelContainer, wd.get("quality", 0))
+			if cd_lbl and player:
+				var remaining := -1.0
+				if i < active_weapons.size() and active_weapons[i]:
+					remaining = player.get_weapon_cd_remaining(active_weapons[i])
+				if remaining < 0.05:
+					cd_lbl.text = "就绪"
+				else:
+					cd_lbl.text = "%.1f" % remaining
+				cd_lbl.visible = true
+			elif cd_lbl:
+				cd_lbl.visible = false
 		else:
 			panel.visible = false
+			if cd_lbl:
+				cd_lbl.visible = false
 
 	var defense_slots = [top_defense1, top_defense2, top_defense3, top_defense4, top_defense5]
 	for idx in range(defense_slots.size()):
@@ -792,7 +843,7 @@ func _update_upgrade_list_display(gm) -> void:
 # ============================================================
 #  主更新函数
 # ============================================================
-func update_display(p_hp: int, p_max_hp: int, p_shield: float, p_shield_max: float, p_coin: int, p_minerals: int, p_kills: int, p_xp: float, p_xp_max: float, p_level: int, p_combo: int = 0) -> void:
+func update_display(p_hp: int, p_max_hp: int, p_shield: float, p_shield_max: float, p_coin: int, p_minerals: int, p_kills: int, p_xp: float, p_xp_max: float, p_level: int, p_combo: int = 0, p_timer_text: String = "", p_timer_color: String = "") -> void:
 	var hp_ratio = float(p_hp) / float(p_max_hp) if p_max_hp > 0 else 0.0
 
 	if hp_bar:
@@ -850,8 +901,12 @@ func update_display(p_hp: int, p_max_hp: int, p_shield: float, p_shield_max: flo
 		level_label.text = "Lv.%d" % p_level
 
 	if info_label:
-		info_label.text = "Level: %d | Kills: %d | 星币: %d" % [p_level, p_kills, p_coin]
-		info_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
+		if p_timer_text.is_empty():
+			info_label.text = "Level: %d | Kills: %d | 星币: %d" % [p_level, p_kills, p_coin]
+			info_label.remove_theme_color_override("font_color")
+		else:
+			var color_str = p_timer_color if not p_timer_color.is_empty() else "#CCCCFF"
+			info_label.text = "Level: %d | Kills: %d | 星币: %d | [color=%s]⏱ %s[/color]" % [p_level, p_kills, p_coin, color_str, p_timer_text]
 
 	# 低血量脉冲
 	var is_low_hp = (hp_ratio <= 0.25 and hp_ratio > 0.0)
@@ -1021,34 +1076,6 @@ func setup(gs: Node2D) -> void:
 		pause_btn.set_pressed_no_signal(false)
 	_update_speed_buttons()
 	update_display(100, 100, 50.0, 50.0, 0, 0, 0, 0.0, 10.0, 1)
-
-func _update_timer_display(gm) -> void:
-	if not timer_label:
-		return
-	if not gm.has_timer:
-		timer_label.visible = false
-		return
-
-	if gm.is_unlimited_mode:
-		var elapsed: float = gm.run_time_elapsed
-		var mins := int(elapsed) / 60
-		var secs := int(elapsed) % 60
-		timer_label.text = "+%02d:%02d" % [mins, secs]
-		timer_label.add_theme_color_override("font_color", Color(0.30, 1.00, 0.50))
-		timer_label.visible = true
-	elif gm.time_remaining > 0:
-		var mins := int(gm.time_remaining) / 60
-		var secs := int(gm.time_remaining) % 60
-		timer_label.text = "%02d:%02d" % [mins, secs]
-		timer_label.visible = true
-		if gm.time_remaining <= 30.0:
-			timer_label.add_theme_color_override("font_color", Color(1.0, 0.30, 0.30))
-		elif gm.time_remaining <= 60.0:
-			timer_label.add_theme_color_override("font_color", Color(1.0, 0.80, 0.00))
-		else:
-			timer_label.add_theme_color_override("font_color", Color(0.80, 0.80, 1.00))
-	else:
-		timer_label.visible = false
 
 func _spawn_coin_floating_text(amount: int) -> void:
 	if not coin_gain_label:
