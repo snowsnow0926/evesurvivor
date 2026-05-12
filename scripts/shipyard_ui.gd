@@ -3,6 +3,7 @@ extends Control
 var ship_list_vbox: VBoxContainer
 var preview_title: Label
 var ship_name_lbl: Label
+var ship_stats_lbl: Label
 var current_slots_lbl: Label
 var upgraded_slots_lbl: Label
 var cost_info_lbl: Label
@@ -27,6 +28,7 @@ func _deferred_init() -> void:
 
 	preview_title = find_child("PreviewTitle", true, false)
 	ship_name_lbl = find_child("ShipName", true, false)
+	ship_stats_lbl = find_child("ShipStats", true, false)
 	current_slots_lbl = find_child("CurrentSlots", true, false)
 	upgraded_slots_lbl = find_child("UpgradedSlots", true, false)
 	cost_info_lbl = find_child("CostInfo", true, false)
@@ -100,6 +102,7 @@ func _update_preview_panel() -> void:
 	if selected_ship == null:
 		if preview_title: preview_title.text = "选择舰船查看升级"
 		if ship_name_lbl: ship_name_lbl.text = ""
+		if ship_stats_lbl: ship_stats_lbl.text = ""
 		if current_slots_lbl: current_slots_lbl.text = ""
 		if upgraded_slots_lbl: upgraded_slots_lbl.text = ""
 		if cost_info_lbl: cost_info_lbl.text = ""
@@ -108,6 +111,8 @@ func _update_preview_panel() -> void:
 
 	if preview_title: preview_title.text = ""
 	if ship_name_lbl: ship_name_lbl.text = selected_ship.display_name
+	if ship_stats_lbl:
+		ship_stats_lbl.text = "基础属性: HP %d | 护盾 %.0f" % [selected_ship.base_hp, selected_ship.base_shield]
 
 	var is_unlocked = selected_ship.is_unlocked or GameState.unlocked_ships.has(int(selected_ship.ship_id))
 	var is_upgraded = GameState.upgraded_ships.get(int(selected_ship.ship_id), false)

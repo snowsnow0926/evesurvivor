@@ -87,6 +87,7 @@ func _init_subsystems() -> void:
 
 	difficulty_scaler.setup(spawn_manager)
 	upgrade_system.upgrade_requested.connect(_on_upgrade_requested)
+	upgrade_system.apply_research_bonuses()
 
 func _setup_references() -> void:
 	var game_scene = get_parent()
@@ -127,11 +128,10 @@ func _spawn_player() -> void:
 		push_error("[GameManager] failed to load Player scene")
 
 func _apply_race_to_player_stats(race: RaceData) -> void:
-	upgrade_system.apply_research_bonuses()
 	var ship = ShipData.get_ship(GameState.selected_ship_id)
 	var ship_base_hp = ship.base_hp if ship else 100
-	player_stats.max_hp = ship_base_hp
-	player_stats.hp = ship_base_hp
+	player_stats.max_hp = ship_base_hp + race.base_hp
+	player_stats.hp = player_stats.max_hp
 	player_stats.shield_max = ship.base_shield + race.shield_max
 	player_stats.shield = player_stats.shield_max
 	player_stats.shield_regen = ship.base_shield_regen + race.shield_regen
@@ -140,24 +140,6 @@ func _apply_race_to_player_stats(race: RaceData) -> void:
 	player_stats.dodge = race.dodge_rate
 	player_stats.crit_rate = race.crit_rate
 	player_stats.crit_mult = race.crit_mult
-	player_stats.cannon_fire_interval = 1.2
-	player_stats.cannon_pierce_count = 1
-	player_stats.cannon_explode_chance = 0.0
-	player_stats.cannon_bloodthirst = 0
-	player_stats.cannon_rush_level = 0
-	player_stats.cannon_vengeance_level = 0
-	player_stats.railgun_damage = 30.0
-	player_stats.railgun_speed = 1000.0
-	player_stats.railgun_range = 400.0
-	player_stats.railgun_fire_interval = 0.6
-	player_stats.railgun_crit_bonus = 0.0
-	player_stats.railgun_multi_count = 1
-	player_stats.laser_damage = 12.0
-	player_stats.laser_duration = 2.0
-	player_stats.laser_width = 16.0
-	player_stats.laser_fire_interval = 2.5
-	player_stats.laser_shield_mult = 1.0
-
 	for talent in race.talents:
 		match talent.get("type"):
 			"cannon_fire_rate":
@@ -290,25 +272,16 @@ func _update_timer(delta: float) -> void:
 		_on_timer_expired()
 
 func _on_timer_expired() -> void:
-	# 第6关：时间到 = 任务失败（没有无限模式）
+	# 第6关：时间到 = 任务失败
 	if current_stage != null and current_stage.id == 6:
 		is_game_over = true
 		get_tree().paused = true
 		game_ended.emit("timeout")
 		return
-	# 其他BOSS关：时间到后切换为无限BOSS模式
-	if spawn_manager.is_boss_phase and not _timer_expired_once:
-		_timer_expired_once = true
-		is_boss_infinite = true
-		is_game_over = false
-		get_tree().paused = false
-		has_timer = false
-		time_remaining = 0.0
-		_notify_hud_update()
-		return
+	# 前五关：时间到 = 撤离成功（坚持5分钟过关）
 	is_game_over = true
 	get_tree().paused = true
-	game_ended.emit("timeout")
+	game_ended.emit("retreat")
 
 func _on_s6_all_bosses_defeated() -> void:
 	# 第6关全部BOSS被击杀 → 胜利
@@ -509,6 +482,7 @@ func reset_for_new_run() -> void:
 	loot_system.reset()
 
 	setup_for_stage(current_chapter_id, current_stage.id if current_stage else 1)
+	upgrade_system.apply_research_bonuses()
 
 	for child in enemy_root.get_children():
 		child.queue_free()

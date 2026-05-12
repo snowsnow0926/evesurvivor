@@ -150,7 +150,7 @@ func _record_run_and_loot(reason: String, kills: int, level: int, coin_gained: i
 			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, true)
 		"retreat":
 			GameState.last_run_reason = "retreat"
-			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, true)
+			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, false)
 		"self_destruct":
 			GameState.last_run_reason = "self_destruct"
 			GameState.on_run_ended(kills, level, coin_gained, minerals_gained, true)
@@ -192,23 +192,46 @@ func _handle_stage_progression(reason: String) -> void:
 		var cur_stage: int = game_manager.current_stage.id
 		GameState.clear_stage(cur_chapter, cur_stage)
 		match cur_chapter:
-			1: GameState.unlock_chapter(2)
-			2: GameState.unlock_chapter(3)
-			3: GameState.unlock_chapter(4)
-			4: GameState.unlock_chapter(5)
-			5: GameState.unlock_chapter(6)
+			1:
+				GameState.unlock_chapter(2)
+				GameState.unlock_stage(2, 1)
+			2:
+				GameState.unlock_chapter(3)
+				GameState.unlock_stage(3, 1)
+			3:
+				GameState.unlock_chapter(4)
+				GameState.unlock_stage(4, 1)
+			4:
+				GameState.unlock_chapter(5)
+				GameState.unlock_stage(5, 1)
+			5:
+				GameState.unlock_chapter(6)
+				GameState.unlock_stage(6, 1)
 		return
 
 	if reason == "retreat" and game_manager.current_stage != null:
 		var cur_chapter: int = game_manager.current_chapter_id
 		var cur_stage: int = game_manager.current_stage.id
+		GameState.clear_stage(cur_chapter, cur_stage)
 		if cur_stage == 6:
 			match cur_chapter:
-				1: GameState.unlock_chapter(2)
-				2: GameState.unlock_chapter(3)
-				3: GameState.unlock_chapter(4)
-				4: GameState.unlock_chapter(5)
-				5: GameState.unlock_chapter(6)
+				1:
+					GameState.unlock_chapter(2)
+					GameState.unlock_stage(2, 1)
+				2:
+					GameState.unlock_chapter(3)
+					GameState.unlock_stage(3, 1)
+				3:
+					GameState.unlock_chapter(4)
+					GameState.unlock_stage(4, 1)
+				4:
+					GameState.unlock_chapter(5)
+					GameState.unlock_stage(5, 1)
+				5:
+					GameState.unlock_chapter(6)
+					GameState.unlock_stage(6, 1)
+		else:
+			GameState.unlock_stage(cur_chapter, cur_stage + 1)
 		return
 
 	if reason == "timeout" and game_manager.current_stage != null:

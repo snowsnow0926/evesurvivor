@@ -79,6 +79,10 @@ text = ""
 layout_mode = 2
 text = ""
 
+[node name="ShipStats" type="Label" parent="Panel/VBox/HBox/RightPanel"]
+layout_mode = 2
+text = ""
+
 [node name="Arrow" type="Label" parent="Panel/VBox/HBox/RightPanel"]
 layout_mode = 2
 text = "     ↓"

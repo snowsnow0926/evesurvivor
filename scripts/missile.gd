@@ -23,17 +23,23 @@ var sprite: Sprite2D
 var trail_points: Array = []
 var trail_max_length: int = 8
 
+var _frame_counter: int = 0
+
 func _ready() -> void:
 	sprite = $Sprite2D
 	body_entered.connect(_on_body_entered)
 
 func _physics_process(delta: float) -> void:
+	_frame_counter += 1
+
 	lifetime += delta
 	if lifetime > max_lifetime:
 		queue_free()
 		return
 
-	_update_target_tracking(delta)
+	if _frame_counter >= 3:
+		_frame_counter = 0
+		_update_target_tracking(delta)
 
 	var move_step = target_dir * speed * delta
 	position += move_step
@@ -122,11 +128,13 @@ func setup_target_direction(dir: Vector2, dmg: float, spd: float, cr: float, cm:
 	max_distance = range_limit
 	current_target = null
 	tracking_time = 0.0
+	_frame_counter = 0
 
 func setup_with_target(dir: Vector2, dmg: float, spd: float, cr: float, cm: float, gm: Node2D, target: Node2D, splash_rad: float = 0.0, splash_cnt: int = 0, range_limit: float = 500.0) -> void:
 	setup_target_direction(dir, dmg, spd, cr, cm, gm, splash_rad, splash_cnt, range_limit)
 	current_target = target
 	initial_target_pos = target.global_position
+	_frame_counter = 0
 
 func _on_body_entered(body: Node) -> void:
 	if body == self:
