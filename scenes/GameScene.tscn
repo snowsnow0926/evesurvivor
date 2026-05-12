@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://cf8upgrade001" path="res://scenes/UpgradeMenu.tscn" id="7_upgrade_scene"]
 [ext_resource type="PackedScene" uid="uid://cf8pause001" path="res://scenes/PauseMenu.tscn" id="8_pause_scene"]
 [ext_resource type="PackedScene" uid="uid://dd8xrawxxtiw3" path="res://scenes/BossWarning.tscn" id="9_bw_scene"]
+[ext_resource type="PackedScene" path="res://scenes/BossEncounterUI.tscn" id="10_beu_scene"]
 
 [node name="GameScene" type="Node2D" unique_id=177883771]
 script = ExtResource("5_gs")
@@ -55,3 +56,5 @@ script = ExtResource("4_psf")
 [node name="PauseMenu" parent="UIRoot" unique_id=1742089277 instance=ExtResource("8_pause_scene")]
 
 [node name="BossWarning" parent="UIRoot" unique_id=1786294256 instance=ExtResource("9_bw_scene")]
+
+[node name="BossEncounterUI" parent="UIRoot" instance=ExtResource("10_beu_scene")]

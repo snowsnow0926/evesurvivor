@@ -41,8 +41,8 @@ func _generate_stars() -> void:
 
 	for i in 80:
 		var star := Sprite2D.new()
-		var size: float = rng.randf_range(1.0, 3.0)
-		star.texture = _make_star_texture(size)
+		var star_size: float = rng.randf_range(1.0, 3.0)
+		star.texture = _make_star_texture(star_size)
 		star.position = Vector2(rng.randf_range(0, viewport_size.x), rng.randf_range(0, viewport_size.y))
 		var brightness: float = rng.randf_range(0.4, 1.0)
 		var hue: float = rng.randf_range(-0.05, 0.1)
@@ -53,8 +53,8 @@ func _generate_stars() -> void:
 
 	for i in 20:
 		var sparkle := Sprite2D.new()
-		var size: float = rng.randf_range(2.0, 4.0)
-		sparkle.texture = _make_sparkle_texture(size)
+		var sparkle_size: float = rng.randf_range(2.0, 4.0)
+		sparkle.texture = _make_sparkle_texture(sparkle_size)
 		sparkle.position = Vector2(rng.randf_range(0, viewport_size.x), rng.randf_range(0, viewport_size.y))
 		sparkle.modulate = Color(0.7, 0.85, 1.0, rng.randf_range(0.3, 0.7))
 		sparkle.z_index = -1
@@ -62,12 +62,12 @@ func _generate_stars() -> void:
 		_star_sprites.append(sparkle)
 
 func _make_star_texture(radius: float) -> ImageTexture:
-	var size := int(radius * 2.0 + 2.0)
-	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	var tex_size := int(radius * 2.0 + 2.0)
+	var image := Image.create(tex_size, tex_size, false, Image.FORMAT_RGBA8)
 	image.fill(Color(0, 0, 0, 0))
-	var center := Vector2i(size / 2, size / 2)
-	for y in range(size):
-		for x in range(size):
+	var center := Vector2i(tex_size >> 1, tex_size >> 1)
+	for y in range(tex_size):
+		for x in range(tex_size):
 			var dist := Vector2i(x, y).distance_to(center)
 			if dist <= radius:
 				var alpha: float = 1.0 - (dist / radius) * 0.5
@@ -75,12 +75,12 @@ func _make_star_texture(radius: float) -> ImageTexture:
 	var tex := ImageTexture.create_from_image(image)
 	return tex
 
-func _make_sparkle_texture(size: float) -> ImageTexture:
-	var s := int(size * 2.0 + 4.0)
+func _make_sparkle_texture(tex_size: float) -> ImageTexture:
+	var s := int(tex_size * 2.0 + 4.0)
 	var image := Image.create(s, s, false, Image.FORMAT_RGBA8)
 	image.fill(Color(0, 0, 0, 0))
-	var c := Vector2i(s / 2, s / 2)
-	var cross_len := int(size)
+	var c := Vector2i(s >> 1, s >> 1)
+	var cross_len := int(tex_size)
 	for i in range(-cross_len, cross_len + 1):
 		var alpha: float = 1.0 - abs(i) / float(cross_len) * 0.5
 		image.set_pixel(c.x + i, c.y, Color(1, 1, 1, alpha))

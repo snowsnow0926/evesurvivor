@@ -96,8 +96,9 @@ func _setup_references() -> void:
 	exp_orb_root = game_scene.get_node_or_null("ExpOrbRoot")
 	damage_root = game_scene.get_node_or_null("DamageRoot")
 	boss_warning = game_scene.get_node_or_null("UIRoot/BossWarning")
+	var boss_encounter_ui = game_scene.get_node_or_null("UIRoot/BossEncounterUI")
 
-	spawn_manager.setup_references(enemy_root, exp_orb_root, boss_warning)
+	spawn_manager.setup_references(enemy_root, exp_orb_root, boss_warning, boss_encounter_ui)
 	spawn_manager.enemy_dead.connect(_on_enemy_dead)
 	spawn_manager.boss_killed.connect(_on_boss_killed)
 	spawn_manager.s6_all_bosses_defeated.connect(_on_s6_all_bosses_defeated)
