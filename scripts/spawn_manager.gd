@@ -63,6 +63,8 @@ var _pending_strength_mult: float = 1.0
 var _pending_speed_mult: float = 1.0
 var _pending_tonnage_chapter: int = 1
 var _pending_is_s6: bool = false
+var _is_spawning_boss: bool = false
+var _spawn_timeout_timer: SceneTreeTimer = null
 
 func _init(gm: Node2D, ps: PlayerStats) -> void:
 	game_manager = gm
@@ -106,8 +108,11 @@ func setup_references(er: Node2D, eor: Node2D, bw: Node, beui: Node = null) -> v
 	exp_orb_root = eor
 	boss_warning = bw
 	boss_encounter_ui = beui
-	if boss_encounter_ui and boss_encounter_ui.has_method("encounter_finished"):
-		boss_encounter_ui.encounter_finished.connect(_on_encounter_finished)
+	print_debug("[SpawnManager] setup_references: boss_encounter_ui=%s has_signal=%s" % [boss_encounter_ui, boss_encounter_ui.has_signal("encounter_finished") if boss_encounter_ui else false])
+	if boss_encounter_ui and boss_encounter_ui.has_signal("encounter_finished"):
+		if not boss_encounter_ui.encounter_finished.is_connected(_on_encounter_finished):
+			boss_encounter_ui.encounter_finished.connect(_on_encounter_finished)
+			print_debug("[SpawnManager] encounter_finished connected successfully")
 
 func setup_stage(chapter_id: int, stage_id: int, player_level: int) -> void:
 	var stage = StageData.get_stage(chapter_id, stage_id)
@@ -291,16 +296,24 @@ func _update_s6_boss_waves(delta: float) -> void:
 			print_debug("[S6] ALL BOSSES DEFEATED!")
 
 func _do_spawn_s6_boss() -> void:
+	print_debug("[SpawnManager] _do_spawn_s6_boss ENTER")
 	if not is_instance_valid(game_manager) or not is_instance_valid(enemy_root):
+		push_error("[SpawnManager] _do_spawn_s6_boss: invalid game_manager=%s or enemy_root=%s" % [is_instance_valid(game_manager), is_instance_valid(enemy_root)])
 		return
 	if not game_manager.player or not is_instance_valid(game_manager.player):
+		push_error("[SpawnManager] _do_spawn_s6_boss: player invalid")
 		return
 	if boss_active:
+		print_debug("[SpawnManager] _do_spawn_s6_boss: blocked by boss_active=true")
+		return
+	if _is_spawning_boss:
+		print_debug("[SpawnManager] _do_spawn_s6_boss: blocked by _is_spawning_boss=true")
 		return
 
 	var chapter_id: int = game_manager.current_chapter_id
 	var stage: StageData.StageInfo = game_manager.current_stage
 	var boss_entry = BossRegistry.get_chapter_boss(chapter_id)
+	print_debug("[SpawnManager] boss_entry=%s chapter=%d" % [boss_entry, chapter_id])
 
 	var strength_mult: float = stage.strength_mult
 	var speed_mult: float = 1.0
@@ -315,15 +328,23 @@ func _do_spawn_s6_boss() -> void:
 	_pending_tonnage_chapter = chapter_id
 	_pending_is_s6 = true
 
+	print_debug("[SpawnManager] pending set: entry=%s chapter=%d" % [_pending_boss_entry, _pending_chapter_id])
+
 	if boss_warning and boss_warning.has_method("hide_warning"):
 		boss_warning.hide_warning()
 
 	_show_boss_encounter(boss_entry)
 
 func _spawn_boss(current_chapter_id: int) -> void:
+	print_debug("[SpawnManager] _spawn_boss ENTER: chapter=%d boss_active=%s" % [current_chapter_id, boss_active])
 	if boss_active:
+		print_debug("[SpawnManager] _spawn_boss: blocked by boss_active=true")
+		return
+	if _is_spawning_boss:
+		print_debug("[SpawnManager] _spawn_boss: blocked by _is_spawning_boss=true")
 		return
 	if not game_manager.player or not is_instance_valid(game_manager.player):
+		push_error("[SpawnManager] _spawn_boss: player invalid")
 		return
 
 	var boss_entry = BossRegistry.get_chapter_boss(current_chapter_id)
@@ -342,6 +363,8 @@ func _spawn_boss(current_chapter_id: int) -> void:
 
 	kill_since_boss = 0
 
+	print_debug("[SpawnManager] _spawn_boss: pending set entry=%s chapter=%d" % [_pending_boss_entry, _pending_chapter_id])
+
 	if boss_warning and boss_warning.has_method("hide_warning"):
 		boss_warning.hide_warning()
 
@@ -349,21 +372,49 @@ func _spawn_boss(current_chapter_id: int) -> void:
 
 
 func _show_boss_encounter(boss_entry: BossEntry) -> void:
+	if _is_spawning_boss:
+		return
+	_is_spawning_boss = true
+	print_debug("[SpawnManager] _show_boss_encounter: entry=%s has_ui=%s" % [boss_entry, boss_encounter_ui != null])
 	if boss_encounter_ui and boss_encounter_ui.has_method("show_encounter"):
 		boss_encounter_ui.show_encounter(boss_entry)
+		# 超时兜底：3秒后信号没触发则强制生成BOSS
+		if get_tree() != null and boss_encounter_ui.has_signal("encounter_finished"):
+			_spawn_timeout_timer = get_tree().create_timer(3.0)
+			_spawn_timeout_timer.timeout.connect(_on_encounter_timeout, CONNECT_ONE_SHOT)
+		else:
+			# 没有信号时直接生成
+			_is_spawning_boss = false
+			_finish_boss_spawn()
 	else:
-		# 兜底：没有EncounterUI时直接生成BOSS
+		# 没有EncounterUI时直接生成BOSS
+		_is_spawning_boss = false
 		_finish_boss_spawn()
 
 
+func _on_encounter_timeout() -> void:
+	print_debug("[SpawnManager] _on_encounter_timeout: forcing boss spawn")
+	_finish_boss_spawn()
+
+
 func _finish_boss_spawn() -> void:
+	print_debug("[SpawnManager] _finish_boss_spawn ENTER: boss_active=%s" % boss_active)
+	# 防止重复调用（超时+信号同时触发时）
+	if boss_active:
+		print_debug("[SpawnManager] _finish_boss_spawn: blocked by boss_active=true")
+		_is_spawning_boss = false
+		return
+
 	var entry = _pending_boss_entry
 	if entry == null:
 		push_error("[SpawnManager] _pending_boss_entry is null in _finish_boss_spawn")
+		_is_spawning_boss = false
 		return
 
-	SoundManager.play_sfx("boss_appear")
-	SoundManager.play_music("battle_boss")
+	# 取消可能残留的超时计时器
+	if _spawn_timeout_timer and is_instance_valid(_spawn_timeout_timer):
+		_spawn_timeout_timer.timeout.disconnect(_on_encounter_timeout)
+		_spawn_timeout_timer = null
 
 	if _pending_is_s6:
 		boss_active = true
@@ -383,6 +434,7 @@ func _finish_boss_spawn() -> void:
 		t.tween_callback(overlay.queue_free)
 
 	var boss_scene = BossRegistry.get_boss_scene(entry.boss_id)
+	print_debug("[SpawnManager] boss_scene=%s (entry.boss_id=%s)" % [boss_scene, entry.boss_id])
 	var boss = boss_scene.instantiate()
 	enemy_root.add_child(boss)
 
@@ -402,9 +454,13 @@ func _finish_boss_spawn() -> void:
 	boss.enemy_dead.connect(_on_enemy_dead)
 
 	print_debug("[SpawnManager] BOSS spawned: %s (chapter %d)" % [entry.boss_id, _pending_chapter_id])
+	_is_spawning_boss = false
 
 
 func _on_encounter_finished() -> void:
+	if _spawn_timeout_timer and is_instance_valid(_spawn_timeout_timer):
+		_spawn_timeout_timer.timeout.disconnect(_on_encounter_timeout)
+		_spawn_timeout_timer = null
 	_finish_boss_spawn()
 
 func spawn_exp_orb(pos: Vector2) -> void:

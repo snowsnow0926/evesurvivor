@@ -12,6 +12,8 @@ var has_hit: bool = false
 const PLAYER_RADIUS: float = 32.0
 const BULLET_RADIUS: float = 8.0
 
+@onready var sprite: Sprite2D = $Sprite2D
+
 func _physics_process(delta: float) -> void:
 	lifetime += delta
 	if lifetime > max_lifetime:
@@ -19,6 +21,9 @@ func _physics_process(delta: float) -> void:
 		return
 
 	position += target_pos * speed * delta
+
+	if sprite and target_pos != Vector2.ZERO:
+		sprite.rotation = target_pos.angle()
 
 	if has_hit:
 		return

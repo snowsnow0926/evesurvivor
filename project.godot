@@ -37,6 +37,7 @@ GameState="*res://scripts/game_state.gd"
 SoundManager="*res://scripts/sound_manager.gd"
 GameBalance="*res://scripts/game_balance_loader.gd"
 MobileInput="*res://scripts/mobile_input.gd"
+BossRegistry="*res://scripts/boss_registry.gd"
 
 [display]
 

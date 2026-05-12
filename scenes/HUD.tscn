@@ -90,29 +90,29 @@ vertical_alignment = 1
 
 [node name="TopCenterAnchor" type="Control" parent="." unique_id=1794777644]
 layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -360.0
-offset_right = 360.0
-offset_bottom = 70.0
-grow_horizontal = 2
+anchors_preset = 0
+offset_left = 529.0
+offset_top = 10.0
+offset_right = 529.0
+offset_bottom = 10.0
 
 [node name="TopWeaponPanel" type="PanelContainer" parent="TopCenterAnchor" unique_id=1518040436]
 layout_mode = 0
+offset_right = 835.0
+offset_bottom = 74.0
 size_flags_horizontal = 4
 size_flags_vertical = 4
 
 [node name="TopWeaponHBox" type="HBoxContainer" parent="TopCenterAnchor/TopWeaponPanel" unique_id=942145752]
 layout_mode = 2
-theme_override_constants/separation = 16
 alignment = 1
 
 [node name="WeaponSlot1" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=1217218636]
 layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="WeaponSlot1VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot1" unique_id=1067056499]
+clip_contents = true
+layout_direction = 1
 layout_mode = 2
 theme_override_constants/separation = 2
 
@@ -123,10 +123,12 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot1/WeaponSlot1VBox" unique_id=1347465675]
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
 text = "导弹"
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 3
 
 [node name="CDLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot1/WeaponSlot1VBox" unique_id=1347400001]
 layout_mode = 2
@@ -135,7 +137,6 @@ vertical_alignment = 1
 
 [node name="WeaponSlot2" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=106615609]
 layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="WeaponSlot2VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot2" unique_id=765790421]
 layout_mode = 2
@@ -148,9 +149,13 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot2/WeaponSlot2VBox" unique_id=1365694691]
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
+size_flags_horizontal = 5
+size_flags_vertical = 5
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 2
 
 [node name="CDLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot2/WeaponSlot2VBox" unique_id=1347400002]
 layout_mode = 2
@@ -159,7 +164,6 @@ vertical_alignment = 1
 
 [node name="WeaponSlot3" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=2016155334]
 layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="WeaponSlot3VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot3" unique_id=92939507]
 layout_mode = 2
@@ -172,9 +176,13 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot3/WeaponSlot3VBox" unique_id=1751071692]
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
+size_flags_horizontal = 5
+size_flags_vertical = 5
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 2
 
 [node name="CDLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot3/WeaponSlot3VBox" unique_id=1347400003]
 layout_mode = 2
@@ -183,7 +191,6 @@ vertical_alignment = 1
 
 [node name="WeaponSlot4" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=1115908097]
 layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="WeaponSlot4VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot4" unique_id=352019245]
 layout_mode = 2
@@ -196,9 +203,13 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot4/WeaponSlot4VBox" unique_id=369367307]
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
+size_flags_horizontal = 5
+size_flags_vertical = 5
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 2
 
 [node name="CDLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot4/WeaponSlot4VBox" unique_id=1347400004]
 layout_mode = 2
@@ -207,7 +218,6 @@ vertical_alignment = 1
 
 [node name="WeaponSlot5" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=739253288]
 layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="WeaponSlot5VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot5" unique_id=1216017822]
 layout_mode = 2
@@ -220,9 +230,13 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot5/WeaponSlot5VBox" unique_id=82904742]
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
+size_flags_horizontal = 5
+size_flags_vertical = 5
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 2
 
 [node name="CDLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot5/WeaponSlot5VBox" unique_id=1347400005]
 layout_mode = 2
@@ -231,7 +245,7 @@ vertical_alignment = 1
 
 [node name="WeaponSlot6" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=810942700]
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_horizontal = 4
 
 [node name="WeaponSlot6VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot6" unique_id=1266818335]
 layout_mode = 2
@@ -244,9 +258,13 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot6/WeaponSlot6VBox" unique_id=2058023679]
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
+size_flags_horizontal = 5
+size_flags_vertical = 5
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 2
 
 [node name="CDLabel" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot6/WeaponSlot6VBox" unique_id=1347400006]
 layout_mode = 2
@@ -255,7 +273,6 @@ vertical_alignment = 1
 
 [node name="DefenseSlot1" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=2006504666]
 layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="DefenseSlot1VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot1" unique_id=37725257]
 layout_mode = 2
@@ -268,14 +285,16 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot1/DefenseSlot1VBox" unique_id=1888268836]
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
+size_flags_vertical = 1
 text = "空槽位"
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 2
 
 [node name="DefenseSlot2" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=757791639]
 layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="DefenseSlot2VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot2" unique_id=427354556]
 layout_mode = 2
@@ -288,14 +307,16 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot2/DefenseSlot2VBox" unique_id=1072825252]
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
+size_flags_vertical = 1
 text = "空槽位"
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 2
 
 [node name="DefenseSlot3" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=18832650]
 layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="DefenseSlot3VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot3" unique_id=1098356432]
 layout_mode = 2
@@ -308,14 +329,16 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot3/DefenseSlot3VBox" unique_id=1065296]
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
+size_flags_vertical = 1
 text = "空槽位"
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 2
 
 [node name="DefenseSlot4" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=1406037310]
 layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="DefenseSlot4VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot4" unique_id=579187006]
 layout_mode = 2
@@ -328,14 +351,16 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot4/DefenseSlot4VBox" unique_id=323293671]
+custom_minimum_size = Vector2(45, 0)
 layout_mode = 2
+size_flags_vertical = 1
 text = "空槽位"
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 2
 
 [node name="DefenseSlot5" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=563394965]
 layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="DefenseSlot5VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot5" unique_id=1047107987]
 layout_mode = 2
@@ -348,7 +373,9 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot5/DefenseSlot5VBox" unique_id=1820217220]
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
+size_flags_vertical = 1
 text = "空槽位"
 horizontal_alignment = 1
 vertical_alignment = 1

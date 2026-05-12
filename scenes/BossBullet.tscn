@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://drchg1sge3gro"]
 
 [ext_resource type="Script" path="res://scripts/enemy_bullet.gd" id="1_bb"]
+[ext_resource type="Texture2D" path="res://assets/sprites/weapons/02.png" id="2_tex"]
 
 [node name="BossBullet" type="Area2D"]
 collision_layer = 4
@@ -9,10 +10,9 @@ script = ExtResource("1_bb")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 
-[node name="ColorRect" type="ColorRect" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="."]
 z_index = 1
-offset_left = -7.0
-offset_top = -7.0
-offset_right = 7.0
-offset_bottom = 7.0
-color = Color(0.8, 0.0, 0.8, 1.0)
+texture = ExtResource("2_tex")
+centered = false
+offset = Vector2(-32, -32)
+scale = Vector2(0.5, 0.5)

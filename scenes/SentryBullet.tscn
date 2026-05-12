@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://dj3udnxthtjho"]
 
 [ext_resource type="Script" path="res://scripts/enemy_bullet.gd" id="1_sb"]
+[ext_resource type="Texture2D" path="res://assets/sprites/weapons/02.png" id="2_tex"]
 
 [node name="SentryBullet" type="Area2D"]
 collision_layer = 4
@@ -9,10 +10,9 @@ script = ExtResource("1_sb")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 
-[node name="ColorRect" type="ColorRect" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="."]
 z_index = 1
-offset_left = -5.0
-offset_top = -5.0
-offset_right = 5.0
-offset_bottom = 5.0
-color = Color(1.0, 0.3, 0.1, 1.0)
+texture = ExtResource("2_tex")
+centered = false
+offset = Vector2(-32, -32)
+scale = Vector2(0.35, 0.35)

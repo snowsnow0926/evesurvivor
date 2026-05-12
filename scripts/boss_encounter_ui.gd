@@ -31,6 +31,8 @@ func show_encounter(entry: BossEntry) -> void:
 	visible = true
 	_reset_all_nodes()
 	_apply_boss_data(entry)
+	# 暂停游戏，播放BOSS登场动画
+	get_tree().paused = true
 	_play_intro_animation()
 
 
@@ -129,6 +131,8 @@ func _on_animation_finished() -> void:
 	if _warning_tween:
 		_warning_tween.kill()
 		_warning_tween = null
+	# 动画播完，恢复游戏
+	get_tree().paused = false
 	encounter_finished.emit()
 
 
