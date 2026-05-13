@@ -53,6 +53,14 @@
 			]
 		},
 		{
+			"id": "boss_chongsan",
+			"name_en": "Boss Chongsan",
+			"name_zh": "冲三杀手",
+			"texture_path": "res://assets/newship/enemy/BossVoid (1).png",
+			"tonnage": "boss",
+			"path": []
+		},
+		{
 			"id": "boss_void",
 			"name_en": "Boss Void",
 			"name_zh": "虚空领主",
@@ -60,8 +68,8 @@
 			"tonnage": "boss",
 			"path": []
 		},
-	{
-		"id": "enemy_raven",
+		{
+			"id": "enemy_raven",
 			"name_en": "Raven Enemy",
 			"name_zh": "乌鸦型敌机",
 			"texture_path": "res://assets/newship/enemy/EnemyRaven (1).png",

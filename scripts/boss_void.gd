@@ -7,7 +7,7 @@ func _ready() -> void:
 	_base_tint = Color(0.5, 0.0, 0.5)
 	_visual_scale = 1.2
 	_icon_id = "boss_void"
-	tonnage = "battlecruiser"
+	tonnage = "boss"
 	_hp_bar_max_width = 102.0
 	_hit_flash_intensity = 3.0
 	_dmg_number_font_size_normal = 20

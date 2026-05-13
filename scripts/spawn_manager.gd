@@ -59,6 +59,7 @@ signal s6_all_bosses_defeated()
 
 var _pending_boss_entry: BossEntry
 var _pending_chapter_id: int = 1
+var _pending_stage_id: int = 1
 var _pending_strength_mult: float = 1.0
 var _pending_speed_mult: float = 1.0
 var _pending_tonnage_chapter: int = 1
@@ -159,7 +160,7 @@ func update_spawning(delta: float, current_stage: StageData.StageInfo, current_c
 		print_debug("[SpawnManager] -> calling _spawn_enemy: stage=%d interval=%.2f" % [current_stage.id, spawn_interval])
 		_spawn_enemy(current_stage, current_chapter_id)
 
-	_check_boss_warning(current_stage, current_chapter_id)
+	_check_boss_warning(current_stage, current_chapter_id, current_stage.id)
 
 func _spawn_enemy(current_stage: StageData.StageInfo, current_chapter_id: int) -> void:
 	if not game_manager.player or not is_instance_valid(game_manager.player):
@@ -232,12 +233,12 @@ func _choose_enemy_type() -> String:
 		else:
 			return ENEMY_RAVEN_PATH
 
-func _check_boss_warning(current_stage: StageData.StageInfo, current_chapter_id: int) -> void:
+func _check_boss_warning(current_stage: StageData.StageInfo, current_chapter_id: int, current_stage_id: int) -> void:
 	if boss_active:
 		return
 	if is_boss_phase:
 		if boss_remaining > 0:
-			_spawn_boss(current_chapter_id)
+			_spawn_boss(current_chapter_id, current_stage_id)
 		return
 
 	var warn_kills := _get_balance_value("difficulty", "boss_warning_kills", 45)
@@ -246,7 +247,7 @@ func _check_boss_warning(current_stage: StageData.StageInfo, current_chapter_id:
 		if boss_warning and boss_warning.has_method("show_warning"):
 			boss_warning.show_warning()
 	elif kill_since_boss >= spawn_kills:
-		_spawn_boss(current_chapter_id)
+		_spawn_boss(current_chapter_id, current_stage_id)
 
 func _update_s6_boss_waves(delta: float) -> void:
 	# 波次1：第2秒刷1只
@@ -309,8 +310,8 @@ func _do_spawn_s6_boss() -> void:
 
 	var chapter_id: int = game_manager.current_chapter_id
 	var stage: StageData.StageInfo = game_manager.current_stage
-	var boss_entry = BossRegistry.get_chapter_boss(chapter_id)
-	print_debug("[SpawnManager] boss_entry=%s chapter=%d" % [boss_entry, chapter_id])
+	var boss_entry = BossRegistry.get_chapter_stage_boss(chapter_id, stage.id)
+	print_debug("[SpawnManager] boss_entry=%s chapter=%d stage=%d" % [boss_entry, chapter_id, stage.id])
 
 	var strength_mult: float = stage.strength_mult
 	var speed_mult: float = 1.0
@@ -320,20 +321,21 @@ func _do_spawn_s6_boss() -> void:
 
 	_pending_boss_entry = boss_entry
 	_pending_chapter_id = chapter_id
+	_pending_stage_id = stage.id
 	_pending_strength_mult = strength_mult
 	_pending_speed_mult = speed_mult
 	_pending_tonnage_chapter = chapter_id
 	_pending_is_s6 = true
 
-	print_debug("[SpawnManager] pending set: entry=%s chapter=%d" % [_pending_boss_entry, _pending_chapter_id])
+	print_debug("[SpawnManager] pending set: entry=%s chapter=%d stage=%d" % [_pending_boss_entry, _pending_chapter_id, _pending_stage_id])
 
 	if boss_warning and boss_warning.has_method("hide_warning"):
 		boss_warning.hide_warning()
 
 	_show_boss_encounter(boss_entry)
 
-func _spawn_boss(current_chapter_id: int) -> void:
-	print_debug("[SpawnManager] _spawn_boss ENTER: chapter=%d boss_active=%s" % [current_chapter_id, boss_active])
+func _spawn_boss(current_chapter_id: int, current_stage_id: int) -> void:
+	print_debug("[SpawnManager] _spawn_boss ENTER: chapter=%d stage=%d boss_active=%s" % [current_chapter_id, current_stage_id, boss_active])
 	if boss_active:
 		print_debug("[SpawnManager] _spawn_boss: blocked by boss_active=true")
 		return
@@ -344,7 +346,7 @@ func _spawn_boss(current_chapter_id: int) -> void:
 		push_error("[SpawnManager] _spawn_boss: player invalid")
 		return
 
-	var boss_entry = BossRegistry.get_chapter_boss(current_chapter_id)
+	var boss_entry = BossRegistry.get_chapter_stage_boss(current_chapter_id, current_stage_id)
 	var strength_mult: float = game_manager.current_stage.strength_mult
 	var speed_mult: float = 1.0
 	if difficulty_scaler and difficulty_scaler.has_method("get_strength_mult"):
@@ -353,6 +355,7 @@ func _spawn_boss(current_chapter_id: int) -> void:
 
 	_pending_boss_entry = boss_entry
 	_pending_chapter_id = current_chapter_id
+	_pending_stage_id = current_stage_id
 	_pending_strength_mult = strength_mult
 	_pending_speed_mult = speed_mult
 	_pending_tonnage_chapter = current_chapter_id
@@ -360,7 +363,7 @@ func _spawn_boss(current_chapter_id: int) -> void:
 
 	kill_since_boss = 0
 
-	print_debug("[SpawnManager] _spawn_boss: pending set entry=%s chapter=%d" % [_pending_boss_entry, _pending_chapter_id])
+	print_debug("[SpawnManager] _spawn_boss: pending set entry=%s chapter=%d stage=%d" % [_pending_boss_entry, _pending_chapter_id, _pending_stage_id])
 
 	if boss_warning and boss_warning.has_method("hide_warning"):
 		boss_warning.hide_warning()
@@ -431,8 +434,8 @@ func _finish_boss_spawn() -> void:
 		t.tween_property(overlay, "modulate:a", 0.0, 0.3)
 		t.tween_callback(overlay.queue_free)
 
-	var boss_scene = BossRegistry.get_boss_scene(entry.boss_id)
-	print_debug("[SpawnManager] boss_scene=%s (entry.boss_id=%s)" % [boss_scene, entry.boss_id])
+	var boss_scene = BossRegistry.get_chapter_stage_boss_scene(_pending_chapter_id, _pending_stage_id)
+	print_debug("[SpawnManager] boss_scene=%s (chapter=%d stage=%d)" % [boss_scene, _pending_chapter_id, _pending_stage_id])
 	var boss = boss_scene.instantiate()
 	enemy_root.add_child(boss)
 
@@ -506,6 +509,7 @@ func reset() -> void:
 	_s6_spawned_this_wave = 0
 	_s6_next_spawn_frames = 0
 	_s6_elapsed = 0.0
+	_pending_stage_id = 1
 	_debug_frame_count = 0
 	if boss_warning and boss_warning.has_method("hide_warning"):
 		boss_warning.hide_warning()

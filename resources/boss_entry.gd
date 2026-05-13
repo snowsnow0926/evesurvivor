@@ -73,6 +73,11 @@ func _init(
 	p_bullet_damage: float = 10.0,
 	p_death_particle_count: int = 40,
 	p_death_burst_count: int = 5,
+	p_death_particle_lifetime: float = 1.0,
+	p_death_particle_velocity_min: float = 100.0,
+	p_death_particle_velocity_max: float = 300.0,
+	p_death_particle_scale_min: float = 5.0,
+	p_death_particle_scale_max: float = 15.0,
 	p_death_exp_orb_count: int = 10
 ) -> void:
 	boss_id = p_boss_id
@@ -98,6 +103,11 @@ func _init(
 	bullet_damage = p_bullet_damage
 	death_particle_count = p_death_particle_count
 	death_burst_count = p_death_burst_count
+	death_particle_lifetime = p_death_particle_lifetime
+	death_particle_velocity_min = p_death_particle_velocity_min
+	death_particle_velocity_max = p_death_particle_velocity_max
+	death_particle_scale_min = p_death_particle_scale_min
+	death_particle_scale_max = p_death_particle_scale_max
 	death_exp_orb_count = p_death_exp_orb_count
 
 
