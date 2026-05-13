@@ -57,6 +57,7 @@ var turn_time: float = 0.12
 
 var polygon: Node2D
 var ship_sprite: Sprite2D
+var ship_exhaust: Node2D
 
 const _SHIP_ICON_MAP: Dictionary = {
 	ShipData.ShipID.FRIGATE:      "frigate",
@@ -109,6 +110,7 @@ func set_ship_icon() -> void:
 func _ready() -> void:
 	polygon = $Polygon2D
 	ship_sprite = $ShipSprite
+	ship_exhaust = $ShipExhaust
 	_debug("_ready called, polygon=" + str(polygon) + ", sprite=" + str(ship_sprite))
 	_debug("viewport size=" + str(get_viewport_rect().size))
 	if polygon:
@@ -276,6 +278,9 @@ func _update_movement(delta: float) -> void:
 
 	velocity = input_dir * player_stats.move_speed
 	move_and_slide()
+
+	if ship_exhaust and ship_exhaust.has_method("update_exhaust"):
+		ship_exhaust.update_exhaust(current_angle, velocity.length(), global_position)
 
 	if ship_sprite and ship_sprite.visible:
 		ship_sprite.rotation = current_angle + PI / 2

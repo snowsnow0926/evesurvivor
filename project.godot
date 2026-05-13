@@ -38,6 +38,8 @@ SoundManager="*res://scripts/sound_manager.gd"
 GameBalance="*res://scripts/game_balance_loader.gd"
 MobileInput="*res://scripts/mobile_input.gd"
 BossRegistry="*res://scripts/boss_registry.gd"
+CoreRegistry="*res://scripts/core_registry.gd"
+CoreEquipManager="*res://scripts/core_equip_manager.gd"
 
 [display]
 

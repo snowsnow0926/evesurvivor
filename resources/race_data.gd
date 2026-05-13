@@ -4,6 +4,7 @@ extends Resource
 enum RaceID { HUMAN, ORC, PLANT, SILICON, DIVINE }
 
 @export var race_id: RaceID
+@export var race_key: String  # 用于核心系统映射: "human", "orc", "plant", "silicon"
 @export var display_name: String
 @export var description: String
 @export var base_hp: float
@@ -32,6 +33,7 @@ static func get_race(race_id: RaceID) -> RaceData:
 static func _human_data() -> RaceData:
 	var r = RaceData.new()
 	r.race_id = RaceID.HUMAN
+	r.race_key = "human"
 	r.display_name = "人类"
 	r.description = "均衡型种族，各项属性平衡，默认使用导弹武器。"
 	r.base_hp = 100.0
@@ -51,6 +53,7 @@ static func _human_data() -> RaceData:
 static func _orc_data() -> RaceData:
 	var r = RaceData.new()
 	r.race_id = RaceID.ORC
+	r.race_key = "orc"
 	r.display_name = "兽人"
 	r.description = "重型战士，HP更高，默认使用加农炮武器，拥有炮术专精和狂暴射击天赋。"
 	r.base_hp = 120.0
@@ -70,6 +73,7 @@ static func _orc_data() -> RaceData:
 static func _plant_data() -> RaceData:
 	var r = RaceData.new()
 	r.race_id = RaceID.PLANT
+	r.race_key = "plant"
 	r.display_name = "植物"
 	r.description = "光子生物，使用磁轨炮武器，拥有高暴击率天赋。磁轨武器升级三项默认 +1，磁轨炮暴击率 +20%。"
 	r.base_hp = 110.0
@@ -89,6 +93,7 @@ static func _plant_data() -> RaceData:
 static func _silicon_data() -> RaceData:
 	var r = RaceData.new()
 	r.race_id = RaceID.SILICON
+	r.race_key = "silicon"
 	r.display_name = "硅基"
 	r.description = "能量生命体，使用激光炮武器，拥有持续伤害天赋。激光武器升级三项默认 +1，激光宽度 +15%，持续时间 +15%。"
 	r.base_hp = 130.0

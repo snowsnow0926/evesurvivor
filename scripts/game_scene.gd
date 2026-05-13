@@ -16,11 +16,16 @@ var shake_duration: float = 0.0
 var shake_time: float = 0.0
 var original_offset: Vector2 = Vector2.ZERO
 
+var _bg_image: Sprite2D = null
+var _bg_nebula_tex: Texture2D = null
+var _prev_vp_size: Vector2 = Vector2.ZERO
+
 func _ready() -> void:
 	add_to_group("game_scene")
 	is_settlement_open = false
 	game_manager = $GameManager
 	_setup_ui()
+	_setup_background()
 	_connect_signals()
 	game_manager.setup_for_stage(GameState.selected_chapter_id, GameState.selected_stage_id)
 	game_manager.start_run_timer()
@@ -46,6 +51,29 @@ func _setup_ui() -> void:
 	if hud and hud.speed_changed.get_connections().is_empty():
 		hud.speed_changed.connect(_on_hud_speed_changed)
 
+func _setup_background() -> void:
+	var bg_layer = $BackgroundLayer
+	if bg_layer:
+		_bg_image = bg_layer.get_node_or_null("BackgroundImage")
+	if _bg_image:
+		_bg_nebula_tex = _bg_image.texture
+	_update_background()
+
+func _update_background() -> void:
+	if not _bg_image or not _bg_nebula_tex:
+		return
+	var vp_rect := get_viewport_rect()
+	var vp_size := vp_rect.size
+	if vp_size == Vector2.ZERO:
+		return
+	var tex_size := _bg_nebula_tex.get_size()
+	if tex_size.x <= 0 or tex_size.y <= 0:
+		return
+	var scale_x := vp_size.x / tex_size.x
+	var scale_y := vp_size.y / tex_size.y
+	_bg_image.scale = Vector2(scale_x, scale_y)
+	_prev_vp_size = vp_size
+
 func _connect_signals() -> void:
 	if game_manager:
 		game_manager.upgrade_requested.connect(_on_upgrade_requested)
@@ -63,6 +91,10 @@ func _connect_signals() -> void:
 		pause_menu_sig.self_destruct_requested.connect(_on_self_destruct_requested)
 
 func _process(_delta: float) -> void:
+	# 动态检测视口尺寸变化，重新计算背景缩放
+	var vp_size := get_viewport_rect().size
+	if vp_size != _prev_vp_size and vp_size != Vector2.ZERO:
+		_update_background()
 	if Input.is_action_just_pressed("pause"):
 		if game_manager.is_upgrading or game_manager.is_game_over:
 			return
@@ -85,7 +117,7 @@ func _on_upgrade_requested() -> void:
 	_notify_guide_level_up()
 	var upgrade_menu = $UIRoot/UpgradeMenu
 	if upgrade_menu:
-		upgrade_menu.open_upgrade_menu(game_manager.upgrade_pool, game_manager)
+		upgrade_menu.open_upgrade_menu([], game_manager)
 
 func _on_upgrade_selected(upgrade_id: String) -> void:
 	SoundManager.play_sfx("upgrade_select")

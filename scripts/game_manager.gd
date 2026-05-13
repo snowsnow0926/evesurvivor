@@ -89,6 +89,11 @@ func _init_subsystems() -> void:
 	upgrade_system.upgrade_requested.connect(_on_upgrade_requested)
 	upgrade_system.apply_research_bonuses()
 
+	# 监听核心词条升级，实时同步到玩家属性
+	CoreEquipManager.skill_upgraded.connect(_on_core_skill_upgraded)
+	# 监听核心切换，重新同步玩家属性
+	CoreEquipManager.core_equipped.connect(_on_core_equipped)
+
 func _setup_references() -> void:
 	var game_scene = get_parent()
 	enemy_root = game_scene.get_node_or_null("EnemyRoot")
@@ -141,35 +146,11 @@ func _apply_race_to_player_stats(race: RaceData) -> void:
 	player_stats.dodge = race.dodge_rate
 	player_stats.crit_rate = race.crit_rate
 	player_stats.crit_mult = race.crit_mult
-	for talent in race.talents:
-		match talent.get("type"):
-			"cannon_fire_rate":
-				player_stats.cannon_fire_interval *= (1.0 - talent.get("value", 0.0))
-			"cannon_base_level":
-				upgrade_system.apply_race_talent("cannon_bloodthirst", int(talent.get("value", 1)))
-				upgrade_system.apply_race_talent("cannon_rush", int(talent.get("value", 1)))
-				upgrade_system.apply_race_talent("cannon_vengeance", int(talent.get("value", 1)))
-			"missile_range":
-				player_stats.missile_range *= (1.0 + talent.get("value", 0.0))
-			"missile_base_level":
-				upgrade_system.apply_race_talent("fire_coverage", int(talent.get("value", 1)))
-				upgrade_system.apply_race_talent("silent_hunter", int(talent.get("value", 1)))
-				upgrade_system.apply_race_talent("precision_kill", int(talent.get("value", 1)))
-			"railgun_base_level":
-				upgrade_system.apply_race_talent("railgun_damage", int(talent.get("value", 1)))
-				upgrade_system.apply_race_talent("railgun_crit", int(talent.get("value", 1)))
-				upgrade_system.apply_race_talent("railgun_multi", int(talent.get("value", 1)))
-			"railgun_crit":
-				player_stats.railgun_crit_bonus += talent.get("value", 0.0)
-			"laser_base_level":
-				upgrade_system.apply_race_talent("laser_duration", int(talent.get("value", 1)))
-				upgrade_system.apply_race_talent("laser_width", int(talent.get("value", 1)))
-				upgrade_system.apply_race_talent("laser_shield", int(talent.get("value", 1)))
-			"laser_width_duration":
-				player_stats.laser_width *= (1.0 + talent.get("value", 0.0))
-				player_stats.laser_duration *= (1.0 + talent.get("value", 0.0))
-			_:
-				pass
+
+	# 核心系统接管种族天赋注入
+	CoreEquipManager.equip_starting_core(race.race_key)
+	player_stats.sync_from_core(CoreEquipManager.get_equipped_core_id())
+
 	_apply_armor_bonuses()
 
 func _apply_armor_bonuses() -> void:
@@ -249,6 +230,7 @@ func _process(delta: float) -> void:
 	if is_game_over or is_upgrading:
 		return
 	# time_scale handles delta scaling for all child nodes automatically
+	# NOTE: delta here is already scaled by Engine.time_scale, do NOT multiply by game_speed again
 	_update_timer(delta)
 	spawn_manager.update_spawning(delta, current_stage, current_chapter_id, player_level)
 	player_stats.update_regen(delta)
@@ -261,12 +243,12 @@ func _update_timer(delta: float) -> void:
 	if is_paused:
 		return
 	if is_unlimited_mode:
-		run_time_elapsed += delta * game_speed
+		run_time_elapsed += delta
 		_notify_hud_update()
 		return
 	if time_remaining <= 0.0:
 		return
-	time_remaining -= delta * game_speed
+	time_remaining -= delta
 	if time_remaining <= 0.0:
 		time_remaining = 0.0
 		_notify_hud_update()
@@ -405,18 +387,37 @@ func _spawn_damage_number(world_pos: Vector2, amount: float, is_crit: bool, enem
 	node.setup(world_pos, amount, is_crit, enemy_dmg)
 
 func apply_upgrade(upgrade_id: String) -> void:
-	var success = upgrade_system.apply_upgrade(upgrade_id)
-	if not success:
-		is_upgrading = false
-		get_tree().paused = false
+	is_upgrading = false
+	get_tree().paused = false
+	var core_id = CoreEquipManager.get_equipped_core_id()
+	if core_id.is_empty():
+		# 无核心时回退旧升级系统（理论上不应发生，equip_starting_core 总会装备一个核心）
+		var success = upgrade_system.apply_upgrade(upgrade_id)
+		if success and player and is_instance_valid(player) and player.has_method("sync_from_player_stats"):
+			player.sync_from_player_stats(player_stats)
+		_notify_hud_update()
 		return
+	var success = CoreEquipManager.upgrade_skill(core_id, upgrade_id)
+	_notify_hud_update()
+	if not success:
+		pass  # 已达等级上限，静默忽略
 
+
+func _on_core_skill_upgraded(core_id: String, skill_id: String, new_level: int) -> void:
+	if core_id != CoreEquipManager.get_equipped_core_id():
+		return
+	# 同步到 upgrade_system.upgrade_counts，使 HUD 升级面板能正常显示
+	upgrade_system.upgrade_counts[skill_id] = new_level
+	player_stats.sync_from_core(core_id)
 	if player and is_instance_valid(player) and player.has_method("sync_from_player_stats"):
 		player.sync_from_player_stats(player_stats)
 
-	is_upgrading = false
-	get_tree().paused = false
-	_notify_hud_update()
+
+func _on_core_equipped(core_id: String) -> void:
+	player_stats.sync_from_core(core_id)
+	if player and is_instance_valid(player) and player.has_method("sync_from_player_stats"):
+		player.sync_from_player_stats(player_stats)
+
 
 func _on_player_dead() -> void:
 	SoundManager.play_sfx("player_death")
@@ -484,6 +485,11 @@ func reset_for_new_run() -> void:
 
 	setup_for_stage(current_chapter_id, current_stage.id if current_stage else 1)
 	upgrade_system.apply_research_bonuses()
+
+	# 重新同步核心词条效果
+	var core_id = CoreEquipManager.get_equipped_core_id()
+	if not core_id.is_empty():
+		player_stats.sync_from_core(core_id)
 
 	for child in enemy_root.get_children():
 		child.queue_free()

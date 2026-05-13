@@ -233,12 +233,9 @@ func _choose_enemy_type() -> String:
 			return ENEMY_RAVEN_PATH
 
 func _check_boss_warning(current_stage: StageData.StageInfo, current_chapter_id: int) -> void:
-	print_debug("[_check_boss_warning] ENTER: boss_active=%s is_boss_phase=%s stage.id=%d" % [boss_active, is_boss_phase, current_stage.id])
 	if boss_active:
-		print_debug("[_check_boss_warning] -> early return: boss_active=true")
 		return
 	if is_boss_phase:
-		print_debug("[_check_boss_warning] -> normal boss flow (is_boss_phase) boss_remaining=%d" % boss_remaining)
 		if boss_remaining > 0:
 			_spawn_boss(current_chapter_id)
 		return
@@ -379,8 +376,9 @@ func _show_boss_encounter(boss_entry: BossEntry) -> void:
 	if boss_encounter_ui and boss_encounter_ui.has_method("show_encounter"):
 		boss_encounter_ui.show_encounter(boss_entry)
 		# 超时兜底：3秒后信号没触发则强制生成BOSS
-		if get_tree() != null and boss_encounter_ui.has_signal("encounter_finished"):
-			_spawn_timeout_timer = get_tree().create_timer(3.0)
+		var tree := boss_encounter_ui.get_tree() as SceneTree
+		if tree != null and boss_encounter_ui.has_signal("encounter_finished"):
+			_spawn_timeout_timer = tree.create_timer(3.0)
 			_spawn_timeout_timer.timeout.connect(_on_encounter_timeout, CONNECT_ONE_SHOT)
 		else:
 			# 没有信号时直接生成

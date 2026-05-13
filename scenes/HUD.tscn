@@ -90,21 +90,33 @@ vertical_alignment = 1
 
 [node name="TopCenterAnchor" type="Control" parent="." unique_id=1794777644]
 layout_mode = 1
-anchors_preset = 0
-offset_left = 529.0
-offset_top = 10.0
-offset_right = 529.0
-offset_bottom = 10.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -382.0
+offset_top = -535.0
+offset_right = -382.0
+offset_bottom = -535.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="TopWeaponPanel" type="PanelContainer" parent="TopCenterAnchor" unique_id=1518040436]
+clip_contents = true
+layout_direction = 2
 layout_mode = 0
-offset_right = 835.0
-offset_bottom = 74.0
+offset_right = 865.0
+offset_bottom = 73.0
 size_flags_horizontal = 4
 size_flags_vertical = 4
 
 [node name="TopWeaponHBox" type="HBoxContainer" parent="TopCenterAnchor/TopWeaponPanel" unique_id=942145752]
+clip_contents = true
 layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+localize_numeral_system = false
 alignment = 1
 
 [node name="WeaponSlot1" type="PanelContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox" unique_id=1217218636]
@@ -112,7 +124,6 @@ layout_mode = 2
 
 [node name="WeaponSlot1VBox" type="VBoxContainer" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/WeaponSlot1" unique_id=1067056499]
 clip_contents = true
-layout_direction = 1
 layout_mode = 2
 theme_override_constants/separation = 2
 
@@ -351,7 +362,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Name" type="Label" parent="TopCenterAnchor/TopWeaponPanel/TopWeaponHBox/DefenseSlot4/DefenseSlot4VBox" unique_id=323293671]
-custom_minimum_size = Vector2(45, 0)
+custom_minimum_size = Vector2(75, 0)
 layout_mode = 2
 size_flags_vertical = 1
 text = "空槽位"
@@ -379,6 +390,7 @@ size_flags_vertical = 1
 text = "空槽位"
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 3
 
 [node name="BottomCenterAnchor" type="Control" parent="." unique_id=622606891]
 layout_mode = 1

@@ -162,6 +162,33 @@ func full_reset() -> void:
 	laser_shield_mult = 1.0
 	silent_hunter_level = 0
 
+
+func sync_from_core(core_id: String) -> void:
+	damage = 15.0
+	missile_range = 500.0
+	spread_count = 1
+	silent_hunter_level = 0
+	cannon_bloodthirst = 0
+	cannon_rush_level = 0
+	cannon_vengeance_level = 0
+	railgun_damage = 30.0
+	railgun_crit_bonus = 0.0
+	railgun_multi_count = 1
+	laser_duration = 2.0
+	laser_width = 16.0
+	laser_shield_mult = 1.0
+	shield_regen = 4.0
+	shield_regen_timer = 0.0
+
+	var cd = CoreEquipManager.get_core_data(core_id)
+	if cd:
+		for skill_id in cd.skill_levels:
+			var level = cd.skill_levels[skill_id]
+			for i in range(level):
+				_apply_upgrade_effect(skill_id)
+	stats_changed.emit()
+
+
 func _copy_from(other: PlayerStats) -> void:
 	max_hp = other.max_hp
 	shield_max = other.shield_max

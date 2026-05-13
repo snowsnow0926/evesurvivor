@@ -1,0 +1,54 @@
+[gd_scene load_steps=2 format=3 uid="uid://core_upgrade_center_001"]
+
+[ext_resource type="Script" path="res://scripts/core_upgrade_center.gd" id="1_core_upgrade"]
+
+[node name="CoreUpgradeCenter" type="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_core_upgrade")
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -420.0
+offset_top = -340.0
+offset_right = 420.0
+offset_bottom = 340.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="CoreTitle" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "核心升级中心"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CoreScroll" type="ScrollContainer" parent="Panel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ListVBox" type="VBoxContainer" parent="Panel/VBox/CoreScroll"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="CurrencyBar" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "星币: 0  |  矿物: 0低 / 0中 / 0高"
+horizontal_alignment = 1
+
+[node name="BackBtn" type="Button" parent="Panel/VBox"]
+layout_mode = 2
+text = "返回"

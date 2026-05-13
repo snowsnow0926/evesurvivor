@@ -40,9 +40,9 @@ color = Color(0.9, 0.2, 0.2, 1.0)
 [node name="ShieldBar" type="ColorRect" parent="."]
 z_index = 1
 offset_left = -17.0
-offset_top = -21.0
+offset_top = -19.0
 offset_right = 17.0
-offset_bottom = -19.0
+offset_bottom = -17.0
 color = Color(0.2, 0.4, 1.0, 0.8)
 
 [node name="Area2D" type="Area2D" parent="."]

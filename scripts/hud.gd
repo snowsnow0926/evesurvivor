@@ -297,9 +297,6 @@ func _copy_bar_props(bar: CustomProgressBar, src: Node) -> void:
 #  样式
 # ============================================================
 func _apply_all_styles() -> void:
-	if not upgrade_list_vbox:
-		return
-
 	# 面板发光边框
 	_apply_glow_panel(main_panel,    Color(0.06, 0.06, 0.18, 0.95), Color(0.55, 0.55, 1.00), Color(0.25, 0.25, 0.90))
 	_apply_glow_panel(player_panel, Color(0.04, 0.04, 0.13, 0.96), Color(0.30, 0.60, 1.00), Color(0.10, 0.30, 0.80))
@@ -353,11 +350,12 @@ func _apply_all_styles() -> void:
 		ship_slots_label.add_theme_color_override("font_color", Color(0.70, 0.70, 0.90))
 		ship_slots_label.add_theme_font_size_override("font_size", 12)
 
-	var title_lbl = upgrade_list_vbox.get_node_or_null("TitleLabel")
+	var title_lbl = upgrade_list_vbox.get_node_or_null("TitleLabel") if upgrade_list_vbox else null
 	if title_lbl:
 		title_lbl.add_theme_color_override("font_color", Color(0.70, 0.90, 1.0))
 		title_lbl.add_theme_font_size_override("font_size", 14)
-	upgrade_list_vbox.custom_minimum_size.y = 30
+	if upgrade_list_vbox:
+		upgrade_list_vbox.custom_minimum_size.y = 30
 
 	_apply_weapon_slot_base_style()
 	_apply_cd_label_style()
@@ -726,6 +724,19 @@ func _get_upgrade_ids_for_weapon(wid) -> Array:
 #  武器/防御槽
 # ============================================================
 func _update_top_weapon_display(player, all_weapon_data: Array, defense_list: Array) -> void:
+	var has_weapon_content = all_weapon_data.size() > 0
+	var has_defense_content = defense_list.size() > 0
+	if not has_weapon_content and not has_defense_content:
+		top_weapon_panel.visible = false
+		top_weapon_panel.custom_minimum_size = Vector2.ZERO
+	else:
+		top_weapon_panel.visible = true
+		var weapon_count = mini(all_weapon_data.size(), 6)
+		var defense_count = mini(defense_list.size(), 5)
+		var slot_width := 80
+		var total_width: int = (weapon_count + defense_count) * slot_width
+		top_weapon_panel.custom_minimum_size = Vector2(total_width, 0)
+
 	var slot_nodes = [
 		{"panel": null, "name_label": top_slot1_name, "cd_label": top_slot1_cd},
 		{"panel": null, "name_label": top_slot2_name, "cd_label": top_slot2_cd},
@@ -1117,6 +1128,12 @@ func setup(gs: Node2D) -> void:
 	if pause_btn:
 		pause_btn.set_pressed_no_signal(false)
 	_update_speed_buttons()
+	# setup() 调用时 @onready 变量未初始化，_apply_all_styles() 会在 HUD._ready() 时执行
+	# 这里直接隐藏面板防止闪现，等 HUD._ready() + _notify_hud_update() 正确控制可见性
+	var upgrade_panel = $BottomRightAnchor/UpgradeListPanel
+	if upgrade_panel:
+		upgrade_panel.visible = false
+	_apply_all_styles()
 	update_display(100, 100, 50.0, 50.0, 0, 0, 0, 0.0, 10.0, 1)
 
 func _spawn_coin_floating_text(amount: int) -> void:

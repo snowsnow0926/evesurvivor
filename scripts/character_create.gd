@@ -1,6 +1,8 @@
 extends Control
 
 const ShipData = preload("res://resources/ship_data.gd")
+const CoreEntry = preload("res://resources/core_entry.gd")
+const CoreDefinitions = preload("res://resources/core_definitions.gd")
 
 @onready var race_grid: GridContainer = $Panel/VBox/RaceScroll/RaceGrid
 @onready var name_edit: LineEdit = $Panel/VBox/NameRow/NameEdit
@@ -139,35 +141,34 @@ func _create_race_card(race_id: RaceData.RaceID) -> Control:
 	sep1.set("theme_override_constants/separation", 4)
 	detail_vbox.add_child(sep1)
 
-	# 默认武器
-	var weapon_name = "导弹"
-	if "Cannon" in race.base_weapon_scene:
-		weapon_name = "加农炮"
-	elif "Railgun" in race.base_weapon_scene:
-		weapon_name = "磁轨炮"
-	elif "Laser" in race.base_weapon_scene:
-		weapon_name = "激光炮"
-	var weapon_label = Label.new()
-	weapon_label.text = "默认武器: %s" % weapon_name
-	weapon_label.add_theme_color_override("font_color", Color(0.8, 0.6, 1.0))
-	weapon_label.add_theme_font_size_override("font_size", 14)
-	detail_vbox.add_child(weapon_label)
+	# 默认核心
+	var core_id = CoreRegistry.get_core_id_by_race(race.race_key)
+	var core_name = ""
+	if not core_id.is_empty():
+		var entry_ref = CoreRegistry.get_core_entry(core_id)
+		core_name = entry_ref.core_name_zh if entry_ref else (core_id + "核心")
+	var core_label = Label.new()
+	core_label.text = "默认核心: %s" % core_name
+	core_label.add_theme_color_override("font_color", Color(0.6, 0.9, 1.0))
+	core_label.add_theme_font_size_override("font_size", 14)
+	detail_vbox.add_child(core_label)
 
-	# 分隔
-	var sep2 = HSeparator.new()
-	sep2.set("theme_override_constants/separation", 4)
-	detail_vbox.add_child(sep2)
-
-	# 天赋
-	if race.talents.size() > 0:
-		var talent_label = Label.new()
-		var talent_lines: Array = []
-		for t in race.talents:
-			talent_lines.append("[%s]" % t["name"])
-		talent_label.text = "\n".join(talent_lines)
-		talent_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))
-		talent_label.add_theme_font_size_override("font_size", 13)
-		detail_vbox.add_child(talent_label)
+	# 核心技能
+	if not core_id.is_empty():
+		var entry_ref = CoreRegistry.get_core_entry(core_id)
+		if entry_ref:
+			var skill_lines: Array = []
+			for skill_id in entry_ref.race_skills:
+				var sname = CoreDefinitions.get_skill_name(skill_id)
+				skill_lines.append("%s Lv.1" % sname)
+			for skill_id in entry_ref.universal_skills:
+				var sname = CoreDefinitions.get_skill_name(skill_id)
+				skill_lines.append("%s Lv.0" % sname)
+			var skills_label = Label.new()
+			skills_label.text = "核心技能：%s" % " / ".join(skill_lines)
+			skills_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.85))
+			skills_label.add_theme_font_size_override("font_size", 12)
+			detail_vbox.add_child(skills_label)
 
 	# 天赋下方加弹性 spacer，推选择按钮到底部
 	var spacer = Control.new()
@@ -259,6 +260,11 @@ func _on_confirm() -> void:
 	GameState.minerals_high = 200000
 	GameState.selected_ship_id = ShipData.ShipID.FRIGATE
 	GameState.first_run = false
+
+	# 解锁并装备该种族的核心（存档前必须做，否则仓库/升级中心看不到）
+	var race = RaceData.get_race(selected_race_id)
+	CoreEquipManager.equip_starting_core(race.race_key)
+
 	var slot = GameState.pending_new_game_slot if GameState.pending_new_game_slot >= 0 else GameState.SLOT_AUTO
 	GameState.current_save_slot = slot
 	GameState.pending_new_game_slot = -1

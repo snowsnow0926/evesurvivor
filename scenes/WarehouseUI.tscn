@@ -90,6 +90,20 @@ layout_mode = 2
 text = "仓库库存"
 horizontal_alignment = 1
 
+[node name="TabRow" type="HBoxContainer" parent="Panel/VBox/ContentHBox/InventorySide"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TabWeapon" type="Button" parent="Panel/VBox/ContentHBox/InventorySide/TabRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "装备"
+
+[node name="TabCore" type="Button" parent="Panel/VBox/ContentHBox/InventorySide/TabRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "核心"
+
 [node name="InventoryScroll" type="ScrollContainer" parent="Panel/VBox/ContentHBox/InventorySide"]
 layout_mode = 2
 size_flags_vertical = 3

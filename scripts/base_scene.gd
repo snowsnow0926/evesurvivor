@@ -36,7 +36,7 @@ const _PANEL_SCENES := {
 	"shop": "res://scenes/ShopUI.tscn",
 	"warehouse": "res://scenes/WarehouseUI.tscn",
 	"shipyard": "res://scenes/ShipyardUI.tscn",
-	"research": "res://scenes/ResearchCenterUI.tscn",
+	"research": "res://scenes/CoreUpgradeCenter.tscn",
 }
 
 const BUILDING_DATA: Array[Dictionary] = [
@@ -58,8 +58,8 @@ const BUILDING_DATA: Array[Dictionary] = [
 	},
 	{
 		"id": "research",
-		"name": "科研中心",
-		"desc": "解锁并升级各类型武器的科技",
+		"name": "核心升级中心",
+		"desc": "升级核心词条，扩展各武器等级上限",
 		"icon": "res://assets/base/icons/icon_research.png",
 		"sprite": "res://assets/base/buildings/building_research.png",
 		"method": "_show_research",
@@ -346,8 +346,10 @@ func _show_warehouse() -> void:
 		panel._build_all()
 
 func _show_research() -> void:
-	var panel := _get_or_create_panel(&"research") as Control
+	var panel = _get_or_create_panel(&"research") as Control
 	_switch_panel(panel)
+	if panel and panel.has_method("open"):
+		panel.open()
 
 func _show_shop() -> void:
 	var panel := _get_or_create_panel(&"shop") as Control

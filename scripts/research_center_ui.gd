@@ -1,5 +1,9 @@
 extends Control
 
+## 【已废弃】此脚本已废弃，功能迁移到 CoreUpgradeCenter
+## 科研中心入口已重定向到 CoreUpgradeCenter.tscn
+## 此文件保留仅作兼容性参考，请勿修改
+
 const RESEARCH_DATA: Array = [
 	{"id": "fire_coverage",    "name": "火力覆盖",    "weapon": "missile",  "max_level": 2,
 		"level_costs": [{"coin": 20_000, "mineral": 10_000, "tier": "low"},

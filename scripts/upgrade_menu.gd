@@ -37,8 +37,10 @@ func handle_click(pos: Vector2) -> void:
 
 func open_upgrade_menu(available_upgrades: Array, gm: Node2D) -> void:
 	game_manager = gm
-	var filtered_pool = _filter_by_equipped_weapon(available_upgrades, gm)
-	upgrade_options = _pick_random_upgrades(filtered_pool, 3)
+	# 从核心系统获取可升级词条
+	var core_id = CoreEquipManager.get_equipped_core_id()
+	var candidates = CoreEquipManager.get_available_upgrades(core_id)
+	upgrade_options = _pick_random_upgrades(candidates, 3)
 	_populate()
 
 	# 确保面板可见且在最上层
@@ -50,7 +52,9 @@ func open_upgrade_menu(available_upgrades: Array, gm: Node2D) -> void:
 
 	await get_tree().create_timer(0.1).timeout
 
+
 func _filter_by_equipped_weapon(pool: Array, gm: Node2D) -> Array:
+	# 保留原有逻辑作为备用（旧升级路径），新路径走 CoreEquipManager
 	var weapon_upgrade_ids: Array = []
 	var equipped_types = _get_all_equipped_weapon_types(gm)
 
@@ -108,10 +112,11 @@ func _get_all_equipped_weapon_types(gm: Node2D) -> Array:
 	return types
 
 func _pick_random_upgrades(pool: Array, count: int) -> Array:
+	# pool 来自 CoreEquipManager.get_available_upgrades()，格式为 {id, name, desc, color, current_level, max_level}
 	var available = pool.filter(func(u):
-		var research_bonus = game_manager.upgrade_system._research_bonus_counts.get(u["id"], 0)
-		var race_bonus = game_manager.upgrade_system._race_talent_counts.get(u["id"], 0)
-		return u.get("max", -1) == -1 or game_manager.upgrade_counts.get(u["id"], 0) < u["max"] + research_bonus + race_bonus
+		var current = u.get("current_level", 0)
+		var max_lvl = u.get("max_level", 6)
+		return current < max_lvl
 	)
 	var result: Array = []
 	var rng = RandomNumberGenerator.new()
@@ -175,13 +180,16 @@ func _populate() -> void:
 	for i in range(upgrade_options.size()):
 		var upgrade = upgrade_options[i]
 		var btn = Button.new()
-		btn.text = "[ %d ] %s\n%s" % [i + 1, upgrade.get("name", "?"), upgrade.get("desc", "")]
+		var desc = upgrade.get("desc", "")
+		var level_info = "Lv.%d/%d" % [upgrade.get("current_level", 0) + 1, upgrade.get("max_level", 6)]
+		btn.text = "[ %d ] %s %s\n%s" % [i + 1, upgrade.get("name", "?"), level_info, desc]
 		btn.size = Vector2(btn_width, btn_height)
 		btn.position = Vector2(start_x, start_y + i * (btn_height + btn_spacing))
 		btn.set_meta("upgrade_id", upgrade["id"])
 		btn.set_meta("index", i)
 		btn.z_index = 10
 
+		var color = upgrade.get("color", Color.WHITE)
 		btn.add_theme_stylebox_override("normal", _make_btn_style(Color(0.15, 0.15, 0.25)))
 		btn.add_theme_stylebox_override("hover", _make_btn_style(Color(0.25, 0.35, 0.55)))
 		btn.add_theme_stylebox_override("pressed", _make_btn_style(Color(0.1, 0.2, 0.4)))
@@ -212,7 +220,9 @@ func _update_selection() -> void:
 		var is_selected = (i == selected_index)
 
 		if is_selected:
-			btn.add_theme_stylebox_override("normal", _make_btn_style(Color(0.3, 0.6, 0.3)))
+			var upgrade = upgrade_options[i]
+			var color = upgrade.get("color", Color(0.3, 0.6, 0.3))
+			btn.add_theme_stylebox_override("normal", _make_btn_style(color.darkened(0.3)))
 			btn.add_theme_color_override("font_color", Color(1, 1, 0.3))
 			btn.grab_focus()
 		else:

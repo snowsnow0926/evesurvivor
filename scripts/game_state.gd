@@ -36,6 +36,9 @@ var pre_run_minerals_total: int = 0
 var selected_chapter_id: int = 1
 var selected_stage_id: int = 1
 
+var cores: Dictionary = {}
+var equipped_core_id: String = ""
+
 func _debug(msg: String) -> void:
 	if DEBUG:
 		print("[GameState] ", msg)
@@ -102,6 +105,10 @@ func _collect_save_data() -> Dictionary:
 		"research": {
 			"research_progress": research_progress,
 		},
+		"cores": {
+			"cores": CoreEquipManager.save_to_dict(),
+			"equipped_core_id": equipped_core_id,
+		},
 		"equipment": {
 			"equipment_inventory": equipment_inventory,
 			"equipped_weapons": equipped_weapons,
@@ -141,6 +148,11 @@ func _apply_save_data(data: Dictionary) -> void:
 
 	var research = data.get("research", {})
 	research_progress = research.get("research_progress", {}) as Dictionary
+
+	var cores_data = data.get("cores", {})
+	if not cores_data.is_empty():
+		CoreEquipManager.load_from_dict(cores_data.get("cores", {}))
+		equipped_core_id = cores_data.get("equipped_core_id", "")
 
 	var equipment = data.get("equipment", {})
 	equipment_inventory = equipment.get("equipment_inventory", []) as Array
@@ -204,6 +216,10 @@ func save(slot: int = -1) -> bool:
 	for key in research:
 		cfg.set_value("research", key, research[key])
 
+	var cores_save = save_data["cores"]
+	for key in cores_save:
+		cfg.set_value("cores", key, cores_save[key])
+
 	var equipment = save_data["equipment"]
 	for key in equipment:
 		cfg.set_value("equipment", key, equipment[key])
@@ -239,6 +255,7 @@ func _do_load(slot: int = -1) -> bool:
 		"ships": {},
 		"research": {},
 		"equipment": {},
+		"cores": {},
 	}
 
 	for key in cfg.get_section_keys("meta"):
@@ -253,6 +270,9 @@ func _do_load(slot: int = -1) -> bool:
 		raw_data["research"][key] = cfg.get_value("research", key)
 	for key in cfg.get_section_keys("equipment"):
 		raw_data["equipment"][key] = cfg.get_value("equipment", key)
+	if cfg.has_section("cores"):
+		for key in cfg.get_section_keys("cores"):
+			raw_data["cores"][key] = cfg.get_value("cores", key)
 
 	_apply_save_data(raw_data)
 	print("[GameState] Loaded from slot %d: %s" % [target_slot, path])
@@ -310,6 +330,9 @@ func reset_all_data() -> void:
 	equipped_armor = {}
 	upgraded_ships = {}
 	research_progress = {}
+	cores = {}
+	equipped_core_id = ""
+	CoreEquipManager.load_from_dict({"cores": [], "equipped_core_id": ""})
 	current_save_slot = SLOT_AUTO
 	var auto_path = _resolve_path(SLOT_AUTO)
 	if FileAccess.file_exists(auto_path):
@@ -433,4 +456,5 @@ func reset_progress() -> void:
 	equipped_weapons = {}
 	equipped_armor = {}
 	upgraded_ships = {}
+	CoreEquipManager.load_from_dict({"cores": [], "equipped_core_id": ""})
 	auto_save()
