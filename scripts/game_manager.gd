@@ -111,6 +111,11 @@ func _setup_references() -> void:
 func _spawn_player() -> void:
 	if player != null and is_instance_valid(player):
 		return
+	# 跨关卡继承：从 GameState 恢复玩家等级
+	current_xp = GameState.current_xp
+	xp_to_next_level = GameState.xp_to_next_level
+	player_level = GameState.player_level
+	print("[GameManager] _spawn_player: player_level=", player_level, " current_xp=", current_xp, " xp_to_next=", xp_to_next_level)
 	var ps = _SCENE_PLAYER
 	if ps:
 		var p = ps.instantiate()
@@ -340,6 +345,10 @@ func on_exp_orb_collected(amount: float) -> void:
 	_notify_hud_update()
 	if leveled_up:
 		_trigger_upgrade()
+	# 同步回 GameState（跨关卡继承）
+	GameState.current_xp = current_xp
+	GameState.xp_to_next_level = xp_to_next_level
+	GameState.player_level = player_level
 
 func _trigger_upgrade() -> void:
 	if CoreEquipManager.get_equipped_core_id().is_empty():

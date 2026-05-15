@@ -39,6 +39,11 @@ var selected_stage_id: int = 1
 var cores: Dictionary = {}
 var equipped_core_id: String = ""
 
+# 玩家等级（跨关卡继承）
+var player_level: int = 1
+var current_xp: float = 0.0
+var xp_to_next_level: float = 10.0
+
 func _debug(msg: String) -> void:
 	if DEBUG:
 		print("[GameState] ", msg)
@@ -109,6 +114,11 @@ func _collect_save_data() -> Dictionary:
 			"cores": CoreEquipManager.save_to_dict(),
 			"equipped_core_id": equipped_core_id,
 		},
+		"player_level": {
+			"level": player_level,
+			"current_xp": current_xp,
+			"xp_to_next": xp_to_next_level,
+		},
 		"equipment": {
 			"equipment_inventory": equipment_inventory,
 			"equipped_weapons": equipped_weapons,
@@ -151,8 +161,12 @@ func _apply_save_data(data: Dictionary) -> void:
 
 	var cores_data = data.get("cores", {})
 	if not cores_data.is_empty():
-		CoreEquipManager.load_from_dict(cores_data.get("cores", {}))
-		equipped_core_id = cores_data.get("equipped_core_id", "")
+		CoreEquipManager.load_from_dict(cores_data)
+
+	var level_data = data.get("player_level", {})
+	player_level = level_data.get("level", 1)
+	current_xp = level_data.get("current_xp", 0.0)
+	xp_to_next_level = level_data.get("xp_to_next", 10.0)
 
 	var equipment = data.get("equipment", {})
 	equipment_inventory = equipment.get("equipment_inventory", []) as Array
@@ -217,8 +231,9 @@ func save(slot: int = -1) -> bool:
 		cfg.set_value("research", key, research[key])
 
 	var cores_save = save_data["cores"]
-	for key in cores_save:
-		cfg.set_value("cores", key, cores_save[key])
+	# 使用 JSON 序列化避免 ConfigFile 嵌套 Dictionary 序列化问题
+	var json_str = JSON.stringify(cores_save)
+	cfg.set_value("cores", "data", json_str)
 
 	var equipment = save_data["equipment"]
 	for key in equipment:
@@ -273,6 +288,15 @@ func _do_load(slot: int = -1) -> bool:
 	if cfg.has_section("cores"):
 		for key in cfg.get_section_keys("cores"):
 			raw_data["cores"][key] = cfg.get_value("cores", key)
+		# 使用 JSON 反序列化还原 cores 数据
+		var json_str = raw_data["cores"].get("data", "")
+		if not json_str.is_empty():
+			var json = JSON.new()
+			var parse_result = json.parse(json_str)
+			if parse_result == OK:
+				raw_data["cores"] = json.data as Dictionary
+			else:
+				push_warning("[GameState] Failed to parse cores JSON: " + json_str)
 
 	_apply_save_data(raw_data)
 	print("[GameState] Loaded from slot %d: %s" % [target_slot, path])

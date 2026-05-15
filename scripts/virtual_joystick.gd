@@ -22,8 +22,7 @@ var _base_pos := Vector2.ZERO
 
 
 func _ready() -> void:
-	if auto_hide_on_mouse and DisplayServer.is_touchscreen_available():
-		visible = false
+	# 不再默认隐藏 — 摇杆在触屏设备上也始终可见，让玩家能找到
 	knob_radius = _knob.size.x * 0.5
 	_knob.pivot_offset = _knob.size * 0.5
 	_base.pivot_offset = _base.size * 0.5
@@ -110,9 +109,7 @@ func _reset() -> void:
 	_knob_offset = Vector2.ZERO
 	_knob.position = _base.size * 0.5 - _knob.size * 0.5
 	moved.emit(Vector2.ZERO)
-	if auto_hide_on_mouse:
-		visible = false
-	return
+	# 摇杆始终可见，不需要再隐藏
 
 
 func get_vector() -> Vector2:

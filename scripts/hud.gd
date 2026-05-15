@@ -32,6 +32,12 @@ const ARMOR_NAME_ABBR: Dictionary = {
 	"装甲维修器": "甲修",
 }
 
+static func _get_armor_abbr(full_name: String) -> String:
+	for key in ARMOR_NAME_ABBR:
+		if full_name.ends_with(key):
+			return ARMOR_NAME_ABBR[key]
+	return ""
+
 const _QUALITY_COLORS: Array[Color] = [
 	Color(0.75, 0.75, 0.75),  # 白
 	Color(0.25, 0.85, 0.35),  # 绿
@@ -810,7 +816,7 @@ func _update_top_weapon_display(player, all_weapon_data: Array, defense_list: Ar
 		if idx < defense_list.size():
 			var armor = defense_list[idx]
 			var full_name: String = str(armor.get("name", "防御装"))
-			var abbr = ARMOR_NAME_ABBR.get(full_name, "")
+			var abbr = _get_armor_abbr(full_name)
 			name_lbl.text = abbr if not abbr.is_empty() else full_name
 			name_lbl.add_theme_color_override("font_color", EquipmentData.get_quality_color(armor.get("quality", 0)))
 			_apply_weapon_slot_style(slot_panel as PanelContainer, armor.get("quality", 0))

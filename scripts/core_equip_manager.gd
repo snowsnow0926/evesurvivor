@@ -149,14 +149,17 @@ func unlock_core(core_id: String) -> bool:
 		return false
 	cd.core_id = core_id
 	cd.is_unlocked = true
+	_initialize_skill_levels(cd, core_id)
+	return true
 
-	# 初始化词条等级
+
+# === 初始化技能等级（仅在首次解锁时调用，不覆盖已有等级） ===
+func _initialize_skill_levels(cd: CoreData, core_id: String) -> void:
 	var entry = CoreRegistry.get_core_entry(core_id)
 	if entry:
 		for skill_id in entry.get_all_skill_ids():
 			if not cd.skill_levels.has(skill_id):
 				cd.skill_levels[skill_id] = entry.get_start_level(skill_id)
-	return true
 
 
 # ================================================================
@@ -301,11 +304,19 @@ func save_to_dict() -> Dictionary:
 
 func load_from_dict(data: Dictionary) -> void:
 	_cores.clear()
-	_equipped_core_id = data.get("equipped_core_id", "")
-	_total_core_xp = data.get("total_core_xp", 0)
 
-	var cores_list: Array = data.get("cores", [])
-	for entry_data in cores_list:
+	# 兼容旧存档的双层嵌套格式 {"cores": {...}, ...}
+	# 新存档直接是 {"cores": [...], "equipped_core_id": "...", "total_core_xp": N}
+	var cores_list_raw = data.get("cores", [])
+	var cores_inner: Dictionary = {}
+	if cores_list_raw is Dictionary:
+		cores_inner = cores_list_raw as Dictionary
+		cores_list_raw = cores_inner.get("cores", [])
+
+	_equipped_core_id = cores_inner.get("equipped_core_id", data.get("equipped_core_id", ""))
+	_total_core_xp = cores_inner.get("total_core_xp", data.get("total_core_xp", 0))
+
+	for entry_data in cores_list_raw as Array:
 		var cid = entry_data.get("id", "")
 		var cd_data: Dictionary = entry_data.get("data", {})
 		if not cid.is_empty():
