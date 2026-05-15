@@ -44,7 +44,10 @@ func _spawn_nodes() -> void:
 	_configure_smoke_particles()
 
 func _configure_explosion_particles() -> void:
-	explosion_particles.amount = 20
+	var count = 20
+	if PerformanceSettings and PerformanceSettings.is_mobile:
+		count = 10
+	explosion_particles.amount = count
 	explosion_particles.lifetime = 0.5
 	explosion_particles.one_shot = true
 	explosion_particles.emission_shape = 0
@@ -95,6 +98,8 @@ func setup(
 		explosion_particles.emitting = true
 		explosion_particles.finished.connect(_on_explosion_finished)
 	smoke_particles.emitting = true
+	if PerformanceSettings and not PerformanceSettings.wreck_smoke_enabled:
+		smoke_particles.emitting = false
 
 func _on_explosion_finished() -> void:
 	if is_instance_valid(explosion_particles):

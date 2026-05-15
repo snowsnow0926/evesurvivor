@@ -38,6 +38,10 @@ func _physics_process(delta: float) -> void:
 	queue_redraw()
 
 func _add_layers() -> void:
+	var mobile_mult: float = 1.0
+	if PerformanceSettings.is_mobile:
+		mobile_mult = PerformanceSettings.starfield_density_mult
+
 	var configs: Array[Dictionary] = [
 		{parallax = 0.12, color = Color(0.78, 0.86, 1.0, 0.60), density = 150.0, size_range = Vector2(0.6, 1.5)},
 		{parallax = 0.30, color = Color(0.90, 0.95, 1.0, 0.55), density = 100.0, size_range = Vector2(1.0, 2.2)},
@@ -47,7 +51,7 @@ func _add_layers() -> void:
 	for i in range(mini(star_layer_count, configs.size())):
 		var cfg: Dictionary = configs[i]
 		var layer := StarLayer.new(cfg.parallax, cfg.color, cfg.size_range)
-		_generate_stars(layer, cfg.density)
+		_generate_stars(layer, cfg.density * mobile_mult)
 		layers.append(layer)
 
 func _generate_stars(layer: StarLayer, density: float) -> void:

@@ -33,9 +33,14 @@ const ARMOR_NAME_ABBR: Dictionary = {
 }
 
 static func _get_armor_abbr(full_name: String) -> String:
+	var tonnage_prefix := ""
+	if full_name.begins_with("小型"):       tonnage_prefix = "小"
+	elif full_name.begins_with("中型"):     tonnage_prefix = "中"
+	elif full_name.begins_with("大型"):     tonnage_prefix = "大"
+	elif full_name.begins_with("旗舰级"):   tonnage_prefix = "旗"
 	for key in ARMOR_NAME_ABBR:
 		if full_name.ends_with(key):
-			return ARMOR_NAME_ABBR[key]
+			return tonnage_prefix + ARMOR_NAME_ABBR[key]
 	return ""
 
 const _QUALITY_COLORS: Array[Color] = [

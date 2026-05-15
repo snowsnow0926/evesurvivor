@@ -179,7 +179,11 @@ func _spawn_explosion(pos: Vector2) -> void:
 		return
 
 	var explosion = CPUParticles2D.new()
-	explosion.amount = 30
+	var perf = PerformanceSettings
+	if perf and perf.is_mobile:
+		explosion.amount = mini(perf.explosion_particle_count, 30)
+	else:
+		explosion.amount = 30
 	explosion.lifetime = 0.4
 	explosion.explosiveness = 0.8
 	explosion.emission_shape = 1

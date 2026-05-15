@@ -355,6 +355,8 @@ func _update_hp_bar() -> void:
 		hp_bar.position.x = -_hp_bar_max_width * 0.5 * ratio
 
 func _spawn_damage_number(amount: float, is_crit: bool) -> void:
+	if PerformanceSettings and not PerformanceSettings.show_damage_numbers:
+		return
 	var parent = get_parent()
 	if not parent:
 		return
@@ -384,17 +386,23 @@ func _spawn_damage_number(amount: float, is_crit: bool) -> void:
 	timer.call_deferred("start")
 
 func _spawn_death_effect() -> void:
+	if PerformanceSettings and not PerformanceSettings.show_death_effects:
+		return
 	var parent = get_parent()
 	if not parent:
 		return
 
 	var burst_count := maxf(_death_burst_count, 1)
+	var perf = PerformanceSettings
 	for _i in range(burst_count):
 		var offset := Vector2.ZERO
 		if burst_count > 1:
 			offset = Vector2(randf_range(-100, 100), randf_range(-100, 100))
 		var particles = CPUParticles2D.new()
-		particles.amount = _death_particle_count
+		var count = _death_particle_count
+		if perf and perf.is_mobile:
+			count = mini(perf.death_particle_count, _death_particle_count)
+		particles.amount = count
 		particles.lifetime = _death_particle_lifetime
 		particles.one_shot = true
 		particles.emission_shape = 0
@@ -412,6 +420,8 @@ func _spawn_death_effect() -> void:
 		particles.finished.connect(particles.queue_free)
 
 func _start_hit_flash() -> void:
+	if PerformanceSettings and not PerformanceSettings.show_hit_flash:
+		return
 	if not ship_sprite:
 		return
 	var original_color = ship_sprite.modulate if ship_sprite.modulate is Color else Color.WHITE
@@ -430,6 +440,8 @@ func _die() -> void:
 	queue_free()
 
 func _spawn_wreck() -> void:
+	if PerformanceSettings and not PerformanceSettings.show_wrecks:
+		return
 	if _icon_tex == null:
 		return
 	var parent = get_parent()

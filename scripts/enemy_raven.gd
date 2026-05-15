@@ -72,7 +72,10 @@ func _do_explosion() -> void:
 	var parent = get_parent()
 	if parent:
 		var explosion = CPUParticles2D.new()
-		explosion.amount = 30
+		var count = 30
+		if PerformanceSettings and PerformanceSettings.is_mobile:
+			count = 15
+		explosion.amount = count
 		explosion.lifetime = 0.5
 		explosion.one_shot = true
 		explosion.emission_shape = 0

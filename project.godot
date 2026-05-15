@@ -45,6 +45,7 @@ MobileInput="*res://scripts/mobile_input.gd"
 BossRegistry="*res://scripts/boss_registry.gd"
 CoreRegistry="*res://scripts/core_registry.gd"
 CoreEquipManager="*res://scripts/core_equip_manager.gd"
+PerformanceSettings="*res://scripts/performance_settings.gd"
 
 [display]
 
