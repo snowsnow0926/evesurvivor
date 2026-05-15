@@ -1,6 +1,45 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cf8wreck001"]
 
 [ext_resource type="Script" path="res://scripts/enemy_wreck.gd" id="1_wreck"]
 
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_explosion"]
+particle_flag_align_y = true
+direction = Vector3(0, -1, 0)
+spread = 180.0
+gravity = Vector3(0, 50, 0)
+initial_velocity_min = 80.0
+initial_velocity_max = 200.0
+scale_min = 2.0
+scale_max = 6.0
+hue_variation_min = -0.1
+hue_variation_max = 0.1
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_smoke"]
+particle_flag_align_y = true
+direction = Vector3(0, -1, 0)
+spread = 60.0
+gravity = Vector3(0, -10, 0)
+initial_velocity_min = 15.0
+initial_velocity_max = 40.0
+scale_min = 6.0
+scale_max = 16.0
+hue_variation_min = -0.05
+hue_variation_max = 0.05
+
 [node name="EnemyWreck" type="Node2D"]
 script = ExtResource("1_wreck")
+
+[node name="ExplosionParticles" type="CPUParticles2D" parent="."]
+z_index = 1
+amount = 20
+lifetime = 0.5
+one_shot = true
+local_coords = false
+process_material = SubResource("ParticleProcessMaterial_explosion")
+
+[node name="SmokeParticles" type="CPUParticles2D" parent="."]
+z_index = 0
+amount = 30
+lifetime = 1.5
+local_coords = false
+process_material = SubResource("ParticleProcessMaterial_smoke")

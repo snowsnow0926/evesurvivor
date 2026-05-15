@@ -6,6 +6,7 @@
 [node name="LaserBeam" type="Node2D"]
 z_index = 1
 script = ExtResource("1_laser")
+laser_texture = ExtResource("2_laser_tex")
 
 [node name="Line2D_Glow" type="Line2D" parent="."]
 width = 72.0

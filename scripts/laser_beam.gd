@@ -14,6 +14,8 @@ var damage_to_shield_mult: float = 1.0
 var game_manager: Node2D
 var owner_player: Node2D = null
 
+@export var laser_texture: Texture2D = null
+
 var elapsed: float = 0.0
 var tick_timer: float = 0.0
 var anchor_target: Node2D = null
@@ -32,15 +34,11 @@ func _ready() -> void:
 	_apply_laser_texture()
 
 func _apply_laser_texture() -> void:
-	var tex_path := "res://assets/sprites/weapons/激光.png"
-	if not FileAccess.file_exists(tex_path):
+	if laser_texture == null:
 		return
-	var img := Image.new()
-	img.load(tex_path)
-	var itex := ImageTexture.create_from_image(img)
 	for l: Line2D in [line2d_core, line2d_glow]:
 		if l:
-			l.texture = itex
+			l.texture = laser_texture
 			l.texture_mode = 2  # LINE_TEXTURE_STRETCH
 
 func _physics_process(delta: float) -> void:

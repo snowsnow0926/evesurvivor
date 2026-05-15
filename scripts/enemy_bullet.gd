@@ -9,18 +9,34 @@ var lifetime: float = 0.0
 var max_lifetime: float = 3.0
 var has_hit: bool = false
 
+var _low_fps_mode: bool = false
+var _fps_check_timer: float = 0.0
+
 const PLAYER_RADIUS: float = 32.0
 const BULLET_RADIUS: float = 8.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 
 func _physics_process(delta: float) -> void:
+	_fps_check_timer += delta
+	if _fps_check_timer >= 1.0:
+		_fps_check_timer = 0.0
+		var fps = Engine.get_frames_per_second()
+		if fps < 30.0 and not _low_fps_mode:
+			_low_fps_mode = true
+		elif fps >= 45.0 and _low_fps_mode:
+			_low_fps_mode = false
+
 	lifetime += delta
 	if lifetime > max_lifetime:
 		queue_free()
 		return
 
-	position += target_pos * speed * delta
+	var speed_mult = 1.0
+	if _low_fps_mode or (PerformanceSettings and PerformanceSettings.is_mobile):
+		speed_mult = 1.3
+
+	position += target_pos * speed * speed_mult * delta
 
 	if sprite and target_pos != Vector2.ZERO:
 		sprite.rotation = target_pos.angle()

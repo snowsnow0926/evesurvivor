@@ -5,6 +5,7 @@ extends CharacterBody2D
 ## Extend this class and override _update_movement() and _process_combat().
 
 const _SCENE_WRECK: PackedScene = preload("res://scenes/EnemyWreck.tscn")
+const _SCENE_DEATH_EXPLOSION: PackedScene = preload("res://scenes/DeathExplosion.tscn")
 
 # === Shared State ===
 var game_manager: Node2D
@@ -392,32 +393,27 @@ func _spawn_death_effect() -> void:
 	if not parent:
 		return
 
-	var burst_count := maxf(_death_burst_count, 1)
+	var burst_count := maxi(_death_burst_count, 1)
 	var perf = PerformanceSettings
 	for _i in range(burst_count):
 		var offset := Vector2.ZERO
 		if burst_count > 1:
 			offset = Vector2(randf_range(-100, 100), randf_range(-100, 100))
-		var particles = CPUParticles2D.new()
+
+		var explosion = _SCENE_DEATH_EXPLOSION.instantiate()
 		var count = _death_particle_count
 		if perf and perf.is_mobile:
-			count = mini(perf.death_particle_count, _death_particle_count)
-		particles.amount = count
-		particles.lifetime = _death_particle_lifetime
-		particles.one_shot = true
-		particles.emission_shape = 0
-		particles.direction = Vector2(0, -1)
-		particles.spread = 180.0
-		particles.initial_velocity_min = _death_particle_velocity_min
-		particles.initial_velocity_max = _death_particle_velocity_max
-		particles.scale_amount_min = _death_particle_scale_min
-		particles.scale_amount_max = _death_particle_scale_max
-		particles.color = _death_particle_color
-		particles.position = global_position + offset
+			count = perf.get_death_particle_count(_death_particle_count)
+		explosion.amount = count
+		explosion.lifetime = _death_particle_lifetime
+		explosion.scale_amount_min = _death_particle_scale_min
+		explosion.scale_amount_max = _death_particle_scale_max
+		explosion.color = _death_particle_color
+		explosion.global_position = global_position + offset
 
-		parent.call_deferred("add_child", particles)
-		particles.emitting = true
-		particles.finished.connect(particles.queue_free)
+		parent.call_deferred("add_child", explosion)
+		explosion.emitting = true
+		explosion.finished.connect(explosion.queue_free)
 
 func _start_hit_flash() -> void:
 	if PerformanceSettings and not PerformanceSettings.show_hit_flash:

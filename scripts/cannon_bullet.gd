@@ -20,12 +20,24 @@ var explode_radius: float = 80.0
 var sprite: Sprite2D
 var trail_points: Array = []
 var trail_max_length: int = 10
+var _trail_draw_skip: int = 0
+var _low_fps_mode: bool = false
+var _fps_check_timer: float = 0.0
 
 func _ready() -> void:
 	sprite = $Sprite2D
 	body_entered.connect(_on_body_entered)
 
 func _physics_process(delta: float) -> void:
+	_fps_check_timer += delta
+	if _fps_check_timer >= 1.0:
+		_fps_check_timer = 0.0
+		var fps = Engine.get_frames_per_second()
+		if fps < 30.0 and not _low_fps_mode:
+			_low_fps_mode = true
+		elif fps >= 45.0 and _low_fps_mode:
+			_low_fps_mode = false
+
 	var step_vec = direction * speed * delta
 	global_position += step_vec
 	traveled_distance += step_vec.length()
@@ -37,11 +49,19 @@ func _physics_process(delta: float) -> void:
 	if sprite:
 		sprite.rotation = direction.angle()
 
+	var is_mobile = PerformanceSettings.is_mobile if PerformanceSettings else false
+	var effective_max = trail_max_length
+	if is_mobile or _low_fps_mode:
+		effective_max = maxi(4, trail_max_length / 2)
+
 	trail_points.push_front(global_position)
-	if trail_points.size() > trail_max_length:
+	if trail_points.size() > effective_max:
 		trail_points.pop_back()
 
-	queue_redraw()
+	_trail_draw_skip += 1
+	if _trail_draw_skip >= 2:
+		_trail_draw_skip = 0
+		queue_redraw()
 
 func _draw() -> void:
 	if trail_points.size() < 2:
