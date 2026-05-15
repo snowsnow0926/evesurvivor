@@ -72,7 +72,7 @@ func _linear_to_db(linear: float) -> float:
 
 func apply_audio_settings(master: float, sfx: float, music: float, master_muted: bool, sfx_muted: bool, music_muted: bool) -> void:
 	var master_db := _linear_to_db(master) if not master_muted else -80.0
-	var sfx_db := 0.0 if not sfx_muted else -80.0
+	var sfx_db := _linear_to_db(sfx) if not sfx_muted else -80.0
 	var music_db := _linear_to_db(music) if not music_muted else -80.0
 
 	_sfx_volume = sfx
@@ -80,9 +80,15 @@ func apply_audio_settings(master: float, sfx: float, music: float, master_muted:
 	_sfx_muted = sfx_muted
 	_music_muted = music_muted
 
-	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(&"Master"), master_db)
-	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(&"SFX"), sfx_db)
-	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(&"Music"), music_db)
+	var master_idx := AudioServer.get_bus_index(&"Master")
+	if master_idx >= 0:
+		AudioServer.set_bus_volume_db(master_idx, master_db)
+	var sfx_idx := AudioServer.get_bus_index(&"SFX")
+	if sfx_idx >= 0:
+		AudioServer.set_bus_volume_db(sfx_idx, sfx_db)
+	var music_idx := AudioServer.get_bus_index(&"Music")
+	if music_idx >= 0:
+		AudioServer.set_bus_volume_db(music_idx, music_db)
 
 func play_sfx(sfx_name: String, volume_override: float = 0.0) -> void:
 	if not sfx_players.has(sfx_name):

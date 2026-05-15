@@ -65,7 +65,7 @@ text = "撤退结算"
 
 [node name="SFXToggleBtn" type="Button" parent="Panel/VBox"]
 layout_mode = 2
-text = "音效: 开"
+text = "音效设置"
 
 [node name="SelfDestructBtn" type="Button" parent="Panel/VBox"]
 layout_mode = 2

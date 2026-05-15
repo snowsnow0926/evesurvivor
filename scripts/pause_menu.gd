@@ -36,7 +36,6 @@ func _connect_buttons() -> void:
 		retreat_btn.pressed.connect(_on_retreat_pressed)
 	if sfx_toggle_btn:
 		sfx_toggle_btn.pressed.connect(_on_sfx_toggle_pressed)
-	_update_sfx_toggle_text()
 	if self_destruct_btn:
 		self_destruct_btn.pressed.connect(_on_self_destruct_pressed)
 
@@ -116,19 +115,11 @@ func _build_pause_loot_list() -> void:
 		row.add_child(label)
 		loot_container.add_child(row)
 
-func _update_sfx_toggle_text() -> void:
-	if sfx_toggle_btn:
-		var muted = SettingsManager.sfx_muted if has_node("/root/SettingsManager") else false
-		sfx_toggle_btn.text = "音效: " + ("关" if muted else "开")
-
 func _on_sfx_toggle_pressed() -> void:
 	SoundManager.play_sfx("button_click")
-	if has_node("/root/SettingsManager"):
-		var sm = get_node("/root/SettingsManager")
-		var new_muted = not SettingsManager.sfx_muted
-		SettingsManager.set_sfx_muted(new_muted)
-		SettingsManager.save_settings()
-	_update_sfx_toggle_text()
+	var scene: PackedScene = load("res://scenes/SettingsUI.tscn")
+	var ui: Control = scene.instantiate()
+	add_child(ui)
 
 func _on_retreat_pressed() -> void:
 	print("[PauseMenu] retreat pressed, is_game_over=", game_manager.is_game_over if game_manager else "no gm")
