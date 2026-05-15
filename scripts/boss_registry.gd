@@ -34,12 +34,12 @@ func _register_all_bosses() -> void:
 		3.0,
 		0.6,
 		40.0,
-		15.0,
+		30.0,
 		0.5,
 		80.0,
 		"res://scenes/BossBullet.tscn",
 		400.0,
-		10.0,
+		20.0,
 		40,
 		5,
 		1.0,
@@ -58,7 +58,7 @@ func _register_all_bosses() -> void:
 		"冲三杀手",
 		"Boss Chongsan",
 		"boss_chongsan",
-		"",
+		"res://assets/races/chongsan_portrait.png",
 		1,
 		"boss",
 		Color(0.0, 0.8, 0.8),
@@ -69,12 +69,12 @@ func _register_all_bosses() -> void:
 		3.0,
 		0.5,
 		40.0,
-		20.0,
+		40.0,
 		0.5,
 		100.0,
 		"res://scenes/BossBullet.tscn",
 		380.0,
-		8.0,
+		16.0,
 		40,
 		5,
 		1.0,
@@ -85,7 +85,42 @@ func _register_all_bosses() -> void:
 		12
 	)
 	_register_boss(chongsan_entry)
+
+	# === 钱破军 ===
+	var qianpojun_entry := BossEntry.new(
+		"boss_qianpojun",
+		"钱破军",
+		"Boss Qianpojun",
+		"boss_qianpojun",
+		"res://assets/races/qianpojun_portrait.png",
+		1,
+		"boss",
+		Color(0.8, 0.67, 0.0),
+		Color(1.0, 0.13, 0.13),
+		Color(0.8, 0.67, 0.0, 1.0),
+		1.3,
+		102.0,
+		3.0,
+		0.4,
+		40.0,
+		50.0,
+		0.5,
+		90.0,
+		"res://scenes/BossBullet.tscn",
+		420.0,
+		30.0,
+		50,
+		6,
+		1.2,
+		120.0,
+		350.0,
+		6.0,
+		18.0,
+		12
+	)
+	_register_boss(qianpojun_entry)
 	_chapter_stage_boss_map["1_5"] = "boss_chongsan"
+	_chapter_stage_boss_map["1_6"] = "boss_qianpojun"
 	# 默认章节BOSS：stage映射未覆盖时回退到此
 	_chapter_boss_map[1] = "boss_void"
 

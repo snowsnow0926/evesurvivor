@@ -31,9 +31,14 @@ config/description="EVE同人幸存者游戏"
 run/main_scene="res://scenes/MainMenu.tscn"
 config/features=PackedStringArray("4.6")
 
+[audio]
+
+default_bus_layout="res://audio/default_bus_layout.tres"
+
 [autoload]
 
 GameState="*res://scripts/game_state.gd"
+SettingsManager="*res://scripts/settings_manager.gd"
 SoundManager="*res://scripts/sound_manager.gd"
 GameBalance="*res://scripts/game_balance_loader.gd"
 MobileInput="*res://scripts/mobile_input.gd"

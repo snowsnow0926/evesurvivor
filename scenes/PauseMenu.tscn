@@ -55,9 +55,17 @@ horizontal_alignment = 1
 layout_mode = 2
 text = "继续游戏"
 
+[node name="SettingsBtn" type="Button" parent="Panel/VBox"]
+layout_mode = 2
+text = "设置"
+
 [node name="RetreatBtn" type="Button" parent="Panel/VBox"]
 layout_mode = 2
 text = "撤退结算"
+
+[node name="SFXToggleBtn" type="Button" parent="Panel/VBox"]
+layout_mode = 2
+text = "音效: 开"
 
 [node name="SelfDestructBtn" type="Button" parent="Panel/VBox"]
 layout_mode = 2

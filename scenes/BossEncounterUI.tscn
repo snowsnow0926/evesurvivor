@@ -1,8 +1,8 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://o4thxnrsc8ic"]
 
-[ext_resource type="Script" path="res://scripts/boss_encounter_ui.gd" id="1_enc_ui"]
+[ext_resource type="Script" uid="uid://eciim4sp84ho" path="res://scripts/boss_encounter_ui.gd" id="1_enc_ui"]
 
-[node name="BossEncounterUI" type="Control"]
+[node name="BossEncounterUI" type="Control" unique_id=455796485]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,16 +12,16 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_enc_ui")
 
-[node name="Overlay" type="ColorRect" parent="."]
+[node name="Overlay" type="ColorRect" parent="." unique_id=888236645]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.0, 0.0, 0.0, 0.0)
+color = Color(0, 0, 0, 0)
 
-[node name="WarningLabel" type="Label" parent="."]
+[node name="WarningLabel" type="Label" parent="." unique_id=934659991]
 visible = false
 layout_mode = 1
 anchors_preset = 5
@@ -32,30 +32,27 @@ offset_top = 30.0
 offset_right = 300.0
 offset_bottom = 80.0
 grow_horizontal = 2
-theme_override_colors/font_color = Color(1.0, 0.2, 0.2, 1.0)
+theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
 theme_override_font_sizes/font_size = 32
 text = "警告：BOSS来袭"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="PortraitContainer" type="Control" parent="."]
-anchors_preset = 15
+[node name="PortraitContainer" type="Control" parent="." unique_id=2076257340]
+anchors_preset = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="PortraitSprite" type="Sprite2D" parent="PortraitContainer"]
+[node name="PortraitSprite" type="Sprite2D" parent="PortraitContainer" unique_id=1596111727]
 visible = false
-position = Vector2(640, 220)
-centered = true
+position = Vector2(960, 540)
 
-[node name="IconSprite" type="Sprite2D" parent="PortraitContainer"]
-position = Vector2(640, 220)
-centered = true
-modulate = Color(1.5, 1.5, 1.5, 1.0)
+[node name="IconSprite" type="Sprite2D" parent="PortraitContainer" unique_id=1122843082]
+modulate = Color(1.5, 1.5, 1.5, 1)
 
-[node name="NameContainer" type="VBoxContainer" parent="PortraitContainer"]
+[node name="NameContainer" type="VBoxContainer" parent="PortraitContainer" unique_id=1932990380]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -69,25 +66,25 @@ offset_bottom = 240.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="NameLabel" type="Label" parent="PortraitContainer/NameContainer"]
+[node name="NameLabel" type="Label" parent="PortraitContainer/NameContainer" unique_id=1648723165]
 layout_mode = 2
-theme_override_colors/font_color = Color(1.0, 0.2, 0.2, 1.0)
+theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
 theme_override_font_sizes/font_size = 48
 text = "虚空领主"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SubtitleLabel" type="Label" parent="PortraitContainer/NameContainer"]
+[node name="SubtitleLabel" type="Label" parent="PortraitContainer/NameContainer" unique_id=1263663339]
 layout_mode = 2
-theme_override_colors/font_color = Color(1.0, 0.6, 0.6, 1.0)
+theme_override_colors/font_color = Color(1, 0.6, 0.6, 1)
 theme_override_font_sizes/font_size = 24
 text = "BOSS VOID"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ChapterLabel" type="Label" parent="PortraitContainer/NameContainer"]
+[node name="ChapterLabel" type="Label" parent="PortraitContainer/NameContainer" unique_id=1715176737]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1.0)
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 18
 text = "第一章 · 黑渊之地"
 horizontal_alignment = 1

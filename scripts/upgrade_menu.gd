@@ -6,47 +6,58 @@ const WeaponData = preload("res://resources/weapon_data.gd")
 
 var game_manager: Node2D
 var upgrade_options: Array = []
-var buttons: Array = []
 var selected_index: int = 0
+
+const _QUALITY_COLORS: Array[Color] = [
+	Color(0.75, 0.75, 0.75),
+	Color(0.25, 0.85, 0.35),
+	Color(0.25, 0.55, 0.95),
+	Color(0.80, 0.30, 0.95),
+	Color(1.00, 0.60, 0.10),
+	Color(1.00, 0.85, 0.20),
+]
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_process_input(true)
+	_card_panels = [
+		$CenterContainer/UpgradePanel/VBox/CardContainer/Card1,
+		$CenterContainer/UpgradePanel/VBox/CardContainer/Card2,
+		$CenterContainer/UpgradePanel/VBox/CardContainer/Card3,
+	]
+
+var _card_panels: Array = []
 
 func move_selection(dir: int) -> void:
-	if buttons.is_empty():
+	if _card_panels.is_empty():
 		return
-	selected_index = wrapi(selected_index + dir, 0, buttons.size())
+	selected_index = wrapi(selected_index + dir, 0, _card_panels.size())
 	_update_selection()
 
 func confirm_selection() -> void:
-	if selected_index >= 0 and selected_index < buttons.size():
-		var btn = buttons[selected_index]
-		var id = btn.get_meta("upgrade_id")
-		_on_upgrade_selected(id)
+	if selected_index >= 0 and selected_index < upgrade_options.size():
+		var opt = upgrade_options[selected_index]
+		_on_upgrade_selected(opt["id"])
 
 func handle_click(pos: Vector2) -> void:
-	for i in range(buttons.size()):
-		var btn = buttons[i]
-		if btn.get_global_rect().has_point(pos):
+	for i in range(_card_panels.size()):
+		var card = _card_panels[i]
+		if card.get_global_rect().has_point(pos):
 			selected_index = i
 			_update_selection()
 			confirm_selection()
 			return
 
-func open_upgrade_menu(available_upgrades: Array, gm: Node2D) -> void:
+func open_upgrade_menu(_available_upgrades: Array, gm: Node2D) -> void:
 	game_manager = gm
-	# 从核心系统获取可升级词条
 	var core_id = CoreEquipManager.get_equipped_core_id()
 	var candidates = CoreEquipManager.get_available_upgrades(core_id)
 	upgrade_options = _pick_random_upgrades(candidates, 3)
 	_populate()
 
-	# 确保面板可见且在最上层
 	visible = true
 	z_index = 100
-
 	selected_index = 0
 	_update_selection()
 
@@ -54,62 +65,7 @@ func open_upgrade_menu(available_upgrades: Array, gm: Node2D) -> void:
 
 
 func _filter_by_equipped_weapon(pool: Array, gm: Node2D) -> Array:
-	# 保留原有逻辑作为备用（旧升级路径），新路径走 CoreEquipManager
-	var weapon_upgrade_ids: Array = []
-	var equipped_types = _get_all_equipped_weapon_types(gm)
-
-	var missile_ids = [
-		WeaponData.WeaponID.MISSILE, WeaponData.WeaponID.SMALL_MISSILE,
-		WeaponData.WeaponID.MEDIUM_MISSILE, WeaponData.WeaponID.LARGE_MISSILE, WeaponData.WeaponID.FLAGSHIP_MISSILE
-	]
-	var cannon_ids = [
-		WeaponData.WeaponID.CANNON, WeaponData.WeaponID.SMALL_CANNON,
-		WeaponData.WeaponID.MEDIUM_CANNON, WeaponData.WeaponID.LARGE_CANNON, WeaponData.WeaponID.FLAGSHIP_CANNON
-	]
-	var railgun_ids = [
-		WeaponData.WeaponID.RAILGUN, WeaponData.WeaponID.SMALL_RAILGUN,
-		WeaponData.WeaponID.MEDIUM_RAILGUN, WeaponData.WeaponID.LARGE_RAILGUN, WeaponData.WeaponID.FLAGSHIP_RAILGUN
-	]
-	var laser_ids = [
-		WeaponData.WeaponID.LASER, WeaponData.WeaponID.SMALL_LASER,
-		WeaponData.WeaponID.MEDIUM_LASER, WeaponData.WeaponID.LARGE_LASER, WeaponData.WeaponID.FLAGSHIP_LASER
-	]
-	for wtype in equipped_types:
-		if wtype in missile_ids:
-			if not weapon_upgrade_ids.has("fire_coverage"): weapon_upgrade_ids.append("fire_coverage")
-			if not weapon_upgrade_ids.has("silent_hunter"): weapon_upgrade_ids.append("silent_hunter")
-			if not weapon_upgrade_ids.has("precision_kill"): weapon_upgrade_ids.append("precision_kill")
-		elif wtype in cannon_ids:
-			if not weapon_upgrade_ids.has("cannon_bloodthirst"): weapon_upgrade_ids.append("cannon_bloodthirst")
-			if not weapon_upgrade_ids.has("cannon_rush"): weapon_upgrade_ids.append("cannon_rush")
-			if not weapon_upgrade_ids.has("cannon_vengeance"): weapon_upgrade_ids.append("cannon_vengeance")
-		elif wtype in railgun_ids:
-			if not weapon_upgrade_ids.has("railgun_damage"): weapon_upgrade_ids.append("railgun_damage")
-			if not weapon_upgrade_ids.has("railgun_crit"): weapon_upgrade_ids.append("railgun_crit")
-			if not weapon_upgrade_ids.has("railgun_multi"): weapon_upgrade_ids.append("railgun_multi")
-		elif wtype in laser_ids:
-			if not weapon_upgrade_ids.has("laser_duration"): weapon_upgrade_ids.append("laser_duration")
-			if not weapon_upgrade_ids.has("laser_width"): weapon_upgrade_ids.append("laser_width")
-			if not weapon_upgrade_ids.has("laser_shield"): weapon_upgrade_ids.append("laser_shield")
-
-	var general_ids = ["damage", "shield_max", "shield_regen"]
-	var result: Array = []
-	for upgrade in pool:
-		if general_ids.has(upgrade["id"]) or weapon_upgrade_ids.has(upgrade["id"]):
-			result.append(upgrade)
-	return result
-
-func _get_all_equipped_weapon_types(gm: Node2D) -> Array:
-	var types: Array = []
-	if not gm.player or not is_instance_valid(gm.player):
-		return types
-	var pw = gm.player.get_primary_weapon()
-	if pw:
-		types.append(pw.weapon_id)
-	var sw = gm.player.get_secondary_weapon()
-	if sw:
-		types.append(sw.weapon_id)
-	return types
+	return pool
 
 func _pick_random_upgrades(pool: Array, count: int) -> Array:
 	# pool 来自 CoreEquipManager.get_available_upgrades()，格式为 {id, name, desc, color, current_level, max_level}
@@ -165,69 +121,97 @@ func _get_upgrade_weight(upgrade_id: String) -> float:
 	return 3.0
 
 func _populate() -> void:
-	for btn in buttons:
-		if is_instance_valid(btn):
-			btn.queue_free()
-	buttons.clear()
+	for card in _card_panels:
+		for child in card.get_children():
+			child.queue_free()
 
-	var screen_size = get_viewport().get_visible_rect().size
-	var btn_width = 400
-	var btn_height = 80
-	var btn_spacing = 10
-	var start_x = (screen_size.x - btn_width) / 2
-	var start_y = (screen_size.y - (upgrade_options.size() * (btn_height + btn_spacing))) / 2
-
-	for i in range(upgrade_options.size()):
+	for i in range(mini(upgrade_options.size(), _card_panels.size())):
 		var upgrade = upgrade_options[i]
-		var btn = Button.new()
-		var desc = upgrade.get("desc", "")
-		var level_info = "Lv.%d/%d" % [upgrade.get("current_level", 0) + 1, upgrade.get("max_level", 6)]
-		btn.text = "[ %d ] %s %s\n%s" % [i + 1, upgrade.get("name", "?"), level_info, desc]
-		btn.size = Vector2(btn_width, btn_height)
-		btn.position = Vector2(start_x, start_y + i * (btn_height + btn_spacing))
-		btn.set_meta("upgrade_id", upgrade["id"])
-		btn.set_meta("index", i)
-		btn.z_index = 10
+		var card = _card_panels[i]
+		_build_card(card, upgrade, i)
 
-		var color = upgrade.get("color", Color.WHITE)
-		btn.add_theme_stylebox_override("normal", _make_btn_style(Color(0.15, 0.15, 0.25)))
-		btn.add_theme_stylebox_override("hover", _make_btn_style(Color(0.25, 0.35, 0.55)))
-		btn.add_theme_stylebox_override("pressed", _make_btn_style(Color(0.1, 0.2, 0.4)))
-		btn.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
-		btn.add_theme_font_size_override("font_size", 18)
+func _build_card(card: PanelContainer, upgrade: Dictionary, index: int) -> void:
+	var quality_color = upgrade.get("color", Color.WHITE)
+	var qc = _QUALITY_COLORS[clampi(upgrade.get("quality", 0), 0, _QUALITY_COLORS.size() - 1)]
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.05, 0.15, 0.92)
+	style.set_border_width_all(3)
+	style.border_color = qc
+	style.set_corner_radius_all(8)
+	card.add_theme_stylebox_override("panel", style)
+	card.set_meta("index", index)
 
-		btn.pressed.connect(_on_btn_pressed.bind(upgrade["id"]))
-		add_child(btn)
-		buttons.append(btn)
+	var vbox = VBoxContainer.new()
+	vbox.custom_minimum_size = Vector2(114, 234)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 8)
+	card.add_child(vbox)
 
-func _on_btn_pressed(upgrade_id: String) -> void:
+	var name_lbl = Label.new()
+	name_lbl.text = upgrade.get("name", "?")
+	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_lbl.add_theme_font_size_override("font_size", 14)
+	name_lbl.add_theme_color_override("font_color", qc)
+	name_lbl.custom_minimum_size.y = 36
+	vbox.add_child(name_lbl)
+
+	var level_lbl = Label.new()
+	var cur_lvl = upgrade.get("current_level", 0)
+	var max_lvl = upgrade.get("max_level", 6)
+	level_lbl.text = "Lv.%d/%d" % [cur_lvl + 1, max_lvl]
+	level_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	level_lbl.add_theme_font_size_override("font_size", 12)
+	level_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8))
+	vbox.add_child(level_lbl)
+
+	var sep = HSeparator.new()
+	sep.add_theme_constant_override("separation", 2)
+	vbox.add_child(sep)
+
+	var desc_lbl = Label.new()
+	desc_lbl.text = upgrade.get("desc", "")
+	desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_lbl.add_theme_font_size_override("font_size", 11)
+	desc_lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.9))
+	desc_lbl.custom_minimum_size.y = 140
+	vbox.add_child(desc_lbl)
+
+	var key_lbl = Label.new()
+	key_lbl.text = "[ %d ]" % (index + 1)
+	key_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	key_lbl.add_theme_font_size_override("font_size", 16)
+	key_lbl.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
+	vbox.add_child(key_lbl)
+
+	var btn = Button.new()
+	btn.flat = true
+	btn.custom_minimum_size = Vector2(114, 234)
+	btn.pressed.connect(_on_card_selected.bind(upgrade["id"]))
+	btn.gui_input.connect(_on_card_input.bind(upgrade["id"], index))
+	card.add_child(btn)
+
+func _on_card_selected(upgrade_id: String) -> void:
 	if not visible:
 		return
 	visible = false
 	upgrade_selected.emit(upgrade_id)
 
-func _make_btn_style(color: Color) -> StyleBoxFlat:
-	var style = StyleBoxFlat.new()
-	style.bg_color = color
-	style.set_corner_radius_all(8)
-	style.set_border_width_all(2)
-	style.border_color = Color(0.4, 0.4, 0.6)
-	return style
-
-func _update_selection() -> void:
-	for i in range(buttons.size()):
-		var btn = buttons[i]
-		var is_selected = (i == selected_index)
-
-		if is_selected:
-			var upgrade = upgrade_options[i]
-			var color = upgrade.get("color", Color(0.3, 0.6, 0.3))
-			btn.add_theme_stylebox_override("normal", _make_btn_style(color.darkened(0.3)))
-			btn.add_theme_color_override("font_color", Color(1, 1, 0.3))
-			btn.grab_focus()
-		else:
-			btn.add_theme_stylebox_override("normal", _make_btn_style(Color(0.15, 0.15, 0.25)))
-			btn.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
+func _on_card_input(event: InputEvent, upgrade_id: String, index: int) -> void:
+	if event is InputEventMouseButton:
+		var mb = event as InputEventMouseButton
+		if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+			selected_index = index
+			_update_selection()
+	elif event is InputEventMouseMotion:
+		var mouse_pos = get_global_mouse_position()
+		for i in range(_card_panels.size()):
+			if _card_panels[i].get_global_rect().has_point(mouse_pos):
+				if selected_index != i:
+					selected_index = i
+					_update_selection()
+				break
 
 func _on_upgrade_selected(upgrade_id: String) -> void:
 	SoundManager.play_sfx("upgrade_select")
@@ -244,7 +228,6 @@ func skip_upgrade() -> void:
 func _input(event: InputEvent) -> void:
 	if not visible:
 		return
-
 	if event.is_action_pressed("ui_up"):
 		move_selection(-1)
 	elif event.is_action_pressed("ui_down"):
@@ -260,12 +243,21 @@ func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			handle_click(get_global_mouse_position())
-	elif event is InputEventMouseMotion:
-		var mouse_pos = get_global_mouse_position()
-		for i in range(buttons.size()):
-			var btn = buttons[i]
-			if btn.get_global_rect().has_point(mouse_pos):
-				if selected_index != i:
-					selected_index = i
-					_update_selection()
-				break
+
+func _update_selection() -> void:
+	for i in range(_card_panels.size()):
+		var card = _card_panels[i]
+		var is_selected = (i == selected_index)
+		var style: StyleBoxFlat = card.get_theme_stylebox("panel") as StyleBoxFlat
+		if style == null:
+			style = StyleBoxFlat.new()
+		if is_selected:
+			style.border_color = Color(1.0, 0.9, 0.3)
+			style.bg_color = Color(0.1, 0.1, 0.25, 0.96)
+		else:
+			var qc = _QUALITY_COLORS[0]
+			if i < upgrade_options.size():
+				qc = _QUALITY_COLORS[clampi(upgrade_options[i].get("quality", 0), 0, _QUALITY_COLORS.size() - 1)]
+			style.border_color = qc
+			style.bg_color = Color(0.05, 0.05, 0.15, 0.92)
+		card.add_theme_stylebox_override("panel", style)

@@ -17,7 +17,7 @@ var max_tracking_time: float = 3.0
 var tracking_time: float = 0.0
 
 var current_target: Node2D = null
-var initial_target_pos: Vector2 = Vector2.ZERO
+var _target_locked: bool = false
 
 var sprite: Sprite2D
 var trail_points: Array = []
@@ -63,17 +63,18 @@ func _update_target_tracking(delta: float) -> void:
 	if tracking_time > max_tracking_time:
 		return
 
+	if not _target_locked:
+		current_target = _find_nearest_enemy()
+		if current_target:
+			target_dir = (current_target.global_position - global_position).normalized()
+			_target_locked = true
+		return
+
 	if is_instance_valid(current_target):
 		if _is_target_alive(current_target):
 			target_dir = (current_target.global_position - global_position).normalized()
 		else:
-			current_target = _find_nearest_enemy()
-			if current_target:
-				target_dir = (current_target.global_position - global_position).normalized()
-	else:
-		current_target = _find_nearest_enemy()
-		if current_target:
-			target_dir = (current_target.global_position - global_position).normalized()
+			current_target = null
 
 func _is_target_alive(target: Node2D) -> bool:
 	if not is_instance_valid(target):
@@ -133,7 +134,7 @@ func setup_target_direction(dir: Vector2, dmg: float, spd: float, cr: float, cm:
 func setup_with_target(dir: Vector2, dmg: float, spd: float, cr: float, cm: float, gm: Node2D, target: Node2D, splash_rad: float = 0.0, splash_cnt: int = 0, range_limit: float = 500.0) -> void:
 	setup_target_direction(dir, dmg, spd, cr, cm, gm, splash_rad, splash_cnt, range_limit)
 	current_target = target
-	initial_target_pos = target.global_position
+	_target_locked = true
 	_frame_counter = 0
 
 func _on_body_entered(body: Node) -> void:

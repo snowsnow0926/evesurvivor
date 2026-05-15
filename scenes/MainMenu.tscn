@@ -107,6 +107,10 @@ text = "读取游戏"
 layout_mode = 2
 text = "结束游戏"
 
+[node name="SettingsBtn" type="Button" parent="Panel/VBox"]
+layout_mode = 2
+text = "设置"
+
 [node name="SpacerBot" type="Control" parent="Panel/VBox"]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2

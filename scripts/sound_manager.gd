@@ -1,71 +1,102 @@
 extends Node
 
 const SFX_RESOURCES: Dictionary = {
-	"shoot_missile":   "",
-	"shoot_cannon":    "",
-	"shoot_railgun":   "",
-	"shoot_laser":     "",
-	"hit":             "",
-	"crit":            "",
-	"shield_hit":      "",
-	"shield_break":    "",
-	"player_hurt":     "",
-	"enemy_death":     "",
-	"upgrade":         "",
-	"upgrade_select":  "",
-	"player_death":    "",
+	"shoot_missile":   "res://assets/sfx/shoot_missile.ogg",
+	"shoot_cannon":    "res://assets/sfx/shoot_cannon.ogg",
+	"shoot_railgun":   "res://assets/sfx/shoot_railgun.ogg",
+	"shoot_laser":     "res://assets/sfx/shoot_laser.ogg",
+	"hit":             "res://assets/sfx/hit.ogg",
+	"crit":            "res://assets/sfx/crit.ogg",
+	"shield_hit":      "res://assets/sfx/shield_hit.ogg",
+	"shield_break":    "res://assets/sfx/shield_break.ogg",
+	"player_hurt":     "res://assets/sfx/player_hurt.ogg",
+	"enemy_death":     "res://assets/sfx/enemy_death.ogg",
+	"upgrade":         "res://assets/sfx/upgrade.ogg",
+	"upgrade_select":  "res://assets/sfx/upgrade_select.ogg",
+	"player_death":    "res://assets/sfx/player_death.ogg",
 	"boss_appear":     "",
 	"boss_death":      "",
-	"button_click":    "",
-	"retreat_success": "",
+	"button_click":    "res://assets/sfx/button_click.ogg",
+	"retreat_success": "res://assets/sfx/retreat_success.ogg",
 }
 
 var sfx_players: Dictionary = {}
+var sfx_streams: Dictionary = {}
+var music_streams: Dictionary = {}
 var music_player: AudioStreamPlayer
-var sfx_bus: StringName = &"Master"
-var music_bus: StringName = &"Master"
-var sfx_volume: float = 0.0
-var music_volume: float = 0.0
+
+var _sfx_volume: float = 1.0
+var _music_volume: float = 1.0
+var _sfx_muted: bool = false
+var _music_muted: bool = false
+
 var current_music: String = ""
+
+func _preload_music_streams() -> void:
+	for music_key in ["menu", "battle", "battle_boss", "base", "settlement", "race_select"]:
+		var path = _get_music_path(music_key)
+		if path != "" and ResourceLoader.exists(path):
+			music_streams[music_key] = load(path)
 
 func _ready() -> void:
 	_setup_sfx_players()
 	_setup_music_player()
+	_preload_streams()
+	_preload_music_streams()
+
+func _preload_streams() -> void:
+	for sfx_name in SFX_RESOURCES.keys():
+		var path = SFX_RESOURCES[sfx_name]
+		if path != "" and ResourceLoader.exists(path):
+			sfx_streams[sfx_name] = load(path)
 
 func _setup_sfx_players() -> void:
 	for sfx_name in SFX_RESOURCES.keys():
-		var player = AudioStreamPlayer.new()
+		var player := AudioStreamPlayer.new()
 		player.name = "SFX_" + sfx_name
-		player.bus = sfx_bus
-		player.volume_db = sfx_volume
+		player.bus = &"SFX"
 		add_child(player)
 		sfx_players[sfx_name] = player
 
 func _setup_music_player() -> void:
 	music_player = AudioStreamPlayer.new()
 	music_player.name = "MusicPlayer"
-	music_player.bus = music_bus
-	music_player.volume_db = music_volume
+	music_player.bus = &"Music"
 	music_player.autoplay = false
 	add_child(music_player)
+
+func _linear_to_db(linear: float) -> float:
+	if linear <= 0.0:
+		return -80.0
+	return linear * 80.0 - 80.0
+
+func apply_audio_settings(master: float, sfx: float, music: float, master_muted: bool, sfx_muted: bool, music_muted: bool) -> void:
+	var master_db := _linear_to_db(master) if not master_muted else -80.0
+	var sfx_db := 0.0 if not sfx_muted else -80.0
+	var music_db := _linear_to_db(music) if not music_muted else -80.0
+
+	_sfx_volume = sfx
+	_music_volume = music
+	_sfx_muted = sfx_muted
+	_music_muted = music_muted
+
+	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(&"Master"), master_db)
+	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(&"SFX"), sfx_db)
+	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(&"Music"), music_db)
 
 func play_sfx(sfx_name: String, volume_override: float = 0.0) -> void:
 	if not sfx_players.has(sfx_name):
 		return
-	var resource_path = SFX_RESOURCES[sfx_name]
-	if resource_path == "":
-		return
-	if not ResourceLoader.exists(resource_path):
+	var stream = sfx_streams.get(sfx_name) as AudioStream
+	if not stream:
 		return
 	var player = sfx_players[sfx_name]
 	if player.playing:
 		player.stop()
-	var stream = load(resource_path)
-	if stream:
-		player.stream = stream
-		if volume_override != 0.0:
-			player.volume_db = volume_override
-		player.play()
+	player.stream = stream
+	var linear_vol: float = volume_override if volume_override > 0.0 else _sfx_volume
+	player.volume_db = _linear_to_db(linear_vol)
+	player.play()
 
 func play_music(music_name: String, fade_duration: float = 0.5) -> void:
 	if current_music == music_name and music_player.playing:
@@ -73,14 +104,12 @@ func play_music(music_name: String, fade_duration: float = 0.5) -> void:
 	var resource_path = _get_music_path(music_name)
 	if resource_path == "":
 		return
-	if not ResourceLoader.exists(resource_path):
-		return
 
 	if fade_duration > 0 and music_player.playing:
 		_fade_out_music(fade_duration)
 		await get_tree().create_timer(fade_duration).timeout
 
-	var stream = load(resource_path)
+	var stream = music_streams.get(music_name) as AudioStream
 	if stream:
 		music_player.stream = stream
 		music_player.play()
@@ -113,17 +142,14 @@ func _get_music_path(music_name: String) -> String:
 			return "res://assets/music/race_select.ogg"
 	return ""
 
-func set_sfx_volume(volume_db: float) -> void:
-	sfx_volume = volume_db
-	for player in sfx_players.values():
-		player.volume_db = volume_db
-
-func set_music_volume(volume_db: float) -> void:
-	music_volume = volume_db
-	music_player.volume_db = volume_db
-
 func get_sfx_volume() -> float:
-	return sfx_volume
+	return _sfx_volume
 
 func get_music_volume() -> float:
-	return music_volume
+	return _music_volume
+
+func is_sfx_muted() -> bool:
+	return _sfx_muted
+
+func is_music_muted() -> bool:
+	return _music_muted

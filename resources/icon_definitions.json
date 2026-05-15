@@ -61,6 +61,14 @@
 			"path": []
 		},
 		{
+			"id": "boss_qianpojun",
+			"name_en": "Boss Qianpojun",
+			"name_zh": "钱破军",
+			"texture_path": "res://assets/newship/enemy/BossQianpojun.png",
+			"tonnage": "boss",
+			"path": []
+		},
+		{
 			"id": "boss_void",
 			"name_en": "Boss Void",
 			"name_zh": "虚空领主",

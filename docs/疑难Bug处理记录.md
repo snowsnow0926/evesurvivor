@@ -362,3 +362,101 @@ func _load_chapters() -> void:
 - **美术素材必须通过 `.tscn` 中的 `ExtResource` 直接引用**，不要在脚本中动态加载纹理文件路径。
 - 导出测试是必须的——编辑器正常运行不能作为导出后也正常的依据。
 - 如果必须动态创建节点，可以先在 `.tscn` 中预置节点、隐藏备用，运行时通过 `get_node()` 获取并显示，避免在代码里 `load()` 纹理路径。
+
+---
+
+## Bug #007：隐藏字符导致 Godot 解析错误
+
+**影响版本**：任意版本
+**严重程度**：编译错误（脚本完全无法加载）
+**调试难度**：高（肉眼无法发现，标准编码检查也无法察觉）
+
+### 问题现象
+
+Godot 4 报错，但报错位置和代码看起来完全正常：
+
+```
+ERROR: res://scripts/settings_manager.gd:27 - Parse Error: Expected statement, found "else" instead.
+ERROR: res://scripts/main_menu.gd:117 - Parse Error: Cannot infer the type of "ui" variable because the value doesn't have a set type.
+ERROR: res://scripts/pause_menu.gd:65 - Parse Error: Cannot infer the type of "ui" variable because the value doesn't have a set type.
+```
+
+行27是 `else:`，肉眼看起来格式完全正确。行117和行65的 `load(...).instantiate()` 链式调用看起来也没问题。
+
+### 根因分析
+
+**问题出在前一行语句的末尾混入了不可见字符。**
+
+GDScript 的语句以换行符分隔，如果上一行（如 line 26 `_apply_to_sound_manager()`）末尾有零宽字符（如零宽空格 U+200B、零宽不换行空格 U+FEFF、或 UTF-16 代理对残留），Godot 解析器会认为该语句尚未结束，从而把下一行的 `else:` 当作同一语句的一部分，报 `Expected statement, found "else"`。
+
+`null` 字节检测（BOM 检测）**无法**发现这类字符，因为零宽字符不是 null，它们的字节是合法 UTF-8 序列。PowerShell 的 `Get-Content -Encoding UTF8` 读取时也会自动过滤大多数零宽字符，导致即使逐行读取也看不到异常。
+
+对于链式调用 `.instantiate()` 的类型推断报错，情况类似——Godot 4 对 `Variant` 值的类型推断比想象中更严格，`load(...).instantiate()` 返回 `Variant`（因为 `load` 返回的是 `Resource` 而非 `PackedScene`），`:=` 推断不出具体类型。
+
+### 修复方案
+
+**对于隐藏字符问题**——最干净的修复是重写相关代码块，消除 `else` 块对缩进的依赖：
+
+```gdscript
+# 原始（有问题的结构，else: 依赖于精确的缩进/行边界）
+if err == OK:
+    # ... 赋值
+    _apply_to_sound_manager()
+else:  # ← 上一行末尾可能有隐藏字符，导致解析器认为 else: 不是独立语句
+    # ... 默认值
+
+# 修复后（用 return 早期返回，消除 else: 依赖）
+if err == OK:
+    # ... 赋值
+    _apply_to_sound_manager()
+    return  # 早期返回，替代 else:
+# 默认值...
+```
+
+**对于链式调用类型推断问题**——显式声明类型：
+
+```gdscript
+# 原始（类型推断失败）
+var ui := load("res://scenes/SettingsUI.tscn").instantiate()
+
+# 修复后（显式两步声明）
+var scene: PackedScene = load("res://scenes/SettingsUI.tscn")
+var ui: Control = scene.instantiate()
+```
+
+### 排查清单
+
+当遇到"代码看起来完全正常但 Godot 报解析错误"时：
+
+1. **不要浪费时间排查文件路径、编码格式、正反斜杠**——Windows 文件系统正反斜杠等效，不是问题。
+2. **检查正上方一行末尾是否有隐藏字符**：在前一行末尾打断点，或用十六进制查看器检查上一行最后一个可显示字符的字节之后是否有 `0xE2 0x80 0x8B`（U+200B 零宽空格）、`0xEF 0xBB 0xBF`（BOM）、`0xEF 0xBF 0xBD`（替换字符 U+FFFD）等。
+3. **最直接的修复方式**：重写相关代码块，用 `return` 替代 `else:`，用显式类型声明替代链式类型推断。
+4. **PowerShell 检查不可见字符的可靠方式**：
+
+```powershell
+# 读取文件的原始字节，逐字节排查换行符之间的内容
+$b = [System.IO.File]::ReadAllBytes("path/to/file.gd")
+$lines = [System.Text.Encoding]::UTF8.GetString($b).Split("`n")
+# 检查第 N 行末尾是否有非空白字节
+$line = $lines[$N - 1]  # GDScript 行号从1开始
+$lineBytes = [System.Text.Encoding]::UTF8.GetBytes($line)
+# 零宽字符范围：0xE2 0x80 0x8B (U+200B), 0xE2 0x80 0x8C (U+200C),
+#               0xE2 0x80 0x8D (U+200D), 0xE2 0x80 0x8E (U+200E),
+#               0xE2 0x80 0x8F (U+200F), 0xEF 0xBB 0xBF (U+FEFF BOM)
+```
+
+### 预防措施
+
+- 养成习惯：用编辑器保存 GDScript 文件时，确保使用**纯 UTF-8（无 BOM）** 编码。
+- 避免在行末添加多余的空格或不可见字符。
+- 使用 `:=` 声明变量时，**不要链式调用** `.instantiate()`，拆成两步并显式声明类型。
+
+---
+
+### 误判记录（Agent 排查教训）
+
+**误判：正斜杠/反斜杠路径不一致导致 Godot 无法找到脚本。**
+
+实际情况：Windows 文件系统中，正斜杠 `/` 和反斜杠 `\` 完全等效（Windows 内核层面都解析为 `\`）。Glob 工具在不同上下文中可能以不同风格报告同一文件路径（如 `scripts\xxx.gd` vs `scripts/xxx.gd`），但这是工具报告格式的差异，**不是文件系统的真实差异**。Git 状态里看到两个路径写法也并不意味着真的存在两个文件——在 Windows 上它们就是同一个文件。
+
+**排查教训**：遇到文件路径类问题时，先确认文件是否真的存在（`Test-Path`），再确认文件字节内容（`ReadAllBytes`），而不是被工具报告的路径格式所迷惑。Windows 上正反斜杠的问题几乎可以**直接排除**，除非是在生成跨平台字符串（如写入 `.tscn` 内部引用）时才需要关注。

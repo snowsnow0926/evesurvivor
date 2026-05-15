@@ -2,6 +2,7 @@ extends Control
 
 @onready var start_btn: Button = $Panel/VBox/StartBtn
 @onready var load_game_btn: Button = $Panel/VBox/LoadGameBtn
+@onready var settings_btn: Button = $Panel/VBox/SettingsBtn
 @onready var quit_btn: Button = $Panel/VBox/QuitBtn
 @onready var save_ui: Control = $SaveUI
 @onready var star_container: Node2D = $BG/StarContainer
@@ -19,11 +20,12 @@ func _ready() -> void:
 	_fade_in()
 	_setup_bg()
 
-	var buttons := [start_btn, load_game_btn, quit_btn]
+	var buttons := [start_btn, load_game_btn, settings_btn, quit_btn]
 	for btn in buttons:
 		if btn:
 			btn.pressed.connect(_on_start_pressed if btn == start_btn
 					else _on_load_game_pressed if btn == load_game_btn
+					else _on_settings_pressed if btn == settings_btn
 					else _on_quit_pressed)
 
 	save_ui.save_loaded.connect(_on_save_loaded)
@@ -109,6 +111,12 @@ func _on_start_pressed() -> void:
 func _on_load_game_pressed() -> void:
 	SoundManager.play_sfx("button_click")
 	save_ui.visible = true
+
+func _on_settings_pressed() -> void:
+	SoundManager.play_sfx("button_click")
+	var scene: PackedScene = load("res://scenes/SettingsUI.tscn")
+	var ui: Control = scene.instantiate()
+	add_child(ui)
 
 func _on_save_loaded(_slot_idx: int) -> void:
 	save_ui.visible = false

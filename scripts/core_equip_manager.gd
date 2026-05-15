@@ -12,6 +12,21 @@ const CoreDefinitions = preload("res://resources/core_definitions.gd")
 # === 核心数据存储 ===
 var _cores: Dictionary = {}       # { core_id: CoreData }
 var _equipped_core_id: String = ""
+# V2.3: 核心总经验池（跨局永久累加，用于未来能量球系统）
+static var _total_core_xp: int = 0
+
+# V2.3: 核心升级经验曲线（1小时≈2400经验升满5词条×6级）
+const CORE_XP_CURVE: Array[int] = [30, 50, 80, 120, 200]  # Lv1→2,2→3,3→4,4→5,5→6
+
+# V2.3: 添加核心总经验（跨局累加）
+func add_xp(amount: int) -> void:
+	_total_core_xp += maxi(amount, 0)
+
+func get_total_xp() -> int:
+	return _total_core_xp
+
+func set_total_xp(v: int) -> void:
+	_total_core_xp = maxi(v, 0)
 
 
 # === CoreData 内嵌类 ===
@@ -280,12 +295,14 @@ func save_to_dict() -> Dictionary:
 	return {
 		"cores": _cores.keys().map(func(k): return {"id": k, "data": _cores[k].to_dict()}),
 		"equipped_core_id": _equipped_core_id,
+		"total_core_xp": _total_core_xp,
 	}
 
 
 func load_from_dict(data: Dictionary) -> void:
 	_cores.clear()
 	_equipped_core_id = data.get("equipped_core_id", "")
+	_total_core_xp = data.get("total_core_xp", 0)
 
 	var cores_list: Array = data.get("cores", [])
 	for entry_data in cores_list:

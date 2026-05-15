@@ -44,3 +44,24 @@ custom_minimum_size = Vector2(0, 40)
 text = "SELECT UPGRADE"
 horizontal_alignment = 1
 autowrap_mode = 1
+
+[node name="CardContainer" type="HBoxContainer" parent="CenterContainer/UpgradePanel/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(400, 260)
+alignment = 1
+theme_override_constants/separation = 20
+
+[node name="Card1" type="PanelContainer" parent="CenterContainer/UpgradePanel/VBox/CardContainer"]
+custom_minimum_size = Vector2(120, 240)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Card2" type="PanelContainer" parent="CenterContainer/UpgradePanel/VBox/CardContainer"]
+custom_minimum_size = Vector2(120, 240)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Card3" type="PanelContainer" parent="CenterContainer/UpgradePanel/VBox/CardContainer"]
+custom_minimum_size = Vector2(120, 240)
+layout_mode = 2
+size_flags_horizontal = 3

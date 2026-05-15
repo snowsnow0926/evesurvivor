@@ -9,7 +9,9 @@ signal self_destruct_requested
 
 @onready var panel: Panel = $Panel
 @onready var continue_btn: Button = $Panel/VBox/ContinueBtn
+@onready var settings_btn: Button = $Panel/VBox/SettingsBtn
 @onready var retreat_btn: Button = $Panel/VBox/RetreatBtn
+@onready var sfx_toggle_btn: Button = $Panel/VBox/SFXToggleBtn
 @onready var self_destruct_btn: Button = $Panel/VBox/SelfDestructBtn
 @onready var loot_scroll: ScrollContainer = $Panel/VBox/LootScroll
 @onready var loot_container: VBoxContainer = $Panel/VBox/LootScroll/LootContainer
@@ -28,8 +30,13 @@ func _ready() -> void:
 func _connect_buttons() -> void:
 	if continue_btn:
 		continue_btn.pressed.connect(_on_continue_pressed)
+	if settings_btn:
+		settings_btn.pressed.connect(_on_settings_pressed)
 	if retreat_btn:
 		retreat_btn.pressed.connect(_on_retreat_pressed)
+	if sfx_toggle_btn:
+		sfx_toggle_btn.pressed.connect(_on_sfx_toggle_pressed)
+	_update_sfx_toggle_text()
 	if self_destruct_btn:
 		self_destruct_btn.pressed.connect(_on_self_destruct_pressed)
 
@@ -56,6 +63,12 @@ func _on_continue_pressed() -> void:
 	SoundManager.play_sfx("button_click")
 	print("[PauseMenu] continue pressed")
 	close_menu()
+
+func _on_settings_pressed() -> void:
+	SoundManager.play_sfx("button_click")
+	var scene: PackedScene = load("res://scenes/SettingsUI.tscn")
+	var ui: Control = scene.instantiate()
+	add_child(ui)
 
 func close_menu() -> void:
 	visible = false
@@ -102,6 +115,20 @@ func _build_pause_loot_list() -> void:
 		label.add_theme_color_override("font_color", quality_color)
 		row.add_child(label)
 		loot_container.add_child(row)
+
+func _update_sfx_toggle_text() -> void:
+	if sfx_toggle_btn:
+		var muted = SettingsManager.sfx_muted if has_node("/root/SettingsManager") else false
+		sfx_toggle_btn.text = "音效: " + ("关" if muted else "开")
+
+func _on_sfx_toggle_pressed() -> void:
+	SoundManager.play_sfx("button_click")
+	if has_node("/root/SettingsManager"):
+		var sm = get_node("/root/SettingsManager")
+		var new_muted = not SettingsManager.sfx_muted
+		SettingsManager.set_sfx_muted(new_muted)
+		SettingsManager.save_settings()
+	_update_sfx_toggle_text()
 
 func _on_retreat_pressed() -> void:
 	print("[PauseMenu] retreat pressed, is_game_over=", game_manager.is_game_over if game_manager else "no gm")

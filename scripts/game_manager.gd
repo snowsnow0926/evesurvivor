@@ -330,6 +330,7 @@ func _show_settlement(reason: String) -> void:
 
 func on_exp_orb_collected(amount: float) -> void:
 	current_xp += amount * player_stats.xp_boost
+	CoreEquipManager.add_xp(int(amount * player_stats.xp_boost))
 	var leveled_up = false
 	while current_xp >= xp_to_next_level:
 		current_xp -= xp_to_next_level
@@ -341,6 +342,13 @@ func on_exp_orb_collected(amount: float) -> void:
 		_trigger_upgrade()
 
 func _trigger_upgrade() -> void:
+	if CoreEquipManager.get_equipped_core_id().is_empty():
+		return
+	var candidates = CoreEquipManager.get_available_upgrades(CoreEquipManager.get_equipped_core_id())
+	if candidates.is_empty():
+		is_upgrading = false
+		get_tree().paused = false
+		return
 	is_upgrading = true
 	get_tree().paused = true
 	upgrade_system.trigger_upgrade_request()
@@ -352,7 +360,7 @@ func on_player_take_damage(damage: float) -> void:
 	player_stats.is_injured = true
 	player_stats.injured_timer = PlayerStats.INJURED_DURATION
 	var final_damage = damage
-
+	# 护盾受击：伤害先扣护盾，护盾归零后再扣HP（无额外减伤系数）
 	if player_stats.shield > 0:
 		var shield_dmg = minf(player_stats.shield, final_damage)
 		player_stats.shield -= shield_dmg

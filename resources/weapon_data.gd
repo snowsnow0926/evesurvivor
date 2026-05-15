@@ -68,7 +68,7 @@ static func _missile_data() -> WeaponData:
 	w.display_name = "导弹"
 	w.scene_path = "res://scenes/Missile.tscn"
 	w.damage = 15.0
-	w.fire_interval = 0.8
+	w.fire_interval = 1.20
 	w.projectile_speed = 600.0
 	w.range = 600.0
 	w.crit_rate = 0.05
@@ -142,7 +142,7 @@ static func _small_missile_data() -> WeaponData:
 	w.display_name = "小型导弹发射器"
 	w.scene_path = "res://scenes/Missile.tscn"
 	w.damage = 15.0
-	w.fire_interval = 0.8
+	w.fire_interval = 1.20
 	w.projectile_speed = 600.0
 	w.range = 600.0
 	w.crit_rate = 0.05
@@ -216,7 +216,7 @@ static func _medium_missile_data() -> WeaponData:
 	w.display_name = "中型导弹发射器"
 	w.scene_path = "res://scenes/Missile.tscn"
 	w.damage = 25.0
-	w.fire_interval = 1.0
+	w.fire_interval = 1.50
 	w.projectile_speed = 600.0
 	w.range = 700.0
 	w.crit_rate = 0.06
@@ -290,7 +290,7 @@ static func _large_missile_data() -> WeaponData:
 	w.display_name = "大型导弹发射器"
 	w.scene_path = "res://scenes/Missile.tscn"
 	w.damage = 40.0
-	w.fire_interval = 1.3
+	w.fire_interval = 1.95
 	w.projectile_speed = 600.0
 	w.range = 800.0
 	w.crit_rate = 0.07
@@ -364,7 +364,7 @@ static func _flagship_missile_data() -> WeaponData:
 	w.display_name = "旗舰级导弹发射器"
 	w.scene_path = "res://scenes/Missile.tscn"
 	w.damage = 65.0
-	w.fire_interval = 1.6
+	w.fire_interval = 2.40
 	w.projectile_speed = 600.0
 	w.range = 1000.0
 	w.crit_rate = 0.08

@@ -251,6 +251,24 @@ func _build_inventory() -> void:
 		if not equipped_ids.has(equip_id):
 			items.append(item)
 
+	var _EQUIP_TYPE_ARMOR := "ARMOR"
+	var _EQUIP_TYPE_WEAPON := "WEAPON"
+	items.sort_custom(func(a, b) -> bool:
+		var a_type_val = a.get("equip_type", "")
+		var a_is_armor = typeof(a_type_val) == TYPE_STRING and a_type_val.to_upper() == _EQUIP_TYPE_ARMOR
+		var b_type_val = b.get("equip_type", "")
+		var b_is_armor = typeof(b_type_val) == TYPE_STRING and b_type_val.to_upper() == _EQUIP_TYPE_ARMOR
+		if a_is_armor != b_is_armor:
+			return not a_is_armor
+		var a_quality = a.get("quality", 0)
+		var b_quality = b.get("quality", 0)
+		if a_quality != b_quality:
+			return a_quality > b_quality
+		var a_name = _get_item_display_name(a)
+		var b_name = _get_item_display_name(b)
+		return a_name < b_name
+	)
+
 	if items.is_empty():
 		var lbl = Label.new()
 		lbl.text = "(仓库为空)"

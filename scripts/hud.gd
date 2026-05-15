@@ -26,6 +26,12 @@ const UPGRADE_NAME_MAP: Dictionary = {
 	"laser_shield": "护盾中和",
 }
 
+const ARMOR_NAME_ABBR: Dictionary = {
+	"立场优化器": "盾优",
+	"护盾回充器": "盾修",
+	"装甲维修器": "甲修",
+}
+
 const _QUALITY_COLORS: Array[Color] = [
 	Color(0.75, 0.75, 0.75),  # 白
 	Color(0.25, 0.85, 0.35),  # 绿
@@ -803,7 +809,9 @@ func _update_top_weapon_display(player, all_weapon_data: Array, defense_list: Ar
 			slot_panel.set_meta("quality", defense_list[idx].get("quality", 0) if idx < defense_list.size() else 0)
 		if idx < defense_list.size():
 			var armor = defense_list[idx]
-			name_lbl.text = str(armor.get("name", "防御装"))
+			var full_name: String = str(armor.get("name", "防御装"))
+			var abbr = ARMOR_NAME_ABBR.get(full_name, "")
+			name_lbl.text = abbr if not abbr.is_empty() else full_name
 			name_lbl.add_theme_color_override("font_color", EquipmentData.get_quality_color(armor.get("quality", 0)))
 			_apply_weapon_slot_style(slot_panel as PanelContainer, armor.get("quality", 0))
 		else:
