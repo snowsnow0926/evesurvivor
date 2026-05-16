@@ -24,7 +24,10 @@ var enemy_root: Node2D
 var bullet_root: Node2D
 var exp_orb_root: Node2D
 var damage_root: Node2D
+var hazard_root: Node2D
 var boss_warning: Node
+
+var _hazards_spawned: bool = false
 
 var player_stats: PlayerStats
 var spawn_manager: SpawnManager
@@ -100,6 +103,7 @@ func _setup_references() -> void:
 	bullet_root = game_scene.get_node_or_null("BulletRoot")
 	exp_orb_root = game_scene.get_node_or_null("ExpOrbRoot")
 	damage_root = game_scene.get_node_or_null("DamageRoot")
+	hazard_root = game_scene.get_node_or_null("HazardRoot")
 	boss_warning = game_scene.get_node_or_null("UIRoot/BossWarning")
 	var boss_encounter_ui = game_scene.get_node_or_null("UIRoot/BossEncounterUI")
 
@@ -137,6 +141,38 @@ func _spawn_player() -> void:
 				player.sync_from_player_stats(player_stats)
 	else:
 		push_error("[GameManager] failed to load Player scene")
+
+func _spawn_hazards() -> void:
+	if _hazards_spawned:
+		return
+	_hazards_spawned = true
+	if not hazard_root or not is_instance_valid(hazard_root):
+		return
+	if current_stage == null:
+		return
+	var vp_size = get_viewport_rect().size
+	var center = vp_size * 0.5
+	var spawn_count = randi() % 3 + 2
+	for i in spawn_count:
+		var offset = Vector2(randf_range(-vp_size.x * 0.3, vp_size.x * 0.3), randf_range(-vp_size.y * 0.3, vp_size.y * 0.3))
+		var spawn_pos = center + offset
+		if player and is_instance_valid(player):
+			spawn_pos = player.global_position + offset
+		var hazard_scene: PackedScene = load("res://scenes/Hazard.tscn")
+		if hazard_scene:
+			var hazard_node: Node = hazard_scene.instantiate()
+			hazard_root.add_child(hazard_node)
+			var rng = randi() % 3
+			match rng:
+				0:
+					if hazard_node.has_method("setup_black_hole"):
+						hazard_node.setup_black_hole(spawn_pos, self, player, randf_range(100.0, 160.0), randf_range(20.0, 40.0))
+				1:
+					if hazard_node.has_method("setup_antimatter"):
+						hazard_node.setup_antimatter(spawn_pos, self, player, randf_range(60.0, 100.0), randf_range(15.0, 30.0))
+				2:
+					if hazard_node.has_method("setup_mine_zone"):
+						hazard_node.setup_mine_zone(spawn_pos, self, player, randf_range(80.0, 120.0), randf_range(20.0, 35.0))
 
 func _apply_race_to_player_stats(race: RaceData) -> void:
 	var ship = ShipData.get_ship(GameState.selected_ship_id)
@@ -185,10 +221,12 @@ func setup_for_stage(chapter_id: int, stage_id: int) -> void:
 	difficulty_scaler.setup_stage(current_stage.strength_mult, current_stage.density_mult, player_level)
 	set_game_speed(1.0)
 	loot_system.reset()
+	_spawn_hazards()
 
 	if current_stage.has_timer:
 		has_timer = true
 		is_unlimited_mode = GameState.is_stage_cleared(chapter_id, stage_id)
+		is_boss_infinite = GameState.is_stage_cleared(chapter_id, stage_id)
 		if is_unlimited_mode:
 			time_remaining = 0.0
 			run_time_elapsed = 0.0
@@ -493,6 +531,7 @@ func reset_for_new_run() -> void:
 	stage_duration = 0.0
 	_timer_expired_once = false
 	is_boss_infinite = false
+	_hazards_spawned = false
 
 	spawn_manager.reset()
 	difficulty_scaler.reset()

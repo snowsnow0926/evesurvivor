@@ -1,3 +1,4 @@
+class_name ParallaxStarfield
 extends Node2D
 
 @export var star_layer_count: int = 3
@@ -19,11 +20,15 @@ class StarLayer:
 var _camera_prev: Vector2 = Vector2.ZERO
 var _time: float = 0.0
 
+var _rng: RandomNumberGenerator
+
 func _ready() -> void:
 	camera = get_viewport().get_camera_2d()
 	if camera:
 		_camera_prev = camera.global_position
 		position = camera.global_position
+	_rng = RandomNumberGenerator.new()
+	_rng.randomize()
 	_add_layers()
 	process_physics_priority = -100
 
@@ -50,9 +55,28 @@ func _add_layers() -> void:
 
 	for i in range(mini(star_layer_count, configs.size())):
 		var cfg: Dictionary = configs[i]
-		var layer := StarLayer.new(cfg.parallax, cfg.color, cfg.size_range)
-		_generate_stars(layer, cfg.density * mobile_mult)
+		var layer_color = _randomize_color(cfg.color)
+		var layer_size_range = _randomize_size_range(cfg.size_range)
+		var layer := StarLayer.new(cfg.parallax, layer_color, layer_size_range)
+		var density_variation = _rng.randf_range(0.7, 1.3)
+		_generate_stars(layer, cfg.density * mobile_mult * density_variation)
 		layers.append(layer)
+
+func _randomize_color(base_color: Color) -> Color:
+	var preset_count := 6
+	var preset := _rng.randi() % preset_count
+	match preset:
+		0: return Color(0.78, 0.86, 1.0, 0.60)
+		1: return Color(1.0, 0.85, 0.75, 0.55)
+		2: return Color(0.75, 1.0, 0.85, 0.55)
+		3: return Color(1.0, 0.95, 0.80, 0.60)
+		4: return Color(0.80, 0.80, 1.0, 0.50)
+		5: return Color(0.90, 0.75, 1.0, 0.55)
+	return base_color
+
+func _randomize_size_range(base_range: Vector2) -> Vector2:
+	var scale = _rng.randf_range(0.7, 1.4)
+	return Vector2(base_range.x * scale, base_range.y * scale)
 
 func _generate_stars(layer: StarLayer, density: float) -> void:
 	var rng := RandomNumberGenerator.new()

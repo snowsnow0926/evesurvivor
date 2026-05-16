@@ -1,6 +1,6 @@
 extends Node
 
-const SAVE_VERSION := 2
+const SAVE_VERSION := 3
 const SAVE_SLOTS := 3
 const SLOT_AUTO := 3
 const DEBUG := false
@@ -43,6 +43,9 @@ var equipped_core_id: String = ""
 var player_level: int = 1
 var current_xp: float = 0.0
 var xp_to_next_level: float = 10.0
+
+# 新手引导完成标记
+var tutorial_completed: bool = false
 
 func _debug(msg: String) -> void:
 	if DEBUG:
@@ -119,6 +122,9 @@ func _collect_save_data() -> Dictionary:
 			"current_xp": current_xp,
 			"xp_to_next": xp_to_next_level,
 		},
+		"tutorial": {
+			"tutorial_completed": tutorial_completed,
+		},
 		"equipment": {
 			"equipment_inventory": equipment_inventory,
 			"equipped_weapons": equipped_weapons,
@@ -168,6 +174,9 @@ func _apply_save_data(data: Dictionary) -> void:
 	current_xp = level_data.get("current_xp", 0.0)
 	xp_to_next_level = level_data.get("xp_to_next", 10.0)
 
+	var tutorial_data = data.get("tutorial", {})
+	tutorial_completed = tutorial_data.get("tutorial_completed", false)
+
 	var equipment = data.get("equipment", {})
 	equipment_inventory = equipment.get("equipment_inventory", []) as Array
 	equipped_weapons = equipment.get("equipped_weapons", {}) as Dictionary
@@ -178,6 +187,9 @@ func _migrate_data(from_version: int, data: Dictionary) -> Dictionary:
 	if v < 2:
 		data = _migrate_v1_to_v2(data)
 		v = 2
+	if v < 3:
+		data["tutorial"] = {"tutorial_completed": false}
+		v = 3
 	data["meta"] = data.get("meta", {})
 	data["meta"]["version"] = SAVE_VERSION
 	return data

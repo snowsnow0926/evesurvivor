@@ -44,6 +44,8 @@ y_sort_enabled = true
 
 [node name="DamageRoot" type="Node2D" parent="." unique_id=1574269701]
 
+[node name="HazardRoot" type="Node2D" parent="." unique_id=900000001]
+
 [node name="ParallaxStarfield" type="Node2D" parent="." unique_id=355665312]
 script = ExtResource("4_psf")
 

@@ -205,6 +205,7 @@ func _on_card_gui_input(event: InputEvent, card: Control) -> void:
 				btn.emit_signal("pressed")
 
 func _on_race_card_selected(race_id: RaceData.RaceID, card: Control) -> void:
+	SoundManager.play_sfx("button_click")
 	_select_race(race_id)
 
 func _select_race(race_id: RaceData.RaceID) -> void:
@@ -249,6 +250,7 @@ func _update_confirm_button() -> void:
 	confirm_btn.disabled = false
 
 func _on_confirm() -> void:
+	SoundManager.play_sfx("button_click")
 	GameState.selected_race_id = selected_race_id
 	var name = name_edit.text.strip_edges()
 	if name.is_empty():
@@ -272,4 +274,5 @@ func _on_confirm() -> void:
 	get_tree().change_scene_to_file("res://scenes/BaseScene.tscn")
 
 func _on_back() -> void:
+	SoundManager.play_sfx("button_click")
 	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")

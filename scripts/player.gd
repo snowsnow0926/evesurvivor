@@ -518,7 +518,8 @@ func _spawn_single_missile(target_pos: Vector2, bullet_root: Node, weapon: Weapo
 		game_manager,
 		player_stats.missile_splash_radius,
 		player_stats.missile_splash_count,
-		player_stats.missile_range
+		player_stats.missile_range,
+		self
 	)
 
 func _fire_cannon_at(target_pos: Vector2, weapon: WeaponData) -> void:

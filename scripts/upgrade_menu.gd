@@ -147,6 +147,10 @@ func _build_card(card: PanelContainer, upgrade: Dictionary, index: int) -> void:
 	vbox.add_theme_constant_override("separation", 8)
 	card.add_child(vbox)
 
+	var glow_bg = ColorRect.new()
+	glow_bg.color = Color(qc.r, qc.g, qc.b, 0.08)
+	vbox.add_child(glow_bg)
+
 	var name_lbl = Label.new()
 	name_lbl.text = upgrade.get("name", "?")
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -254,10 +258,18 @@ func _update_selection() -> void:
 		if is_selected:
 			style.border_color = Color(1.0, 0.9, 0.3)
 			style.bg_color = Color(0.1, 0.1, 0.25, 0.96)
+			style.border_width_left = 4
+			style.border_width_right = 4
+			style.border_width_top = 4
+			style.border_width_bottom = 4
 		else:
 			var qc = _QUALITY_COLORS[0]
 			if i < upgrade_options.size():
 				qc = _QUALITY_COLORS[clampi(upgrade_options[i].get("quality", 0), 0, _QUALITY_COLORS.size() - 1)]
 			style.border_color = qc
 			style.bg_color = Color(0.05, 0.05, 0.15, 0.92)
+			style.border_width_left = 2
+			style.border_width_right = 2
+			style.border_width_top = 2
+			style.border_width_bottom = 2
 		card.add_theme_stylebox_override("panel", style)

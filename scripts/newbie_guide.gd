@@ -12,12 +12,14 @@ var steps: Array = []
 
 var step_labels: Array = []
 var arrow: Label
+var skip_btn: Button
 
 func _ready() -> void:
 	visible = false
 	_setup_steps()
 	_setup_overlay()
 	_setup_arrow()
+	_setup_skip_button()
 
 func _setup_steps() -> void:
 	steps = [
@@ -56,6 +58,23 @@ func _setup_overlay() -> void:
 	overlay.gui_input.connect(_on_overlay_input)
 	add_child(overlay)
 	move_child(overlay, 0)
+
+func _setup_skip_button() -> void:
+	skip_btn = Button.new()
+	skip_btn.text = "跳过引导"
+	skip_btn.custom_minimum_size = Vector2(120, 44)
+	skip_btn.pressed.connect(_skip_guide)
+	add_child(skip_btn)
+
+func _update_skip_button_position() -> void:
+	if not is_instance_valid(skip_btn):
+		return
+	var screen_size = get_viewport().get_visible_rect().size
+	skip_btn.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	skip_btn.offset_left = -130
+	skip_btn.offset_top = 10
+	skip_btn.offset_right = -10
+	skip_btn.offset_bottom = 54
 
 func _setup_arrow() -> void:
 	arrow = Label.new()
@@ -98,6 +117,7 @@ func _refresh_step() -> void:
 	var step = steps[current_step]
 	_show_step_label(current_step, step["text"], step["position"])
 	_show_step_arrow(current_step, step["position"])
+	_update_skip_button_position()
 
 	step_changed.emit(current_step)
 
@@ -123,16 +143,16 @@ func _show_step_label(index: int, text: String, pos_key: String) -> void:
 	step_labels.append(label)
 
 	var bg = ColorRect.new()
-	bg.color = Color(0.0, 0.0, 0.0, 0.7)
+	bg.color = Color(0.0, 0.1, 0.3, 0.85)
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	label.add_child(bg)
 	bg.set("layout_mode", 1)
 	bg.set("anchor_right", 1)
 	bg.set("anchor_bottom", 1)
-	bg.set("offset_left", -10)
-	bg.set("offset_top", -5)
-	bg.set("offset_right", 10)
-	bg.set("offset_bottom", 5)
+	bg.set("offset_left", -15)
+	bg.set("offset_top", -8)
+	bg.set("offset_right", 15)
+	bg.set("offset_bottom", 8)
 
 	var pos = _get_label_position(pos_key, screen_size)
 	label.position = pos
@@ -201,6 +221,9 @@ func _on_overlay_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseButton:
 		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			_advance_step()
+	elif event is InputEventScreenTouch:
+		if event.pressed:
 			_advance_step()
 	elif event is InputEventKey:
 		if event.pressed:

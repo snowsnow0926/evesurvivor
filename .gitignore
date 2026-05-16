@@ -12,6 +12,9 @@
 *.dll
 *.zip
 *.tar.gz
+*.apk
+*.idsig
+导出/
 
 # Environment files
 *.env

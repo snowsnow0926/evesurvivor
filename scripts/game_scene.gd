@@ -400,7 +400,9 @@ func _update_screen_shake(delta: float) -> void:
 var newbie_guide: CanvasLayer = null
 
 func _maybe_start_guide() -> void:
-	if not GameState.first_run:
+	if GameState.tutorial_completed:
+		return
+	if GameState.first_run:
 		return
 	if not ResourceLoader.exists("res://scripts/newbie_guide.gd"):
 		return
@@ -425,7 +427,9 @@ func _setup_guide_signals() -> void:
 
 func _on_guide_completed() -> void:
 	print("[GameScene] Guide completed")
+	GameState.tutorial_completed = true
 	GameState.first_run = false
+	GameState.auto_save()
 
 func _notify_guide_pause() -> void:
 	if newbie_guide and newbie_guide.has_method("notify_pause_opened"):

@@ -7,6 +7,7 @@ const WeaponData = preload("res://resources/weapon_data.gd")
 var equip_btn: Button
 var unequip_btn: Button
 var sell_btn: Button
+var sell_all_btn: Button
 var back_btn: Button
 var ship_info_label: Label
 var equipped_weapons_grid: HBoxContainer
@@ -40,6 +41,7 @@ func _deferred_init() -> void:
 	equip_btn = find_child("EquipBtn", true, false)
 	unequip_btn = find_child("UnequipBtn", true, false)
 	sell_btn = find_child("SellBtn", true, false)
+	sell_all_btn = find_child("SellAllBtn", true, false)
 	back_btn = find_child("BackBtn", true, false)
 	detail_name = find_child("DetailName", true, false)
 	detail_stats = find_child("DetailStats", true, false)
@@ -63,6 +65,8 @@ func _deferred_init() -> void:
 		unequip_btn.pressed.connect(_on_unequip)
 	if sell_btn:
 		sell_btn.pressed.connect(_on_sell)
+	if sell_all_btn:
+		sell_all_btn.pressed.connect(_on_sell_all)
 	if back_btn:
 		back_btn.pressed.connect(_on_back)
 
@@ -638,6 +642,7 @@ func _calc_sell_price(item: Dictionary) -> int:
 func _on_sell() -> void:
 	if selected_item.is_empty():
 		return
+	SoundManager.play_sfx("button_click")
 	var sell_price = _calc_sell_price(selected_item)
 	GameState.star_coin += sell_price
 
@@ -657,6 +662,81 @@ func _on_sell() -> void:
 	_update_detail_panel()
 	_build_all()
 	GameState.auto_save()
+
+func _on_sell_all() -> void:
+	SoundManager.play_sfx("button_click")
+	_show_sell_all_confirm()
+
+func _show_sell_all_confirm() -> void:
+	var unequipped_ids: Array = []
+	var equipped_ids: Array = []
+
+	var ship_id = int(GameState.selected_ship_id)
+	if ship_id == 0:
+		ship_id = ShipData.ShipID.FRIGATE
+
+	var eq_weapons = GameState.equipped_weapons.get(ship_id, [])
+	if eq_weapons is Array:
+		for w in eq_weapons:
+			if w is Dictionary:
+				equipped_ids.append(w.get("equip_id", ""))
+	var eq_armor_list: Array = GameState.equipped_armor.get(ship_id, [])
+	if not (eq_armor_list is Array):
+		eq_armor_list = []
+	if eq_armor_list is Array:
+		for a in eq_armor_list:
+			if a is Dictionary:
+				equipped_ids.append(a.get("equip_id", ""))
+
+	var unequipped_items: Array = []
+	for item in GameState.equipment_inventory:
+		if not equipped_ids.has(item.get("equip_id", "")):
+			unequipped_items.append(item)
+			unequipped_ids.append(item.get("equip_id", ""))
+
+	if unequipped_items.is_empty():
+		_show_notification("没有可出售的物品")
+		return
+
+	var total_price = 0
+	for item in unequipped_items:
+		total_price += _calc_sell_price(item)
+
+	var dialog = ConfirmationDialog.new()
+	dialog.dialog_text = "确定要出售全部 %d 件未装备物品吗？\n预计获得: %d 星币" % [unequipped_items.size(), total_price]
+	dialog.ok_button_text = "出售"
+	dialog.cancel_button_text = "取消"
+	get_tree().current_scene.add_child(dialog)
+	dialog.confirmed.connect(_do_sell_all.bind(unequipped_ids, total_price))
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.popup_centered()
+
+func _do_sell_all(equip_ids: Array, total_price: int) -> void:
+	SoundManager.play_sfx("button_click")
+	for equip_id in equip_ids:
+		for idx in range(GameState.equipment_inventory.size() - 1, -1, -1):
+			if GameState.equipment_inventory[idx].get("equip_id", "") == equip_id:
+				GameState.equipment_inventory.remove_at(idx)
+				break
+	GameState.star_coin += total_price
+	selected_item = {}
+	_selected_equip_id = ""
+	_update_detail_panel()
+	_build_all()
+	GameState.auto_save()
+	_show_notification("已出售 %d 件物品，获得 %d 星币" % [equip_ids.size(), total_price])
+
+func _show_notification(msg: String) -> void:
+	var notif = AcceptDialog.new()
+	notif.dialog_text = msg
+	notif.ok_button_text = "确定"
+	var parent_node = get_parent()
+	if parent_node:
+		parent_node.add_child(notif)
+	else:
+		add_child(notif)
+	notif.popup_centered()
+	notif.confirmed.connect(notif.queue_free)
 
 func _on_back() -> void:
 	get_parent().close_all_panels()

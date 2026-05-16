@@ -240,18 +240,14 @@ func _process(delta: float) -> void:
 		if Input.is_action_just_pressed("pause"):
 			close_all_panels()
 		return
-
-	_update_currency_display()
-	if no_weapon_warning.visible:
-		warning_timer -= delta
-		if warning_timer <= 0:
-			no_weapon_warning.visible = false
 	if Input.is_action_just_pressed("pause"):
 		if base_pause_menu and base_pause_menu.visible:
 			base_pause_menu.close_menu()
 		else:
 			base_pause_menu.open_menu()
 		return
+
+	_update_currency_display()
 
 	var current_hover := ""
 
@@ -332,34 +328,41 @@ func _instantiate_panel(scene_path: String) -> Control:
 	return instance as Control
 
 func _show_repair() -> void:
+	SoundManager.play_sfx("button_click")
 	_switch_panel(repair_panel)
 
 func _show_crafting() -> void:
+	SoundManager.play_sfx("button_click")
 	_switch_panel(crafting_panel)
 	if crafting_panel.has_method("_build_inventory"):
 		crafting_panel._build_inventory()
 
 func _show_warehouse() -> void:
+	SoundManager.play_sfx("button_click")
 	var panel := _get_or_create_panel(&"warehouse") as Control
 	_switch_panel(panel)
 	if panel and panel.has_method("_build_all"):
 		panel._build_all()
 
 func _show_research() -> void:
+	SoundManager.play_sfx("button_click")
 	var panel = _get_or_create_panel(&"research") as Control
 	_switch_panel(panel)
 	if panel and panel.has_method("open"):
 		panel.open()
 
 func _show_shop() -> void:
+	SoundManager.play_sfx("button_click")
 	var panel := _get_or_create_panel(&"shop") as Control
 	_switch_panel(panel)
 
 func _show_shipyard() -> void:
+	SoundManager.play_sfx("button_click")
 	var panel := _get_or_create_panel(&"shipyard") as Control
 	_switch_panel(panel)
 
 func _show_storage() -> void:
+	SoundManager.play_sfx("button_click")
 	_switch_panel(storage_panel)
 	if storage_panel and storage_panel.has_method("_build_ship_list"):
 		storage_panel._build_ship_list()

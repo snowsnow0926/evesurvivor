@@ -66,6 +66,7 @@ var _pending_tonnage_chapter: int = 1
 var _pending_is_s6: bool = false
 var _is_spawning_boss: bool = false
 var _spawn_timeout_timer: SceneTreeTimer = null
+var _boss_intro_played: bool = false
 
 func _init(gm: Node2D, ps: PlayerStats) -> void:
 	game_manager = gm
@@ -250,6 +251,8 @@ func _check_boss_warning(current_stage: StageData.StageInfo, current_chapter_id:
 		_spawn_boss(current_chapter_id, current_stage_id)
 
 func _update_s6_boss_waves(delta: float) -> void:
+	var is_infinite = game_manager.is_boss_infinite
+
 	# 波次1：第2秒刷1只
 	if _s6_wave == 0 and _s6_elapsed >= _s6_wave_times[0]:
 		_s6_wave = 1
@@ -259,21 +262,34 @@ func _update_s6_boss_waves(delta: float) -> void:
 		_s6_spawned_this_wave += 1
 		print_debug("[S6] wave1 spawned 1/1")
 
-	# 波次2：第30秒刷2只（不管前面杀没杀完）
+	# 波次2：第30秒刷2只
 	if _s6_wave == 1 and _s6_elapsed >= _s6_wave_times[1]:
 		_s6_wave = 2
 		_s6_spawned_this_wave = 0
 		_s6_next_spawn_frames = int(1.5 * 60.0)
 		print_debug("[S6] wave2 triggered at %.1fs" % _s6_elapsed)
 
-	# 波次3：第75秒刷3只（不管前面杀没杀完）
+	# 波次3：第75秒刷3只
 	if _s6_wave == 2 and _s6_elapsed >= _s6_wave_times[2]:
 		_s6_wave = 3
 		_s6_spawned_this_wave = 0
 		_s6_next_spawn_frames = int(1.5 * 60.0)
 		print_debug("[S6] wave3 triggered at %.1fs" % _s6_elapsed)
 
-	# 多只BOSS间隔生成（所有波次统一处理）
+	# 无限模式：第3波之后继续加速刷BOSS
+	if is_infinite and _s6_wave == 3 and _s6_spawned_this_wave >= _s6_wave_counts[2] and _s6_bosses_alive <= 0:
+		_s6_wave = 5  # 5 = infinite mode
+		_s6_spawned_this_wave = 0
+		# 无限模式间隔随时间缩短（从3秒逐渐降到0.5秒，最快0.5秒一刷）
+		var elapsed_beyond_75 = _s6_elapsed - _s6_wave_times[2]
+		var infinite_interval = clampf(3.0 - elapsed_beyond_75 * 0.005, 0.5, 3.0)
+		_s6_next_spawn_frames = int(infinite_interval * 60.0)
+		_s6_bosses_alive += 1
+		_do_spawn_s6_boss()
+		print_debug("[S6] infinite boss spawned at elapsed=%.1fs interval=%.1f" % [_s6_elapsed, infinite_interval])
+		return
+
+	# 多只BOSS间隔生成（波次1-3统一处理）
 	if _s6_next_spawn_frames > 0:
 		_s6_next_spawn_frames -= 1
 	elif _s6_wave >= 1 and _s6_wave <= 3:
@@ -286,10 +302,10 @@ func _update_s6_boss_waves(delta: float) -> void:
 			if _s6_spawned_this_wave < wave_count:
 				_s6_next_spawn_frames = int(0.5 * 60.0)
 
-	# 检测全部通关：所有波次刷完且场上无BOSS存活
-	if _s6_wave >= 1 and _s6_spawned_this_wave >= _s6_wave_counts[_s6_wave - 1] and _s6_bosses_alive <= 0:
+	# 检测全部通关（非无限模式）
+	if not is_infinite and _s6_wave >= 1 and _s6_spawned_this_wave >= _s6_wave_counts[_s6_wave - 1] and _s6_bosses_alive <= 0:
 		if _s6_wave == 3:
-			_s6_wave = 4  # 全部完成
+			_s6_wave = 4
 			s6_all_bosses_defeated.emit()
 			print_debug("[S6] ALL BOSSES DEFEATED!")
 
@@ -423,16 +439,18 @@ func _finish_boss_spawn() -> void:
 	else:
 		boss_active = true
 
-	var game_scene = game_manager.get_parent()
-	if game_scene and game_scene.has_method("trigger_screen_shake"):
-		game_scene.trigger_screen_shake(15.0, 0.3)
-		var overlay = ColorRect.new()
-		overlay.color = Color(1.0, 1.0, 1.0, 0.5)
-		overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-		game_scene.add_child(overlay)
-		var t = overlay.create_tween()
-		t.tween_property(overlay, "modulate:a", 0.0, 0.3)
-		t.tween_callback(overlay.queue_free)
+	if not _boss_intro_played:
+		_boss_intro_played = true
+		var game_scene = game_manager.get_parent()
+		if game_scene and game_scene.has_method("trigger_screen_shake"):
+			game_scene.trigger_screen_shake(15.0, 0.3)
+			var overlay = ColorRect.new()
+			overlay.color = Color(1.0, 1.0, 1.0, 0.5)
+			overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+			game_scene.add_child(overlay)
+			var t = overlay.create_tween()
+			t.tween_property(overlay, "modulate:a", 0.0, 0.3)
+			t.tween_callback(overlay.queue_free)
 
 	var boss_scene = BossRegistry.get_chapter_stage_boss_scene(_pending_chapter_id, _pending_stage_id)
 	print_debug("[SpawnManager] boss_scene=%s (chapter=%d stage=%d)" % [boss_scene, _pending_chapter_id, _pending_stage_id])
@@ -511,6 +529,7 @@ func reset() -> void:
 	_s6_elapsed = 0.0
 	_pending_stage_id = 1
 	_debug_frame_count = 0
+	_boss_intro_played = false
 	if boss_warning and boss_warning.has_method("hide_warning"):
 		boss_warning.hide_warning()
 

@@ -54,22 +54,27 @@ horizontal_alignment = 1
 [node name="ContinueBtn" type="Button" parent="Panel/VBox"]
 layout_mode = 2
 text = "继续游戏"
+custom_minimum_size = Vector2(0, 52)
 
 [node name="SettingsBtn" type="Button" parent="Panel/VBox"]
 layout_mode = 2
 text = "设置"
+custom_minimum_size = Vector2(0, 52)
 
 [node name="RetreatBtn" type="Button" parent="Panel/VBox"]
 layout_mode = 2
 text = "撤退结算"
+custom_minimum_size = Vector2(0, 52)
 
 [node name="SFXToggleBtn" type="Button" parent="Panel/VBox"]
 layout_mode = 2
 text = "音效设置"
+custom_minimum_size = Vector2(0, 52)
 
 [node name="SelfDestructBtn" type="Button" parent="Panel/VBox"]
 layout_mode = 2
 text = "自毁退出"
+custom_minimum_size = Vector2(0, 52)
 
 [node name="LootSectionLabel" type="Label" parent="Panel/VBox"]
 layout_mode = 2
