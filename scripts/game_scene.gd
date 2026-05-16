@@ -20,7 +20,11 @@ var _bg_image: Sprite2D = null
 var _bg_nebula_tex: Texture2D = null
 var _prev_vp_size: Vector2 = Vector2.ZERO
 
+const _BG_DIR := "res://assets/backgrounds/battle/"
+const _BG_PREFIX := "battle_bg_"
+
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("game_scene")
 	is_settlement_open = false
 	game_manager = $GameManager
@@ -30,7 +34,7 @@ func _ready() -> void:
 	game_manager.setup_for_stage(GameState.selected_chapter_id, GameState.selected_stage_id)
 	game_manager.start_run_timer()
 	SoundManager.play_music("battle")
-	_maybe_start_guide()
+	_maybe_takeover_guide()
 
 func _setup_ui() -> void:
 	var ui_root = $UIRoot
@@ -56,8 +60,32 @@ func _setup_background() -> void:
 	if bg_layer:
 		_bg_image = bg_layer.get_node_or_null("BackgroundImage")
 	if _bg_image:
-		_bg_nebula_tex = _bg_image.texture
+		_bg_nebula_tex = _pick_random_bg()
+		if _bg_nebula_tex:
+			_bg_image.texture = _bg_nebula_tex
 	_update_background()
+
+func _pick_random_bg() -> Texture2D:
+	var bg_files := [] as Array[String]
+	var dir := DirAccess.open(_BG_DIR)
+	if dir:
+		dir.list_dir_begin()
+		var fname: String = dir.get_next()
+		while fname != "":
+			if fname.begins_with(_BG_PREFIX):
+				var ext: String = fname.get_extension().to_lower()
+				if ext == "png" or ext == "jpg" or ext == "jpeg" or ext == "webp":
+					bg_files.append(fname)
+			fname = dir.get_next()
+		dir.list_dir_end()
+	if bg_files.is_empty():
+		push_warning("[GameScene] No battle background found in " + _BG_DIR)
+		return null
+	bg_files.shuffle()
+	var chosen: String = bg_files[0]
+	var path: String = _BG_DIR + chosen
+	_debug("Selected background: " + path)
+	return load(path) as Texture2D
 
 func _update_background() -> void:
 	if not _bg_image or not _bg_nebula_tex:
@@ -399,37 +427,26 @@ func _update_screen_shake(delta: float) -> void:
 
 var newbie_guide: CanvasLayer = null
 
-func _maybe_start_guide() -> void:
-	if GameState.tutorial_completed:
+func _maybe_takeover_guide() -> void:
+	if GameState == null or GameState.tutorial_completed:
 		return
-	if GameState.first_run:
-		return
-	if not ResourceLoader.exists("res://scripts/newbie_guide.gd"):
-		return
-	var guide_script = load("res://scripts/newbie_guide.gd")
-	if not guide_script:
-		return
-	newbie_guide = CanvasLayer.new()
-	newbie_guide.script = guide_script
-	newbie_guide.layer = 200
-	add_child(newbie_guide)
-	newbie_guide.visible = false
-	await get_tree().process_frame
-	if newbie_guide and newbie_guide.has_method("start_guide"):
-		newbie_guide.start_guide()
+	if GameState.guide_mode and GameState.active_guide_layer != null:
+		newbie_guide = GameState.active_guide_layer
+		if newbie_guide.get_parent() != self:
+			newbie_guide.reparent(self)
+		newbie_guide.visible = true
+		if newbie_guide.has_method("show_battle_guide"):
+			newbie_guide.show_battle_guide()
 		_setup_guide_signals()
-	print("[GameScene] NewbieGuide started")
+		print("[GameScene] Guide layer taken over")
 
 func _setup_guide_signals() -> void:
 	if not newbie_guide:
 		return
-	newbie_guide.guide_completed.connect(_on_guide_completed)
-
-func _on_guide_completed() -> void:
-	print("[GameScene] Guide completed")
-	GameState.tutorial_completed = true
-	GameState.first_run = false
-	GameState.auto_save()
+	if game_manager:
+		var already_connected = game_manager.xp_collected.get_connections().any(func(c): return c["callable"] == Callable(newbie_guide, "notify_xp_collected"))
+		if not already_connected:
+			game_manager.xp_collected.connect(newbie_guide.notify_xp_collected)
 
 func _notify_guide_pause() -> void:
 	if newbie_guide and newbie_guide.has_method("notify_pause_opened"):

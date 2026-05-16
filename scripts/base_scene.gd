@@ -32,6 +32,8 @@ var _building_nodes: Dictionary = {}
 var _hover_tween: Dictionary = {}
 var _hovered_building: String = ""
 
+var newbie_guide: CanvasLayer = null
+
 const _PANEL_SCENES := {
 	"shop": "res://scenes/ShopUI.tscn",
 	"warehouse": "res://scenes/WarehouseUI.tscn",
@@ -107,8 +109,10 @@ func _ready() -> void:
 	_update_currency_display()
 	base_pause_menu = find_child("BasePauseMenu", true, false)
 	_connect_save_ui_signals()
-	if GameState.player_name.is_empty() or GameState.first_run:
+	if GameState.player_name.is_empty():
 		get_tree().change_scene_to_file("res://scenes/CharacterCreate.tscn")
+		return
+	_maybe_start_guide()
 
 func _setup_building_nodes() -> void:
 	var id_to_node := {
@@ -222,6 +226,33 @@ func _on_save_ui_back() -> void:
 func _bind_buttons() -> void:
 	if start_battle_btn:
 		start_battle_btn.pressed.connect(_on_start_battle)
+
+func _maybe_start_guide() -> void:
+	if GameState.tutorial_completed:
+		return
+	if not GameState.guide_mode:
+		return
+	if GameState.active_guide_layer == null:
+		return
+	newbie_guide = GameState.active_guide_layer
+	if newbie_guide.get_parent() != self:
+		newbie_guide.reparent(self)
+	newbie_guide.visible = true
+	if newbie_guide.has_method("show_warehouse_guide"):
+		newbie_guide.show_warehouse_guide()
+	_setup_guide_signals()
+	print("[BaseScene] Guide layer attached from CharacterCreate")
+
+func _setup_guide_signals() -> void:
+	if not newbie_guide:
+		return
+	newbie_guide.guide_completed.connect(_on_guide_completed)
+
+func _on_guide_completed() -> void:
+	print("[BaseScene] Guide completed")
+	GameState.tutorial_completed = true
+	GameState.guide_mode = false
+	GameState.auto_save()
 
 func _update_currency_display() -> void:
 	if coin_label:
@@ -355,6 +386,8 @@ func _show_shop() -> void:
 	SoundManager.play_sfx("button_click")
 	var panel := _get_or_create_panel(&"shop") as Control
 	_switch_panel(panel)
+	if newbie_guide and newbie_guide.has_method("show_shop_guide"):
+		newbie_guide.show_shop_guide()
 
 func _show_shipyard() -> void:
 	SoundManager.play_sfx("button_click")
@@ -426,6 +459,8 @@ func _on_start_battle() -> void:
 	if not has_weapon:
 		_show_no_weapon_warning()
 		return
+	if newbie_guide and newbie_guide.has_method("show_battle_guide"):
+		newbie_guide.show_battle_guide()
 	get_tree().change_scene_to_file("res://scenes/ChapterSelectUI.tscn")
 
 func _show_no_weapon_warning() -> void:

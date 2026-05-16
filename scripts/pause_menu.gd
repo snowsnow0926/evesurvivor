@@ -43,7 +43,11 @@ func open_menu(gm: Node2D) -> void:
 	game_manager = gm
 	visible = true
 	is_open = true
-	print("[PauseMenu] opened, visible=", visible, " process_mode=", process_mode)
+	if game_manager:
+		game_manager.is_paused = true
+		get_tree().paused = true
+		_build_pause_loot_list()
+	_notify_hud_paused(true)
 	if game_manager:
 		game_manager.is_paused = true
 		get_tree().paused = true
@@ -60,7 +64,6 @@ func _notify_hud_paused(paused: bool) -> void:
 
 func _on_continue_pressed() -> void:
 	SoundManager.play_sfx("button_click")
-	print("[PauseMenu] continue pressed")
 	close_menu()
 
 func _on_settings_pressed() -> void:

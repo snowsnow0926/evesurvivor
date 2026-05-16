@@ -19,6 +19,8 @@ const RACE_PORTRAIT_PATHS: Dictionary = {
 var selected_race_id: RaceData.RaceID = RaceData.RaceID.HUMAN
 var race_buttons: Array = []
 
+var _guide_layer: CanvasLayer = null
+
 func _ready() -> void:
 	# 为 PanelContainer 设置默认样式，防止 add_theme_style_override 时 rp_style 为 null
 	var panel = $Panel as PanelContainer
@@ -34,6 +36,48 @@ func _ready() -> void:
 	confirm_btn.pressed.connect(_on_confirm)
 	back_btn.pressed.connect(_on_back)
 	_update_confirm_button()
+	GameState.guide_mode = true
+	_setup_guide_layer()
+
+func _setup_guide_layer() -> void:
+	if GameState == null:
+		return
+	if GameState.tutorial_completed:
+		return
+	if not GameState.guide_mode:
+		return
+	if GameState.active_guide_layer != null:
+		return
+	if not ResourceLoader.exists("res://scripts/newbie_guide.gd"):
+		return
+	var guide_script = load("res://scripts/newbie_guide.gd")
+	if not guide_script:
+		return
+	_guide_layer = CanvasLayer.new()
+	_guide_layer.script = guide_script
+	_guide_layer.layer = 200
+	add_child(_guide_layer)
+	GameState.active_guide_layer = _guide_layer
+	await get_tree().process_frame
+	if _guide_layer and _guide_layer.has_method("start_guide"):
+		_guide_layer.start_guide()
+		_setup_guide_signals()
+	print("[CharacterCreate] Guide layer started")
+
+func _setup_guide_signals() -> void:
+	pass
+
+func _on_guide_completed() -> void:
+	pass
+
+func _transfer_guide_to_base_scene() -> void:
+	if _guide_layer == null:
+		return
+	_guide_layer.get_parent().remove_child(_guide_layer)
+	get_tree().root.add_child(_guide_layer)
+	_guide_layer.layer = 200
+	GameState.active_guide_layer = _guide_layer
+	print("[CharacterCreate] Guide layer transferred to root")
 
 func _build_race_cards() -> void:
 	for child in race_grid.get_children():
@@ -261,7 +305,11 @@ func _on_confirm() -> void:
 	GameState.minerals_mid = 200000
 	GameState.minerals_high = 200000
 	GameState.selected_ship_id = ShipData.ShipID.FRIGATE
+	GameState.guide_mode = true
 	GameState.first_run = false
+
+	# 创建引导层（guide_mode 设为 true 后才有效）
+	_setup_guide_layer()
 
 	# 解锁并装备该种族的核心（存档前必须做，否则仓库/升级中心看不到）
 	var race = RaceData.get_race(selected_race_id)
@@ -271,6 +319,7 @@ func _on_confirm() -> void:
 	GameState.current_save_slot = slot
 	GameState.pending_new_game_slot = -1
 	GameState.save_save_slot(slot)
+	_transfer_guide_to_base_scene()
 	get_tree().change_scene_to_file("res://scenes/BaseScene.tscn")
 
 func _on_back() -> void:

@@ -10,6 +10,7 @@ signal player_dead
 signal upgrade_requested
 signal game_paused(is_paused: bool)
 signal game_ended(reason: String)
+signal xp_collected(amount: float)
 
 const _SCENE_PLAYER: PackedScene = preload("res://scenes/Player.tscn")
 const _SCENE_DAMAGE_NUMBER: PackedScene = preload("res://scenes/DamageNumber.tscn")
@@ -27,7 +28,9 @@ var damage_root: Node2D
 var hazard_root: Node2D
 var boss_warning: Node
 
-var _hazards_spawned: bool = false
+var _hazard_spawn_timer: float = 0.0
+var _hazard_initial_delay: float = 10.0
+var _hazard_interval: float = 45.0
 
 var player_stats: PlayerStats
 var spawn_manager: SpawnManager
@@ -142,37 +145,47 @@ func _spawn_player() -> void:
 	else:
 		push_error("[GameManager] failed to load Player scene")
 
-func _spawn_hazards() -> void:
-	if _hazards_spawned:
-		return
-	_hazards_spawned = true
+func _spawn_hazard_at_random_position() -> void:
 	if not hazard_root or not is_instance_valid(hazard_root):
 		return
-	if current_stage == null:
+	if not player or not is_instance_valid(player):
 		return
-	var vp_size = get_viewport_rect().size
-	var center = vp_size * 0.5
-	var spawn_count = randi() % 3 + 2
-	for i in spawn_count:
-		var offset = Vector2(randf_range(-vp_size.x * 0.3, vp_size.x * 0.3), randf_range(-vp_size.y * 0.3, vp_size.y * 0.3))
-		var spawn_pos = center + offset
-		if player and is_instance_valid(player):
-			spawn_pos = player.global_position + offset
-		var hazard_scene: PackedScene = load("res://scenes/Hazard.tscn")
-		if hazard_scene:
-			var hazard_node: Node = hazard_scene.instantiate()
-			hazard_root.add_child(hazard_node)
-			var rng = randi() % 3
-			match rng:
-				0:
-					if hazard_node.has_method("setup_black_hole"):
-						hazard_node.setup_black_hole(spawn_pos, self, player, randf_range(100.0, 160.0), randf_range(20.0, 40.0))
-				1:
-					if hazard_node.has_method("setup_antimatter"):
-						hazard_node.setup_antimatter(spawn_pos, self, player, randf_range(60.0, 100.0), randf_range(15.0, 30.0))
-				2:
-					if hazard_node.has_method("setup_mine_zone"):
-						hazard_node.setup_mine_zone(spawn_pos, self, player, randf_range(80.0, 120.0), randf_range(20.0, 35.0))
+
+	var player_pos = player.global_position
+	var spawn_pos: Vector2
+	var attempts = 20
+	for i in attempts:
+		var angle = randf_range(0, TAU)
+		var dist = randf_range(500.0, 1000.0)
+		spawn_pos = player_pos + Vector2.from_angle(angle) * dist
+		if spawn_pos.x < 50 or spawn_pos.y < 50:
+			continue
+		break
+
+	if spawn_pos == Vector2.ZERO:
+		spawn_pos = player_pos + Vector2.from_angle(randf_range(0, TAU)) * 700.0
+
+	var hazard_scene: PackedScene = load("res://scenes/Hazard.tscn")
+	if not hazard_scene:
+		return
+	var hazard_node: Node = hazard_scene.instantiate()
+	hazard_root.add_child(hazard_node)
+	var rng = randi() % 3
+	match rng:
+		0:
+			if hazard_node.has_method("setup_black_hole"):
+				hazard_node.setup_black_hole(spawn_pos, self, player, randf_range(100.0, 160.0), randf_range(20.0, 40.0))
+		1:
+			if hazard_node.has_method("setup_antimatter"):
+				hazard_node.setup_antimatter(spawn_pos, self, player, randf_range(60.0, 100.0), randf_range(15.0, 30.0))
+		2:
+			if hazard_node.has_method("setup_mine_zone"):
+				hazard_node.setup_mine_zone(spawn_pos, self, player, randf_range(80.0, 120.0), randf_range(20.0, 35.0))
+
+func _spawn_hazard_wave() -> void:
+	_spawn_hazard_at_random_position()
+	if randf() < 0.2:
+		_spawn_hazard_at_random_position()
 
 func _apply_race_to_player_stats(race: RaceData) -> void:
 	var ship = ShipData.get_ship(GameState.selected_ship_id)
@@ -221,7 +234,6 @@ func setup_for_stage(chapter_id: int, stage_id: int) -> void:
 	difficulty_scaler.setup_stage(current_stage.strength_mult, current_stage.density_mult, player_level)
 	set_game_speed(1.0)
 	loot_system.reset()
-	_spawn_hazards()
 
 	if current_stage.has_timer:
 		has_timer = true
@@ -279,6 +291,7 @@ func _process(delta: float) -> void:
 	player_stats.update_regen(delta)
 	difficulty_scaler.update_combo(delta)
 	_notify_hud_update()
+	_update_hazard_spawning(delta)
 
 func _update_timer(delta: float) -> void:
 	if not has_timer:
@@ -296,6 +309,16 @@ func _update_timer(delta: float) -> void:
 		time_remaining = 0.0
 		_notify_hud_update()
 		_on_timer_expired()
+
+func _update_hazard_spawning(delta: float) -> void:
+	if is_paused:
+		return
+	_hazard_spawn_timer += delta
+	if _hazard_spawn_timer < _hazard_initial_delay:
+		return
+	var elapsed_since_initial = _hazard_spawn_timer - _hazard_initial_delay
+	if fmod(elapsed_since_initial, _hazard_interval) < delta:
+		_spawn_hazard_wave()
 
 func _on_timer_expired() -> void:
 	# 第6关：时间到 = 任务失败
@@ -373,6 +396,7 @@ func _show_settlement(reason: String) -> void:
 
 func on_exp_orb_collected(amount: float) -> void:
 	current_xp += amount * player_stats.xp_boost
+	xp_collected.emit(amount)
 	CoreEquipManager.add_xp(int(amount * player_stats.xp_boost))
 	var leveled_up = false
 	while current_xp >= xp_to_next_level:
@@ -531,7 +555,7 @@ func reset_for_new_run() -> void:
 	stage_duration = 0.0
 	_timer_expired_once = false
 	is_boss_infinite = false
-	_hazards_spawned = false
+	_hazard_spawn_timer = 0.0
 
 	spawn_manager.reset()
 	difficulty_scaler.reset()

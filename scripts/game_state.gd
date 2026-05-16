@@ -44,6 +44,12 @@ var player_level: int = 1
 var current_xp: float = 0.0
 var xp_to_next_level: float = 10.0
 
+# 运行时引导模式标记（不存档，仅内存使用）
+var guide_mode: bool = false
+
+# 当前活跃的引导层（跨场景引用）
+var active_guide_layer: CanvasLayer = null
+
 # 新手引导完成标记
 var tutorial_completed: bool = false
 
@@ -407,8 +413,6 @@ func add_rewards(coin: int, minrl: int) -> void:
 	auto_save()
 
 func on_run_started() -> void:
-	if first_run:
-		first_run = false
 	pre_run_coin = star_coin
 	pre_run_minerals_total = minerals_low + minerals_mid + minerals_high
 

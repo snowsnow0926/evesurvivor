@@ -14,6 +14,11 @@ func _ready() -> void:
 	_close_on_outside_click()
 	_connect_signals()
 	_load_current_settings()
+	process_mode = Node.PROCESS_MODE_ALWAYS
+
+func _process(_delta: float) -> void:
+	if Input.is_key_pressed(KEY_ESCAPE):
+		_on_close_pressed()
 
 func _close_on_outside_click() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP

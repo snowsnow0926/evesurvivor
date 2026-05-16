@@ -155,7 +155,7 @@ func _build_card(card: PanelContainer, upgrade: Dictionary, index: int) -> void:
 	name_lbl.text = upgrade.get("name", "?")
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	name_lbl.add_theme_font_size_override("font_size", 14)
+	name_lbl.add_theme_font_size_override("font_size", 28)
 	name_lbl.add_theme_color_override("font_color", qc)
 	name_lbl.custom_minimum_size.y = 36
 	vbox.add_child(name_lbl)
@@ -177,7 +177,7 @@ func _build_card(card: PanelContainer, upgrade: Dictionary, index: int) -> void:
 	desc_lbl.text = upgrade.get("desc", "")
 	desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc_lbl.add_theme_font_size_override("font_size", 11)
+	desc_lbl.add_theme_font_size_override("font_size", 18)
 	desc_lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.9))
 	desc_lbl.custom_minimum_size.y = 140
 	vbox.add_child(desc_lbl)

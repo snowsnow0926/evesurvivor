@@ -66,7 +66,8 @@ var _pending_tonnage_chapter: int = 1
 var _pending_is_s6: bool = false
 var _is_spawning_boss: bool = false
 var _spawn_timeout_timer: SceneTreeTimer = null
-var _boss_intro_played: bool = false
+## 追踪每个BOSS ID是否已播放过登场动画（首次出现播放，后续跳过）
+var _boss_intros_shown: Dictionary = {}
 
 func _init(gm: Node2D, ps: PlayerStats) -> void:
 	game_manager = gm
@@ -391,16 +392,23 @@ func _show_boss_encounter(boss_entry: BossEntry) -> void:
 	if _is_spawning_boss:
 		return
 	_is_spawning_boss = true
-	print_debug("[SpawnManager] _show_boss_encounter: entry=%s has_ui=%s" % [boss_entry, boss_encounter_ui != null])
+	var intro_key := _pending_chapter_id * 100 + _pending_stage_id
+	var intro_already_shown: bool = _boss_intros_shown.get(intro_key, false)
+	print_debug("[SpawnManager] _show_boss_encounter: entry=%s has_ui=%s intro_shown=%s (key=%d)" % [boss_entry, boss_encounter_ui != null, intro_already_shown, intro_key])
 	if boss_encounter_ui and boss_encounter_ui.has_method("show_encounter"):
-		boss_encounter_ui.show_encounter(boss_entry)
-		# 超时兜底：3秒后信号没触发则强制生成BOSS
-		var tree := boss_encounter_ui.get_tree() as SceneTree
-		if tree != null and boss_encounter_ui.has_signal("encounter_finished"):
-			_spawn_timeout_timer = tree.create_timer(3.0)
-			_spawn_timeout_timer.timeout.connect(_on_encounter_timeout, CONNECT_ONE_SHOT)
+		if not intro_already_shown:
+			boss_encounter_ui.show_encounter(boss_entry)
+			_boss_intros_shown[intro_key] = true
+			# 超时兜底：3秒后信号没触发则强制生成BOSS
+			var tree := boss_encounter_ui.get_tree() as SceneTree
+			if tree != null and boss_encounter_ui.has_signal("encounter_finished"):
+				_spawn_timeout_timer = tree.create_timer(3.0)
+				_spawn_timeout_timer.timeout.connect(_on_encounter_timeout, CONNECT_ONE_SHOT)
+			else:
+				_is_spawning_boss = false
+				_finish_boss_spawn()
 		else:
-			# 没有信号时直接生成
+			# 已播放过该章节关卡的BOSS登场动画，直接生成
 			_is_spawning_boss = false
 			_finish_boss_spawn()
 	else:
@@ -439,8 +447,10 @@ func _finish_boss_spawn() -> void:
 	else:
 		boss_active = true
 
-	if not _boss_intro_played:
-		_boss_intro_played = true
+	var intro_key := _pending_chapter_id * 100 + _pending_stage_id
+	if not _boss_intros_shown.get(intro_key, false):
+		# 仅首次出场播放屏幕震动特效
+		_boss_intros_shown[intro_key] = true
 		var game_scene = game_manager.get_parent()
 		if game_scene and game_scene.has_method("trigger_screen_shake"):
 			game_scene.trigger_screen_shake(15.0, 0.3)
@@ -529,7 +539,7 @@ func reset() -> void:
 	_s6_elapsed = 0.0
 	_pending_stage_id = 1
 	_debug_frame_count = 0
-	_boss_intro_played = false
+	_boss_intros_shown.clear()
 	if boss_warning and boss_warning.has_method("hide_warning"):
 		boss_warning.hide_warning()
 

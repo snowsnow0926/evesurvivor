@@ -1,5 +1,7 @@
 extends Control
 
+signal item_equipped
+
 const EquipmentData = preload("res://resources/equipment_data.gd")
 const ShipData = preload("res://resources/ship_data.gd")
 const WeaponData = preload("res://resources/weapon_data.gd")
@@ -481,6 +483,7 @@ func _equip_item(item: Dictionary, from_equipped: bool) -> void:
 	_selected_equip_id = ""
 	_build_all()
 	GameState.auto_save()
+	item_equipped.emit()
 
 func _show_tonnage_warning() -> void:
 	var tonnage = _get_ship_tonnage()

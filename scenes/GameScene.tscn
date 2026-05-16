@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://c73wx3unjx4gy"]
 
 [ext_resource type="Script" uid="uid://c618gvtyyynwf" path="res://scripts/game_manager.gd" id="1_gm"]
-[ext_resource type="Texture2D" uid="uid://bi07jdo0l1fh0" path="res://assets/backgrounds/battle/battle_bg_nebula.png" id="2_nebula"]
 [ext_resource type="Script" uid="uid://dke64atcfgbmk" path="res://scripts/parallax_starfield.gd" id="4_psf"]
 [ext_resource type="Script" uid="uid://d0uwlo07gfq1t" path="res://scripts/game_scene.gd" id="5_gs"]
 [ext_resource type="PackedScene" uid="uid://cf8hud001" path="res://scenes/HUD.tscn" id="6_hud_scene"]
@@ -27,7 +26,6 @@ color = Color(0, 0, 0.02, 1)
 [node name="BackgroundImage" type="Sprite2D" parent="BackgroundLayer" unique_id=1041698471]
 modulate = Color(1, 1, 1, 0.5)
 scale = Vector2(0.75849706, 0.75849706)
-texture = ExtResource("2_nebula")
 centered = false
 
 [node name="GameManager" type="Node2D" parent="." unique_id=688986465]
